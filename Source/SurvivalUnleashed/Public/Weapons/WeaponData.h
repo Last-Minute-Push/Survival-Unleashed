@@ -34,7 +34,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Transient, Category = "Stats")                                   Focus Alignment;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Mesh", meta = (ClampMin = "0"))           float Height;
-	UPROPERTY(EditDefaultsOnly, Category = "Properties|Mesh", meta = (ClampMin = "0"))           float Radius;
+	UPROPERTY(EditDefaultsOnly, Category = "Properties|Mesh", meta = (ClampMin = "0"))           float DistanceFromPlayer;
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|ProjectileMesh")                          TSubclassOf<AProjectileBase> ProjectileType;
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Projectile", meta = (ClampMin = "0"))     int32 ProjectilePierce;
 
