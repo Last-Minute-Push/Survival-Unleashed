@@ -44,7 +44,7 @@ void ABaseBowToGun::BeginPlay()
 		Range     = Data->Range;
 		Damage    = Data->Damage;
 		Height    = Data->Height;
-		Radius    = Data->Radius;
+		Radius    = Data->DistanceFromPlayer;
 		Cooldown  = Data->Cooldown * 0.5f;
 		Knockback = Data->Knockback;
 	}

@@ -63,7 +63,7 @@ void ABaseSword::BeginPlay()
         SwingArc             = Data->Range < 360.f ? Data->Range : 360.f;
         SwingSpeed           = Data->AttackSpeed;
         Height               = Data->Height;
-        Radius               = Data->Radius;
+        Radius               = Data->DistanceFromPlayer;
     }
     else
     {
