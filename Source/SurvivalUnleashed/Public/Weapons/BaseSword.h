@@ -18,21 +18,11 @@ class SURVIVALUNLEASHED_API ABaseSword : public ABaseWeapon
 {
 	GENERATED_BODY()
 
-	bool bIsSwinging;
-	float Height;
-	float Radius;
-	float SwingAngle;
-	float SwingSpeed;             // Data->AttackSpeed
-	float SwingArc;               // Data->Range
-	float SwingArcHalf;
-	float SwingPatternCooldown;   // Data->Cooldown
-	uint32 CurrentSwingCount;
-
 	void StartSwing();
 	void StopSwing();
 
-	UFUNCTION(BlueprintCallable, Category = "Damage") void ApplyDamageCollision(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, 
-		                                                               int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION(Category = "Damage") void ApplyDamageCollision(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, 
+		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	void Swing(bool bRight, float DeltaTime) const;
 	inline void HideSword(bool bHide) const { Pivot->AddLocalOffset(FVector(0.f, 0.f, bHide ? SwingDisappearingDistance : -SwingDisappearingDistance)); }
@@ -52,7 +42,17 @@ public:
 	virtual void StopWeapon() override;
 
 protected:
+	bool bIsSwinging;
+	float Height;
+	float Radius;
+	float SwingAngle;
+	float SwingSpeed;             // Data->AttackSpeed
+	float SwingArc;               // Data->Range
+	float SwingArcHalf;
+	float SwingPatternCooldown;   // Data->Cooldown
+	uint32 CurrentSwingCount;
 	FTimerHandle TSwingStart, TDisappearDelay;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Swing", meta = (ClampMin = "0")) uint32 SwingCountMax;                      // Total number of swings in one set
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Swing", meta = (ClampMin = "0")) float SwingInterval;                       // Delay between individual swings
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Swing")                          float SwingDisappearingDistance;           // Distance the sword will travel underground to "disappear"
