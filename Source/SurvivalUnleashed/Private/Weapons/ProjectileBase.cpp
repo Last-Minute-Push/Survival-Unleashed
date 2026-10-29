@@ -5,6 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Framework/ObjectPoolSubsystem.h"
 #include "Enemies/EnemyBase.h"
+#include "Framework/SUCollision.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogProjectile, Log, All);
 
@@ -139,6 +140,10 @@ void AProjectileBase::OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedCom
 	if (OtherActor && OtherActor->IsA<AEnemyBase>())
 	{
 		HandleHit(OtherActor);
+	}
+	else if (bActive && OtherComp && OtherComp->GetCollisionObjectType() == SUCollision::Obstacle)
+	{
+		bSpent = true; // stopped by a pillar, log, or wall
 	}
 }
 
