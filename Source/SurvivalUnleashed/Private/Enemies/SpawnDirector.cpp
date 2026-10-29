@@ -14,6 +14,7 @@
 #include "Debug/SUDebug.h"
 #include "Enemies/EnemyData.h"
 #include "HAL/IConsoleManager.h"
+#include "Framework/SUCollision.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogSpawnDirector, Log, All);
 
@@ -253,18 +254,20 @@ bool ASpawnDirector::FindSpawnLocation(const FVector& PlayerLocation, float Clea
 		}
 		const FVector Candidate = PlayerLocation + FVector(Dir, 0.f) * Distance;
 
-		// Trace down for ground; points off the edge of the map hit nothing and get retried
+		// Trace down for ground or the top of an obstacle; points off the edge of the map hit nothing and get retried
+		FCollisionObjectQueryParams GroundOrObstacle(ECC_WorldStatic);
+		GroundOrObstacle.AddObjectTypesToQuery(SUCollision::Obstacle);
 		FHitResult Hit;
 		const FVector TraceStart = Candidate + FVector(0.f, 0.f, 1000.f);
 		const FVector TraceEnd = Candidate - FVector(0.f, 0.f, 2000.f);
-		if (!GetWorld()->LineTraceSingleByObjectType(Hit, TraceStart, TraceEnd,
-			FCollisionObjectQueryParams(ECC_WorldStatic)))
+
+		if (!GetWorld()->LineTraceSingleByObjectType(Hit, TraceStart, TraceEnd, GroundOrObstacle))
 		{
 			continue;
 		}
 
 		// Landed on top of a pillar, tree, log, boulder, or the jungle wall, or the body would clip into one
-		const bool bOnObstacle = Hit.GetActor() && Hit.GetActor()->ActorHasTag(ObstacleTag);
+		const bool bOnObstacle = Hit.GetComponent() && Hit.GetComponent()->GetCollisionObjectType() == SUCollision::Obstacle;
 		if (bOnObstacle || !IsSpawnPointClear(Hit.ImpactPoint, ClearanceRadius))
 		{
 #if ENABLE_DRAW_DEBUG
@@ -285,20 +288,9 @@ bool ASpawnDirector::FindSpawnLocation(const FVector& PlayerLocation, float Clea
 
 bool ASpawnDirector::IsSpawnPointClear(const FVector& GroundLocation, float ClearanceRadius) const
 {
-	// The floor is WorldStatic too, so only tagged obstacles count as blocking
-	TArray<FOverlapResult> Overlaps;
 	const FVector Center = GroundLocation + FVector(0.f, 0.f, ClearanceRadius);
-	GetWorld()->OverlapMultiByObjectType(Overlaps, Center, FQuat::Identity,
-		FCollisionObjectQueryParams(ECC_WorldStatic), FCollisionShape::MakeSphere(ClearanceRadius));
-
-	for (const FOverlapResult& Overlap : Overlaps)
-	{
-		if (Overlap.GetActor() && Overlap.GetActor()->ActorHasTag(ObstacleTag))
-		{
-			return false;
-		}
-	}
-	return true;
+	return !GetWorld()->OverlapAnyTestByObjectType(Center, FQuat::Identity,
+		FCollisionObjectQueryParams(SUCollision::Obstacle), FCollisionShape::MakeSphere(ClearanceRadius));
 }
 
 UCapsuleComponent* ASpawnDirector::GetDefaultCapsule(TSubclassOf<AEnemyBase> Class)
