@@ -111,8 +111,8 @@ void ABossBase::SpawnBossChest() const
 	}
 
 	// LastLocation is the capsule's center, so drop it to the ground
-	const UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(GetRootComponent());
-	const float HalfHeight = Capsule ? Capsule->GetScaledCapsuleHalfHeight() : 0.f;
+	const UCapsuleComponent* CapsuleComp = Cast<UCapsuleComponent>(GetRootComponent());
+	const float HalfHeight = CapsuleComp ? CapsuleComp->GetScaledCapsuleHalfHeight() : 0.f;
 	Pool->Acquire(BossChestClass, FTransform(LastLocation - FVector(0.f, 0.f, HalfHeight)));
 }
 

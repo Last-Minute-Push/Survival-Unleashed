@@ -33,6 +33,9 @@ public:
 	// Only enabled while su.DebugAI is on; draws the spawn area and recycle distance every frame
 	virtual void Tick(float DeltaSeconds) override;
 
+	// Acquires one enemy from the pool at a ground point, facing the player, and hooks up its events
+	AEnemyBase* SpawnEnemy(TSubclassOf<AEnemyBase> Class, const FVector& GroundLocation, const FVector& PlayerLocation);
+
 	// ---- Testing (called by USUCheatManager)
 	int32 SpawnEnemiesNow(TSubclassOf<AEnemyBase> Class, int32 Count);
 	int32 KillAllEnemies();
@@ -130,9 +133,6 @@ private:
 
 	// Spawns any timeline events that are due
 	void ProcessEvents(float RunTime, const FVector& PlayerLocation);
-
-	// Acquires one enemy from the pool at a ground point, facing the player, and hooks up its events
-	AEnemyBase* SpawnEnemy(TSubclassOf<AEnemyBase> Class, const FVector& GroundLocation, const FVector& PlayerLocation);
 
 	// Standing on GroundLocation (capsule bottom on the ground), facing the player
 	FTransform GetSpawnTransform(TSubclassOf<AEnemyBase> Class, const FVector & GroundLocation, const FVector & PlayerLocation) const;
