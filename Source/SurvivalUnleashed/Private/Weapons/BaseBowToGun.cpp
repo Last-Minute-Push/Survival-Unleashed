@@ -36,7 +36,7 @@ void ABaseBowToGun::BeginPlay()
 	{
 		Horde = H;
 	}
-	else UE_LOG(LogBowToGun, Error, TEXT("Failed to retrieve HordeSubystem!"));
+	else UE_LOG(LogBowToGun, Error, TEXT("Failed to retrieve HordeSubystem in ABaseBowToGun!"));
 
 	// Bow Properties
 	if (Data)
@@ -47,6 +47,8 @@ void ABaseBowToGun::BeginPlay()
 		Radius    = Data->DistanceFromPlayer;
 		Cooldown  = Data->Cooldown * 0.5f;
 		Knockback = Data->Knockback;
+		Speed     = Data->AttackSpeed;
+		Pierce    = Data->ProjectilePierce;
 	}
 	else
 	{
@@ -59,6 +61,7 @@ void ABaseBowToGun::BeginPlay()
 	}
 
 	// Location
+	UE_LOG(LogBowToGun, Error, TEXT("HEIGHT: %f"), Height);
 	Mesh->AddLocalOffset(FVector(0.f, Radius, Height));
 	Mesh->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
 
@@ -81,7 +84,7 @@ void ABaseBowToGun::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-bool ABaseBowToGun::FaceNearestEnemy(USceneComponent* ToRotate, bool bForce/*= true*/)
+bool ABaseBowToGun::FaceNearestEnemy(USceneComponent* ToRotate, bool bFlipRotation/*= false*/, bool bForce/*= true*/)
 {
 	AEnemyBase* Nearest = Horde->FindNearestEnemy(Parent->GetActorLocation(), Range);
 
@@ -101,7 +104,7 @@ bool ABaseBowToGun::FaceNearestEnemy(USceneComponent* ToRotate, bool bForce/*= t
 	// We then find the angle in the directional vector and apply the rotation to the component
 	if (bForce)
 	{
-		Direction.Yaw -= 90.f;
+		Direction.Yaw += bFlipRotation ? 90.f : -90.f;
 		ToRotate->SetWorldRotation(Direction);
 	}
 	else
@@ -131,12 +134,12 @@ void ABaseBowToGun::StopAim()
 	FProjectileLaunchParams Params;
 	Params.Origin = SpawnLocation;
 	Params.Direction = SpawnDirection.Vector();
-	Params.Speed = Data->AttackSpeed * ParentStats->GetAttackSpeed();
-	Params.Pierce = Data->ProjectilePierce;
-	Params.Range = Data->Range;
+	Params.Speed = Speed * ParentStats->GetAttackSpeed();
+	Params.Pierce = Pierce;
+	Params.Range = Range;
 
 	FOnProjectileHit Hit;
-	Hit.BindUFunction(this, TEXT("ApplyDamage"));
+	Hit.BindUFunction(this, TEXT("ApplyProjectileDamage"));
 
 	// Launch the projectile.
 	AProjectileBase::Fire(GetWorld(), Data->ProjectileType, this, Params, Hit);
@@ -148,8 +151,8 @@ void ABaseBowToGun::StopAim()
 
 void ABaseBowToGun::StopWeapon()
 {
-	Super::StopWeapon();
-
 	GetWorldTimerManager().ClearTimer(TAimDelay);
 	GetWorldTimerManager().ClearTimer(TFireCooldown);
+
+	Super::StopWeapon();
 }
