@@ -59,7 +59,9 @@ void AElderTreant::OnFightStarted()
 	SummonCooldown = SummonInterval;
 	RootWallCooldown = RootWallInterval;
 	SlamWindupRemaining = 0.f;
+	SlamRecoverRemaining = 0.f;
 	SetSlamTelegraph(false);
+	SetMaterialData(EnemyMaterialData::AttackPose, 0.f);
 }
 
 void AElderTreant::OnFightEnded()
@@ -97,8 +99,9 @@ void AElderTreant::Tick(float DeltaTime)
 		else
 		{
 			SetSlamTelegraph(true, 1.f - SlamWindupRemaining / SlamTelegraph);
+			SetMaterialData(EnemyMaterialData::AttackPose, GetSlamWindupPose());
 		}
-		return; // one attack at a time; anything that came due waits for the slam to land
+		return; // one attack at a time
 	}
 
 	// At most one attack per frame. Walls first: they're the rarest and shape the next few seconds.
@@ -143,6 +146,10 @@ void AElderTreant::ResolveSlam()
 	SlamWindupRemaining = 0.f;
 	SetSlamTelegraph(false);
 
+	// Arms snap down past rest on impact, then Tick eases them back
+	SetMaterialData(EnemyMaterialData::AttackPose, SlamImpactPose);
+	SlamRecoverRemaining = SlamRecoverTime;
+
 	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(this, 0);
 	if (!Player)
 	{
@@ -170,6 +177,23 @@ void AElderTreant::SetSlamTelegraph(bool bVisible, float Progress)
 	{
 		SlamDecalMaterial->SetScalarParameterValue(SlamProgressParam, FMath::Clamp(Progress, 0.f, 1.f));
 	}
+}
+
+float AElderTreant::GetSlamWindupPose() const
+{
+	const float Elapsed = SlamTelegraph - SlamWindupRemaining;
+	const float Strike = FMath::Min(SlamStrikeTime, SlamTelegraph * 0.5f);
+	const float RaiseEnd = SlamTelegraph - Strike;
+
+	// Rising: fast at first, slowing near the top
+	if (Elapsed < RaiseEnd || Strike <= 0.f)
+	{
+		return FMath::InterpEaseOut(0.f, 1.f, FMath::Clamp(Elapsed / RaiseEnd, 0.f, 1.f), 2.f);
+	}
+
+	// Striking: accelerates down so the hands are moving fastest when they land
+	const float Alpha = FMath::Clamp((Elapsed - RaiseEnd) / Strike, 0.f, 1.f);
+	return 1.f - FMath::InterpEaseIn(0.f, 1.f, Alpha, 2.f);
 }
 
 // ---------------------------------------------------------------- Summon

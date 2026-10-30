@@ -59,6 +59,19 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Treant|Ground Slam", meta = (ClampMin = "0"))
 	float SlamLaunchZ = 200.f;
 
+	// Arm pose sent to the material: 0 at rest, 1 raised for the slam.
+	// On impact it jumps to this (below rest) and eases back to 0 over SlamRecoverTime.
+	UPROPERTY(EditDefaultsOnly, Category = "Treant|Ground Slam")
+	float SlamImpactPose = -0.35f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Treant|Ground Slam", meta = (ClampMin = "0.01"))
+	float SlamRecoverTime = 0.4f;
+
+	// The last part of the telegraph, in which the arms swing down to land exactly when the slam hits.
+	// Capped at half the telegraph so there's always time to raise them first.
+	UPROPERTY(EditDefaultsOnly, Category = "Treant|Ground Slam", meta = (ClampMin = "0"))
+	float SlamStrikeTime = 0.2f;
+
 	// ---- Summon
 
 	UPROPERTY(EditDefaultsOnly, Category = "Treant|Summon")
@@ -93,8 +106,11 @@ private:
 	float SummonCooldown = 0.f;
 	float RootWallCooldown = 0.f;
 
-	// Above zero while the slam is telegraphing; the Treant stands still until it lands
+	// Above zero while the slam is telegraphing. The Treant stands still until it lands
 	float SlamWindupRemaining = 0.f;
+
+	// Above zero while the arms come back up after the slam lands
+	float SlamRecoverRemaining = 0.f;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> SlamDecalMaterial;
@@ -106,6 +122,9 @@ private:
 	void StartSlam();
 	void ResolveSlam();
 	void SetSlamTelegraph(bool bVisible, float Progress = 0.f);
+
+	// Arm pose for the current point in the telegraph: rising, then swinging down for the strike
+	float GetSlamWindupPose() const;
 
 	void SummonVines();
 	void RaiseRootWalls();
