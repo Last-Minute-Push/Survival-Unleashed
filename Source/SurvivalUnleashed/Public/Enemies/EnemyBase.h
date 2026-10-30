@@ -17,6 +17,7 @@ namespace EnemyMaterialData
 	constexpr int32 MoveAmount = 1;
 	constexpr int32 HitFlash = 2;
 	constexpr int32 StatusTint = 3; // slots 3-6: tint RGB + strength (A = 0 means no tint)
+	constexpr int32 AttackPose = 7;
 }
 
 UENUM(BlueprintType)
