@@ -84,6 +84,7 @@ void AUC_Player::BeginPlay()
 				PlayerStatsComponent->OnRadUpdate.BindDynamic(this, &AUC_Player::UpdatePickUpRadius);
 
 				PlayerStatsComponent->OnWeaponUpgrade.AddDynamic(this, &AUC_Player::SetWeapon);
+				PlayerStatsComponent->OnStatUI.AddDynamic(PlayerHUD, &UPlayerHUDBase::SetStatsText);
 				
 
 				isPaused = false;

@@ -38,12 +38,12 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* PersonalBest;
 
-	//UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UHorizontalBox* StatBox;
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UVerticalBox* StatsBox;
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim)) class UWidgetAnimation* Fading;
 
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim)) class UWidgetAnimation* FadingHeal;
 
-	FText GetRankName(uint8 Stats);
+	FText GetRankName(EPlayerStats Stats);
 
 public:
 
@@ -59,12 +59,12 @@ public:
 
 	UFUNCTION(BlueprintCallable) void PlayHealFeedback();
 
-	UFUNCTION(BlueprintCallable) void SetStatsText(uint8 ChosenStats, int32 Ranks);
+	UFUNCTION(BlueprintCallable) void SetStatsText(EPlayerStats ChosenStats, int32 Ranks);
 
 	FVector EndPoint;
 
 	TArray<FText> RankArray;
-	TArray<uint32> RankIndex;
+	TArray<EPlayerStats> RankIndex;
 
 
 	float Timer;

@@ -43,9 +43,10 @@ void UPlayerStatsComponent::ApplyStatUpgrade(EPlayerStats Stat)
 	if (Rank == 0)
 	{
 		MainStatArrayForUI.Add(Stat);
+		
 	}
 	++Rank;
-
+	OnStatUI.Broadcast(Stat, Rank);
 	switch (Stat)
 	{
 	case EPlayerStats::EPS_Attack:LevelUpAttack();break;
@@ -116,6 +117,7 @@ void UPlayerStatsComponent::UpdateExpANDLevel(int amount)
 		ExpReuirement += (ExpReuirementScaler + (Level*100)); 
 	}
 	OnLevelUp.Execute(Level, GetCurrentExpCountForDisplay());
+	
 }
 
 void UPlayerStatsComponent::LevelUpOverall()
