@@ -22,7 +22,9 @@ void UUGI_SUGameInstance::Init()
 }
 
 
-
+//----------------------------------------------------------------------//
+// Level Handling
+//----------------------------------------------------------------------//
 void UUGI_SUGameInstance::LoadLevel(const int32 LevelIndex)
 {
 	UWorld* World = GetWorld();
@@ -257,6 +259,7 @@ void UUGI_SUGameInstance::RefundAllRanks()
 	SaveProgress();
 }
 
+
 void UUGI_SUGameInstance::AudioManagerTest()
 {
 #if AUDIO_MANAGER_TEST
@@ -434,6 +437,34 @@ void UUGI_SUGameInstance::AudioManagerTest()
 #endif
 }
 
+void UUGI_SUGameInstance::ApplyMusicVolume()
+{
+	if (IsValid(CurrentMusic))
+	{
+		CurrentMusic->SetVolumeMultiplier(MusicVolume);
+	}
+
+	MusicStack.RemoveAll([](const TObjectPtr<UAudioComponent>& Song) { return !IsValid(Song); });
+	for (TObjectPtr<UAudioComponent>& Song : MusicStack)
+	{
+		if (IsValid(Song))
+		{
+			Song->SetVolumeMultiplier(MusicVolume); // Master volume is already factored into the music volume
+		}
+	}
+}
+
+void UUGI_SUGameInstance::ApplySoundVolume()
+{
+	for (TObjectPtr<UAudioComponent>&Sound : ActiveSounds)
+	{
+		if (IsValid(Sound))
+		{
+			Sound->SetVolumeMultiplier(SoundVolume); // Master volume is already factored into the sound volume
+		}
+	}
+}
+
 //----------------------------------------------------------------------//
 // IAudioManagerInterface
 //----------------------------------------------------------------------//
@@ -466,13 +497,39 @@ UAudioComponent* UUGI_SUGameInstance::CreateAudio(USoundBase* Sound, float Volum
 	return Audio;
 }
 
+void UUGI_SUGameInstance::SetMasterVolume(float Volume)
+{
+	MasterVolume = FMath::Clamp(Volume, 0.f, 1.f);
+
+	// Master volume directly modifies all audio
+	MusicVolume *= MasterVolume;
+	SoundVolume *= MasterVolume;
+
+	ApplyMusicVolume();
+	ApplySoundVolume();
+}
+
+void UUGI_SUGameInstance::SetMusicVolume(float Volume)
+{
+	MusicVolume = MasterVolume * FMath::Clamp(Volume, 0.f, 1.f);
+
+	ApplyMusicVolume();
+}
+
+void UUGI_SUGameInstance::SetSoundVolume(float Volume)
+{
+	SoundVolume = MasterVolume * FMath::Clamp(Volume, 0.f, 1.f);
+
+	ApplySoundVolume();
+}
+
 // - Music -
 
-uint64 UUGI_SUGameInstance::PlayMusic(USoundBase* Music, const float NewFadeIn, const float OldFadeOut, const float VolumeMultiplier, const float PitchMultiplier, USoundConcurrency* ConcurrencySettings)
+uint64 UUGI_SUGameInstance::PlayMusic(USoundBase* Music, const float NewFadeIn, const float OldFadeOut, USoundConcurrency* ConcurrencySettings)
 {
 	StopMusic(OldFadeOut); // the old song fades and stops itself; it no longer affects the new one
 
-	CurrentMusic = CreateAudio(Music, VolumeMultiplier, PitchMultiplier, ConcurrencySettings, /*bPersistAcrossLevels*/ true);
+	CurrentMusic = CreateAudio(Music, MusicVolume, 1.f, ConcurrencySettings, /*bPersistAcrossLevels*/ true);
 	if (!CurrentMusic)
 	{
 		return UINT64_MAX;
@@ -501,7 +558,7 @@ void UUGI_SUGameInstance::SetMusicPause(const bool bPaused)
 	else UE_LOG(LogGameInstance, Warning, TEXT("There is no music present that can be paused now!"));
 }
 
-uint64 UUGI_SUGameInstance::StackMusic(USoundBase* Music, const float FadeIn, const float VolumeMultiplier, const float PitchMultiplier, USoundConcurrency* ConcurrencySettings)
+uint64 UUGI_SUGameInstance::StackMusic(USoundBase* Music, const float FadeIn, USoundConcurrency* ConcurrencySettings)
 {
 	if (IsValid(CurrentMusic))
 	{
@@ -512,7 +569,7 @@ uint64 UUGI_SUGameInstance::StackMusic(USoundBase* Music, const float FadeIn, co
 	}
 	else UE_LOG(LogGameInstance, Warning, TEXT("No music to stack; playing the new song only."));
 
-	return PlayMusic(Music, FadeIn, 0.f, VolumeMultiplier, PitchMultiplier, ConcurrencySettings);
+	return PlayMusic(Music, FadeIn, 0.f, ConcurrencySettings);
 }
 
 void UUGI_SUGameInstance::DestackMusic(const float FadeOut, const bool bSkipResume)
@@ -582,19 +639,19 @@ void UUGI_SUGameInstance::StopMusic(const float FadeOut)
 
 // - Sounds -
 
-void UUGI_SUGameInstance::PlaySoundOneShot(USoundBase* Sound, const float VolumeMultiplier, const float PitchMultiplier, USoundConcurrency* ConcurrencySettings)
+void UUGI_SUGameInstance::PlaySoundOneShot(USoundBase* Sound, USoundConcurrency* ConcurrencySettings)
 {
 	if (Sound)
 	{
-		UGameplayStatics::PlaySound2D(this, Sound, VolumeMultiplier, PitchMultiplier, 0.f, ConcurrencySettings);
+		UGameplayStatics::PlaySound2D(this, Sound, SoundVolume, 1.f, 0.f, ConcurrencySettings);
 	}
 }
 
-uint64 UUGI_SUGameInstance::PlaySound(USoundBase* Sound, const float VolumeMultiplier, const float PitchMultiplier, USoundConcurrency* ConcurrencySettings)
+uint64 UUGI_SUGameInstance::PlaySound(USoundBase* Sound, USoundConcurrency* ConcurrencySettings)
 {
 	PruneFinished(ActiveSounds);
 
-	UAudioComponent* Audio = CreateAudio(Sound, VolumeMultiplier, PitchMultiplier, ConcurrencySettings, /*bPersistAcrossLevels*/ false);
+	UAudioComponent* Audio = CreateAudio(Sound, SoundVolume, 1.f, ConcurrencySettings, /*bPersistAcrossLevels*/ false);
 	if (!Audio)
 	{
 		return UINT64_MAX;
@@ -605,10 +662,10 @@ uint64 UUGI_SUGameInstance::PlaySound(USoundBase* Sound, const float VolumeMulti
 	return Audio->GetAudioComponentID();
 }
 
-uint64 UUGI_SUGameInstance::PlaySoundInterrupt(USoundBase* Sound, const float VolumeMultiplier, const float PitchMultiplier, USoundConcurrency* ConcurrencySettings)
+uint64 UUGI_SUGameInstance::PlaySoundInterrupt(USoundBase* Sound, USoundConcurrency* ConcurrencySettings)
 {
 	StopSound(Sound);
-	return PlaySound(Sound, VolumeMultiplier, PitchMultiplier, ConcurrencySettings);
+	return PlaySound(Sound, ConcurrencySettings);
 }
 
 void UUGI_SUGameInstance::SetSoundPause(USoundBase const* Sound, const bool bPaused)
