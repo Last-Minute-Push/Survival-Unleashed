@@ -497,9 +497,24 @@ UAudioComponent* UUGI_SUGameInstance::CreateAudio(USoundBase* Sound, float Volum
 	return Audio;
 }
 
+float UUGI_SUGameInstance::GetMasterVolume() const
+{
+	return SaveData->MasterVolume;
+}
+
+float UUGI_SUGameInstance::GetMusicVolume(bool bRaw) const
+{
+	return bRaw ? SaveData->MusicVolume : SaveData->MasterVolume * SaveData->MusicVolume;
+}
+
+float UUGI_SUGameInstance::GetSoundVolume(bool bRaw) const
+{
+	return bRaw ? SaveData->SoundVolume : SaveData->MasterVolume * SaveData->SoundVolume;
+}
+
 void UUGI_SUGameInstance::SetMasterVolume(float Volume)
 {
-	MasterVolume = FMath::Clamp(Volume, 0.f, 1.f);
+	SaveData->MasterVolume = FMath::Clamp(Volume, 0.f, 1.f);
 
 	ApplyMusicVolume();
 	ApplySoundVolume();
@@ -507,14 +522,14 @@ void UUGI_SUGameInstance::SetMasterVolume(float Volume)
 
 void UUGI_SUGameInstance::SetMusicVolume(float Volume)
 {
-	MusicVolume = FMath::Clamp(Volume, 0.f, 1.f);
+	SaveData->MusicVolume = FMath::Clamp(Volume, 0.f, 1.f);
 
 	ApplyMusicVolume();
 }
 
 void UUGI_SUGameInstance::SetSoundVolume(float Volume)
 {
-	SoundVolume = FMath::Clamp(Volume, 0.f, 1.f);
+	SaveData->SoundVolume = FMath::Clamp(Volume, 0.f, 1.f);
 
 	ApplySoundVolume();
 }

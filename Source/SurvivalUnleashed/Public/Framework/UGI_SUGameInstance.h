@@ -34,10 +34,6 @@ protected:
 	UPROPERTY(Transient) TArray<TObjectPtr<UAudioComponent>> FadingOutMusic; // old songs finishing their fade-out
 	UPROPERTY(Transient) TArray<TObjectPtr<UAudioComponent>> ActiveSounds;   // tracked sounds (can be paused/stopped)
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Audio, meta = (ClampMin = "0.0", ClampMax = "1.0")) float MasterVolume = 1.f;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Audio, meta = (ClampMin = "0.0", ClampMax = "1.0")) float MusicVolume = 1.f;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Audio, meta = (ClampMin = "0.0", ClampMax = "1.0")) float SoundVolume = 1.f;
-
 
 	UPROPERTY(EditDefaultsOnly, Category = Audio) TSubclassOf<UAudioLibrary> AudioLibraryClass; //! SET IN EDITOR (BP_AudioLibrary)
 	
@@ -130,9 +126,9 @@ public:
 		return AudioLibraryClass ? AudioLibraryClass->GetDefaultObject<UAudioLibrary>() : nullptr;
 	}
 
-	virtual float GetMasterVolume() const { return MasterVolume; }
-	virtual float GetMusicVolume(bool bRaw = false) const { return bRaw ? MusicVolume : MasterVolume * MusicVolume; }
-	virtual float GetSoundVolume(bool bRaw = false) const { return bRaw ? SoundVolume : MasterVolume * SoundVolume; }
+	virtual float GetMasterVolume() const;
+	virtual float GetMusicVolume(bool bRaw = false) const;
+	virtual float GetSoundVolume(bool bRaw = false) const;
 
 	UFUNCTION() virtual void SetMasterVolume(float Volume);
 	UFUNCTION() virtual void SetMusicVolume(float Volume);
