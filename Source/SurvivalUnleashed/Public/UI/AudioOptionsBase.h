@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "AudioOptionsBase.generated.h"
 
 class UOptionsSliderBase;
@@ -12,7 +12,7 @@ class UOptionsSliderBase;
  * 
  */
 UCLASS()
-class SURVIVALUNLEASHED_API UAudioOptionsBase : public UUserWidget
+class SURVIVALUNLEASHED_API UAudioOptionsBase : public UHUDBase
 {
 	GENERATED_BODY()
 
@@ -23,4 +23,7 @@ protected:
 
 	virtual void NativeOnInitialized() override;
 	virtual void NativeConstruct() override;
+
+public:
+	UAudioOptionsBase();
 };

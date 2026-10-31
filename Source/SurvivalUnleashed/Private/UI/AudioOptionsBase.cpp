@@ -5,6 +5,11 @@
 #include "UI/OptionsSliderBase.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 
+UAudioOptionsBase::UAudioOptionsBase()
+{
+	ZOrderLayer = 2;
+}
+
 void UAudioOptionsBase::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
