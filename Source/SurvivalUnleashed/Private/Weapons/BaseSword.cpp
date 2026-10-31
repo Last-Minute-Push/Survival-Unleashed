@@ -57,7 +57,6 @@ void ABaseSword::BeginPlay()
             NiagaraComponent->SetVariableLinearColor("TrailColor", Data->TrailColor);
             NiagaraComponent->Deactivate();
         }
-        else UE_LOG(LogBaseSword, Error, TEXT("BaseSword's WeaponData Niagara System asset was not set!"));
 
         SwingPatternCooldown = Data->Cooldown;
         SwingArc             = Data->Range < 360.f ? Data->Range : 360.f;

@@ -54,7 +54,7 @@ void AUGM_SUPlayAreaGameMode::BeginPlay() {
 	{
 		if (UCountdownWidget* Countdown = CreateWidget<UCountdownWidget>(GetWorld()->GetFirstPlayerController(), CountdownClass))
 		{
-			Countdown->AddToViewport(10); // above the HUD
+			Countdown->AddToViewport();
 		}
 	}
 	if (CountdownRemaining <= 0)
@@ -209,7 +209,7 @@ void AUGM_SUPlayAreaGameMode::ClearLevelUpScreen()
 	FInputModeGameOnly InputModeData;
 	LevelUpScreenObject->GetOwningPlayer()->SetInputMode(InputModeData);
 	LevelUpScreenObject->GetOwningPlayer()->bShowMouseCursor = false;
-	LevelUpScreenObject->RemoveFromViewport();
+	LevelUpScreenObject->RemoveFromParent();
 	//should be fine? gonna edit this when I get player so it works as expected.
 }
 

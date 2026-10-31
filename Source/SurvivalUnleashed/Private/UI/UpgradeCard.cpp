@@ -5,6 +5,10 @@
 #include "Weapons/WeaponData.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 
+UUpgradeCard::UUpgradeCard()
+{
+	ZOrderLayer = 2;
+}
 
 void UUpgradeCard::NativePreConstruct() {
 	Super::NativePreConstruct();
@@ -15,7 +19,7 @@ void UUpgradeCard::NativeOnInitialized()
 	Super::NativeOnInitialized();
 	PickButton->OnClicked.AddDynamic(this, &UUpgradeCard::HandleClicked); // once per widget, so no double-binding
 	PickButton->OnHovered.AddDynamic(this, &UUpgradeCard::HandleHoverSFX);
-
+	
 }
 
 void UUpgradeCard::SetOffer(const FUpgradeOffer& InOffer)

@@ -10,6 +10,11 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogUpgradeButton, Log, All);
 
+UUpgradeButton::UUpgradeButton()
+{
+	ZOrderLayer = 2;
+}
+
 void UUpgradeButton::NativePreConstruct()
 {
 	Super::NativePreConstruct();

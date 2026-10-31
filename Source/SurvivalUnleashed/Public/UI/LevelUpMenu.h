@@ -3,15 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "LevelUpMenu.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SURVIVALUNLEASHED_API ULevelUpMenu : public UUserWidget
+class SURVIVALUNLEASHED_API ULevelUpMenu : public UHUDBase
 {
 	GENERATED_BODY()
 	
+public:
+	ULevelUpMenu();
 };
