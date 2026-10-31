@@ -9,6 +9,11 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogPauseMenuBase, Log, All);
 
+UPauseMenuBase::UPauseMenuBase()
+{
+	ZOrderLayer = 2;
+}
+
 void UPauseMenuBase::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
@@ -24,7 +29,6 @@ void UPauseMenuBase::NativeOnInitialized()
 		else UE_LOG(LogPauseMenuBase, Error, TEXT("PlayButton and/or QuitButton not bound to the widget!"));
 	}
 	else UE_LOG(LogPauseMenuBase, Error, TEXT("Failed to cast the GameInstance because of an incorrect socketed GameInstance!"));
-
 }
 
 void UPauseMenuBase::ResumeGame()

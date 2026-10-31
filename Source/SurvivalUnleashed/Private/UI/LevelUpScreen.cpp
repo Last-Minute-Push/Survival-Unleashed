@@ -11,6 +11,10 @@
 #include "Utility/UpgradeOffers.h"
 #include "Components/Image.h"
 
+ULevelUpScreen::ULevelUpScreen()
+{
+	ZOrderLayer = 2;
+}
 
 void ULevelUpScreen::NativeOnInitialized()
 {

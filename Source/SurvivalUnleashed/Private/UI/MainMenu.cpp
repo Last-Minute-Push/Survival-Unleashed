@@ -35,7 +35,7 @@ void UMainMenu::NativeOnInitialized()
 	}
 	else UE_LOG(LogMainMenu, Error, TEXT("Failed to cast the GameInstance because of an incorrect socketed GameInstance!"));
 
-
+	ZOrderLayer = 0;
 }
 
 void UMainMenu::SettingsButtonPressed()

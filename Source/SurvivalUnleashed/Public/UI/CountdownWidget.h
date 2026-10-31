@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "CountdownWidget.generated.h"
 
 class UTextBlock;
@@ -10,9 +10,12 @@ class UWidgetAnimation;
 // Big "3, 2, 1, SURVIVE!" in the middle of the screen at the start of a run.
 // Created by the PlayArea game mode; listens to its countdown and removes itself when the run starts.
 UCLASS(Abstract)
-class SURVIVALUNLEASHED_API UCountdownWidget : public UUserWidget
+class SURVIVALUNLEASHED_API UCountdownWidget : public UHUDBase
 {
 	GENERATED_BODY()
+
+public:
+	UCountdownWidget();
 
 protected:
 	virtual void NativeConstruct() override;

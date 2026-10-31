@@ -5,6 +5,11 @@
 #include "UI/ButtonBase.h"
 #include "Components/WidgetSwitcher.h"
 
+UOptionsMenuBase::UOptionsMenuBase()
+{
+	ZOrderLayer = 2;
+}
+
 void UOptionsMenuBase::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
@@ -13,7 +18,6 @@ void UOptionsMenuBase::NativeOnInitialized()
 	AudioButton->CodeButtonClick.AddDynamic(this, &UOptionsMenuBase::AudioPressed);
 	GraphicsButton->CodeButtonClick.AddDynamic(this, &UOptionsMenuBase::GraphicsPressed);
 	ControlsButton->CodeButtonClick.AddDynamic(this, &UOptionsMenuBase::ControlsPressed);
-
 }
 
 void UOptionsMenuBase::NativeConstruct()

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "Utility/PlayerStatsComponent.h"
 #include "PlayerHUDBase.generated.h"
 
@@ -11,7 +11,7 @@
  * 
  */
 UCLASS()
-class SURVIVALUNLEASHED_API UPlayerHUDBase : public UUserWidget
+class SURVIVALUNLEASHED_API UPlayerHUDBase : public UHUDBase
 {
 	GENERATED_BODY()
 

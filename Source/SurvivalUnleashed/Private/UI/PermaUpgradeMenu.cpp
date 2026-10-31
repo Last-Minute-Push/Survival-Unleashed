@@ -3,6 +3,10 @@
 
 #include "UI/PermaUpgradeMenu.h"
 #include "UI/ButtonBase.h"
+UPermaUpgradeMenu::UPermaUpgradeMenu()
+{
+	ZOrderLayer = 2;
+}
 
 void UPermaUpgradeMenu::NativeOnInitialized()
 {

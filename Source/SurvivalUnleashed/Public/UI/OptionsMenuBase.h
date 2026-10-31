@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "OptionsMenuBase.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnOptionsClosed);
@@ -11,7 +11,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnOptionsClosed);
  * 
  */
 UCLASS()
-class SURVIVALUNLEASHED_API UOptionsMenuBase : public UUserWidget
+class SURVIVALUNLEASHED_API UOptionsMenuBase : public UHUDBase
 {
 	GENERATED_BODY()
 	
@@ -46,6 +46,8 @@ protected:
 	class UWidgetSwitcher* OptionsSwitcher;
 
 public:
+	UOptionsMenuBase();
+
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	class UButtonBase* BackButton;
 
