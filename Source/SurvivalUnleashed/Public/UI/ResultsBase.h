@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/VerticalBox.h"
 #include "Components/TextBlock.h"
@@ -16,7 +16,7 @@
  * 
  */
 UCLASS()
-class SURVIVALUNLEASHED_API UResultsBase : public UUserWidget
+class SURVIVALUNLEASHED_API UResultsBase : public UHUDBase
 {
 	GENERATED_BODY()
 
@@ -46,6 +46,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	FTimerHandle RestTimer;
 public:
+	UResultsBase();
+
 	void SetTextTimer(FText timer);
 	void SetTextEnemyKilled(FText enemy);
 	void SetTextlevelReached(FText level);

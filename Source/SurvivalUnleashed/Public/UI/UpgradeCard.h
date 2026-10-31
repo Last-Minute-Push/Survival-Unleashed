@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "Weapons/WeaponDatabase.h"
 #include "Utility/UpgradeOffers.h"
 #include "UpgradeCard.generated.h"
@@ -26,11 +26,13 @@ struct FUpgradeCardInfo
 
 // One level-up choice. The level-up screen has four of these and fills each from an FUpgradeOffer.
 UCLASS(Abstract)
-class SURVIVALUNLEASHED_API UUpgradeCard : public UUserWidget
+class SURVIVALUNLEASHED_API UUpgradeCard : public UHUDBase
 {
 	GENERATED_BODY()
 
 public:
+	UUpgradeCard();
+
 	void SetOffer(const FUpgradeOffer& InOffer);
 	const FUpgradeOffer& GetOffer() const { return Offer; }
 

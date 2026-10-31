@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "DamageNumbersUI.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SURVIVALUNLEASHED_API UDamageNumbersUI : public UUserWidget
+class SURVIVALUNLEASHED_API UDamageNumbersUI : public UHUDBase
 {
 	GENERATED_BODY()
 
@@ -21,5 +21,4 @@ public:
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	class UTextBlock* DamageTextBlock;
-
 };
