@@ -36,7 +36,7 @@ void ABaseSpear::BeginPlay()
 
 	// Begins the thrust cycle	
 	GetWorldTimerManager().ClearTimer(TFireCooldown);
-	GetWorldTimerManager().SetTimer(TFireCooldown, this, &ABaseSpear::StartThrust, Cooldown);
+	GetWorldTimerManager().SetTimer(TFireCooldown, this, &ABaseSpear::Thrust, Cooldown);
 }
 
 void ABaseSpear::Tick(float DeltaTime)
@@ -49,17 +49,16 @@ void ABaseSpear::Tick(float DeltaTime)
 	}
 
 	// Thrusting movement
-	float CurrentThrustDistance = Mesh->GetRelativeLocation().Y;
-	Mesh->AddRelativeLocation(FVector(0.f, (bIsThrusting) ? Speed * DeltaTime : -Speed * ThrustRetreatMultiplier * DeltaTime, 0.f));
+	float CurrentDistance = MoveSpear(DeltaTime);
 
 	// Did we reach our range?
-	if (bIsThrusting && CurrentThrustDistance > Range)
+	if (bIsThrusting && CurrentDistance > Range)
 	{
-		StopThrust(); // Yes, we fully thrusted our spear
+		Retreat(); // Yes, we fully thrusted our spear
 	}
-	else if (CurrentThrustDistance < Radius)
+	else if (CurrentDistance < Radius)
 	{
-		EndThrustCycle(); // Yes, we fully retreated our spear 
+		EndCycle(); // Yes, we fully retreated our spear 
 	}
 	// else we continue the movement
 }
@@ -71,7 +70,13 @@ void ABaseSpear::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-void ABaseSpear::StartThrust()
+float ABaseSpear::MoveSpear(float DeltaTime)
+{
+	Mesh->AddRelativeLocation(FVector(0.f, (bIsThrusting) ? Speed * DeltaTime : -Speed * RetreatMultiplier * DeltaTime, 0.f));
+	return Mesh->GetRelativeLocation().Y;
+}
+
+void ABaseSpear::Thrust()
 {
 	bIsAiming = false;
 	bIsThrusting = true;
@@ -79,14 +84,14 @@ void ABaseSpear::StartThrust()
 	BoxCollision->SetGenerateOverlapEvents(true);
 }
 
-void ABaseSpear::StopThrust()
+void ABaseSpear::Retreat()
 {
 	bIsThrusting = false;
 	Mesh->SetRelativeLocation(FVector(0.f, Range, Height));
 	BoxCollision->SetGenerateOverlapEvents(false);
 }
 
-void ABaseSpear::EndThrustCycle()
+void ABaseSpear::EndCycle()
 {
 	HitActors.Empty();
 
@@ -94,8 +99,9 @@ void ABaseSpear::EndThrustCycle()
 	bIsThrusting = true;
 	Mesh->SetRelativeLocation(FVector(0.f, Radius, Height));
 
-	GetWorldTimerManager().SetTimer(TFireCooldown, this, &ABaseSpear::StartThrust, Cooldown);
+	GetWorldTimerManager().SetTimer(TFireCooldown, this, &ABaseSpear::Thrust, Cooldown);
 }
+
 
 void ABaseSpear::ApplyDamageCollision(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -110,6 +116,7 @@ void ABaseSpear::ApplyDamageCollision(UPrimitiveComponent* OverlappedComponent, 
 void ABaseSpear::StopWeapon()
 {
 	HitActors.Empty();
+	GetWorldTimerManager().ClearTimer(TFireCooldown);
 
 	Super::StopWeapon();
 }

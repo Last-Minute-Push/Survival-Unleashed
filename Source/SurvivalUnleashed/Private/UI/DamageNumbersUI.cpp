@@ -12,4 +12,3 @@ void UDamageNumbersUI::SetDamage(float Damage)
 		DamageTextBlock->SetText(FText::AsNumber(FMath::Max(1, FMath::RoundToInt(Damage))));
 	}
 }
-
