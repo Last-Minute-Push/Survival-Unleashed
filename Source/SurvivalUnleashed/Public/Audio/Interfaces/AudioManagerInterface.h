@@ -26,11 +26,10 @@ class SURVIVALUNLEASHED_API IAudioManagerInterface
 public:
 
 	// General
-	virtual void AudioManagerTest() = 0;
 	virtual UAudioLibrary* GetLibrary() const = 0;
 	virtual float GetMasterVolume() const = 0;
-	virtual float GetMusicVolume() const = 0;
-	virtual float GetSoundVolume() const = 0;
+	virtual float GetMusicVolume(bool bRaw = false) const = 0;
+	virtual float GetSoundVolume(bool bRaw = false) const = 0;
 	virtual void SetMasterVolume(float Volume) = 0;
 	virtual void SetMusicVolume(float Volume) = 0;
 	virtual void SetSoundVolume(float Volume) = 0;

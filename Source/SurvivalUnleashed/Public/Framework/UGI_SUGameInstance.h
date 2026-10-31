@@ -117,25 +117,26 @@ public:
 	// Returns every spent point and clears all ranks and focus points. Saves.
 	UFUNCTION(BlueprintCallable, Category = "Permanent Upgrades") void RefundAllRanks();
 
+#if AUDIO_MANAGER_TEST
+	void AudioManagerTest();
+#endif
 	//----------------------------------------------------------------------//
 	// IAudioManagerInterface
 	//----------------------------------------------------------------------//
 	// - General -
-	virtual void AudioManagerTest() override;
-
 	// The library is read-only data, so the Blueprint's class defaults are used directly
-	inline virtual UAudioLibrary* GetLibrary() const override
+	virtual UAudioLibrary* GetLibrary() const override
 	{
 		return AudioLibraryClass ? AudioLibraryClass->GetDefaultObject<UAudioLibrary>() : nullptr;
 	}
 
-	inline virtual float GetMasterVolume() const { return MasterVolume; }
-	inline virtual float GetMusicVolume() const { return MusicVolume; }
-	inline virtual float GetSoundVolume() const { return SoundVolume; }
+	virtual float GetMasterVolume() const { return MasterVolume; }
+	virtual float GetMusicVolume(bool bRaw = false) const { return bRaw ? MusicVolume : MasterVolume * MusicVolume; }
+	virtual float GetSoundVolume(bool bRaw = false) const { return bRaw ? SoundVolume : MasterVolume * SoundVolume; }
 
-	virtual void SetMasterVolume(float Volume);
-	inline virtual void SetMusicVolume(float Volume);
-	inline virtual void SetSoundVolume(float Volume);
+	UFUNCTION() virtual void SetMasterVolume(float Volume);
+	UFUNCTION() virtual void SetMusicVolume(float Volume);
+	UFUNCTION() virtual void SetSoundVolume(float Volume);
 
 
 

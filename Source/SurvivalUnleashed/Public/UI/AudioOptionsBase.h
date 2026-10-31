@@ -16,7 +16,11 @@ class SURVIVALUNLEASHED_API UAudioOptionsBase : public UUserWidget
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditDefaultsOnly, meta = (BindWidget)) UOptionsSliderBase* MasterSlider;
-	UPROPERTY(EditDefaultsOnly, meta = (BindWidget)) UOptionsSliderBase* MusicSlider;
-	UPROPERTY(EditDefaultsOnly, meta = (BindWidget)) UOptionsSliderBase* SoundSlider;
+protected:
+	UPROPERTY(EditDefaultsOnly, meta = (BindWidget)) TObjectPtr<UOptionsSliderBase> MasterSlider;
+	UPROPERTY(EditDefaultsOnly, meta = (BindWidget)) TObjectPtr<UOptionsSliderBase> MusicSlider;
+	UPROPERTY(EditDefaultsOnly, meta = (BindWidget)) TObjectPtr<UOptionsSliderBase> SoundSlider;
+
+	virtual void NativeOnInitialized() override;
+	virtual void NativeConstruct() override;
 };

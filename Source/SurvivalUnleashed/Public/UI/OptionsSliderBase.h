@@ -13,6 +13,9 @@ UCLASS()
 class SURVIVALUNLEASHED_API UOptionsSliderBase : public UAudioFrequencySlider
 {
 	GENERATED_BODY()
-	
+
+public:
 	UOptionsSliderBase();
+
+	void SetSliderValue(float InValue);
 };
