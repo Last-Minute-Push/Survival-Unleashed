@@ -9,6 +9,8 @@
 #include "Components/Image.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogPlayerHUD, Log, All);
+
 
 void UPlayerHUDBase::Construct()
 {
@@ -16,7 +18,6 @@ void UPlayerHUDBase::Construct()
 
 	Timer = 0;
 	UpdateTimer(Timer);
-	RankArray.Reserve(6);
 	RankIndex.Reserve(6);
 
 	isPaused = false;
@@ -119,7 +120,7 @@ FText UPlayerHUDBase::GetRankName(EPlayerStats Stats)
 void UPlayerHUDBase::SetHealth(float ratio)
 {
 	HealthBar->SetPercent(ratio);
-	
+	HealthCounter->SetText(FText::Format(FText::FromString(TEXT("{0} {1}")), FText::FromString("Health : "), FText::AsNumber((int)(ratio*100))));
 }
 
 void UPlayerHUDBase::SetExperience(float ratio, float Max)
@@ -168,13 +169,50 @@ void UPlayerHUDBase::SetStatsText(EPlayerStats ChosenStats, int32 Ranks)
 {
 		FText CurrentString = FText::Format(FText::FromString(TEXT("{0} {1}")), GetRankName(ChosenStats), Ranks);
 
-		if (RankArray.Num() != 5) {
-			RankArray.Push(CurrentString);
-			RankIndex.Push(ChosenStats);
-			
-			UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(RankArray.Num()-1));
-			IndexPip->SetText(CurrentString);
-			
+		if (RankIndex.Num() != 5) {
+
+			if (RankIndex.IsEmpty()) 
+			{
+				RankIndex.Push(ChosenStats);
+				UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(0));
+				IndexPip->SetText(CurrentString);
+				UE_LOG(LogPlayerHUD, Log, TEXT("First Stat has been Pushed!"))
+			}
+			else {
+				for (int i = 0; i < RankIndex.Num(); i++)
+				{
+					
+						if (RankIndex[i] == ChosenStats)
+						{
+							UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(i));
+							IndexPip->SetText(CurrentString);
+							UE_LOG(LogPlayerHUD, Log, TEXT("Existing Stat has been updated!"))
+								break;
+						}
+						else if (i == RankIndex.Num()-1)
+						{
+							RankIndex.Push(ChosenStats);
+							UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(i + 1));
+							IndexPip->SetText(CurrentString);
+							UE_LOG(LogPlayerHUD, Log, TEXT("New Stat has been pushed!"))
+						}
+						
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i < RankIndex.Num(); i++)
+			{
+				if (RankIndex.IsValidIndex(i))
+				{
+					if (RankIndex[i] == ChosenStats)
+					{
+						UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(i));
+						IndexPip->SetText(CurrentString);
+					}
+				}
+			}
 		}
 			
 }

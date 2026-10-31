@@ -73,7 +73,7 @@ void AUC_Player::BeginPlay()
 			PauseHUD = CreateWidget<UPauseMenuBase>(APC, PauseClass);
 			if (PlayerHUD) {
 				PlayerHUD->AddToViewport();
-				PlayerHUD->SetHealth(PlayerStatsComponent->GetCurrentHealth());
+				PlayerHUD->SetHealth(1);
 				PlayerStatsComponent->OnHurt.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetHealth);
 				PlayerStatsComponent->OnHeal.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetHealth);
 				PlayerStatsComponent->OnHurtEffect.BindDynamic(PlayerHUD, &UPlayerHUDBase::PlayHurtFeedback);
@@ -81,11 +81,12 @@ void AUC_Player::BeginPlay()
 				PlayerStatsComponent->OnDeath.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetHealth);
 				PlayerStatsComponent->OnEXPPickUp.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetExperience);
 				PlayerStatsComponent->OnLevelUp.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetLevelAndExp);
+				PlayerStatsComponent->OnLevelUp.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetLevelAndExp);
 				PlayerStatsComponent->OnRadUpdate.BindDynamic(this, &AUC_Player::UpdatePickUpRadius);
 
 				PlayerStatsComponent->OnWeaponUpgrade.AddDynamic(this, &AUC_Player::SetWeapon);
 				PlayerStatsComponent->OnStatUI.AddDynamic(PlayerHUD, &UPlayerHUDBase::SetStatsText);
-				
+
 
 				isPaused = false;
 

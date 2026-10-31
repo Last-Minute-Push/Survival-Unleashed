@@ -23,21 +23,14 @@ protected:
 	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UProgressBar* HealthBar;
-
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* HealthCounter;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UProgressBar* EXPBar;
-
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* TimerText;
-
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* EXPGainCounter;
-
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* LevelCounter;
-
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* KillCounter;
-
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* FocusCounter;
-
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* PersonalBest;
-
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UVerticalBox* StatsBox;
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim)) class UWidgetAnimation* Fading;
 
@@ -63,7 +56,6 @@ public:
 
 	FVector EndPoint;
 
-	TArray<FText> RankArray;
 	TArray<EPlayerStats> RankIndex;
 
 
