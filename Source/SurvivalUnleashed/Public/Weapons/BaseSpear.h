@@ -9,7 +9,7 @@
 class UBoxComponent;
 
 UCLASS()
-class SURVIVALUNLEASHED_API ABaseSpear : public ABaseBowToGun
+class SURVIVALUNLEASHED_API ABaseSpear : public ABaseWeapon
 {
 	GENERATED_BODY()
 	
@@ -24,7 +24,14 @@ class SURVIVALUNLEASHED_API ABaseSpear : public ABaseBowToGun
 
 protected:
 	bool bIsAiming, bIsThrusting;
+	float Range;     // Data->Range	
+	float Height;    // Data->Height
+	float Radius;    // Data->DistanceFromPlayer
+	float Cooldown;  // Data->Cooldown
+	float Speed;     // Data->AttackSpeed
+	FTimerHandle TThrustCooldown;
 
+	UPROPERTY(Transient) UHordeSubsystem* Horde;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Thrusting") float RetreatMultiplier = 0.25f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Collision") UBoxComponent* BoxCollision;
 	UPROPERTY(VisibleAnywhere, Transient, Category = "Properties|Collision")          TArray<TObjectPtr<AActor>> HitActors;
