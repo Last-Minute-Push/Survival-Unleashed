@@ -149,6 +149,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Loot")
 	TSubclassOf<AEXP_PickUp> ExperiencePickupClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy|HurtAudioConcurrency")
+	USoundConcurrency* ConcurrencySetup;
 private:
 	struct FStatusState
 	{

@@ -4,6 +4,7 @@
 #include "Enemies/EnemyBase.h"
 #include "Enemies/EnemyData.h"
 #include "UI/DamageNumbersUI.h"
+#include "Sound/SoundConcurrency.h"
 #include "Framework/ObjectPoolSubsystem.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -84,7 +85,10 @@ float AEnemyBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
 	{
 		if (I->GetLibrary()->SFX_EnemyHurt) {
-			I->PlaySound(I->GetLibrary()->SFX_EnemyHurt);
+			
+			if (ConcurrencySetup) {
+				I->PlaySound(I->GetLibrary()->SFX_EnemyHurt, 1.0f, 1.0f, ConcurrencySetup);
+			}
 		}
 	}
 
