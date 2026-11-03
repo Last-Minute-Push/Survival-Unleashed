@@ -19,6 +19,30 @@ void UControlsMenu::NativeOnInitialized()
 	}
 	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
 	GI->ControlsMenu = this;
+
+	TArray<FEnhancedActionKeyMapping>& AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(InputMapContext->GetMappings());
+	for (int32 i = 0; i < AllMappings.Num();i++) {
+		if (AllMappings[i].Action == Moves) {
+
+			switch (i) {
+			case 0:
+				ForwardKeySelect->SetSelectedKey(AllMappings[i].Key);
+				break;
+			case 1:
+				DownKeySelect->SetSelectedKey(AllMappings[i].Key);
+				break;
+			case 2:
+				LeftKeySelect->SetSelectedKey(AllMappings[i].Key);
+				break;
+			case 3:
+				RightKeySelect->SetSelectedKey(AllMappings[i].Key);
+				break;
+			}
+		}
+		if (AllMappings[i].Action == Dashes) {
+			DashKeySelect->SetSelectedKey(AllMappings[i].Key);
+		}
+	}
 }
 
 void UControlsMenu::SetForward(FInputChord SelectedInput)
