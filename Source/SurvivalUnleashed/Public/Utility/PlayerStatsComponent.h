@@ -7,6 +7,7 @@
 #include "Weapons/WeaponDatabase.h"
 #include "PlayerStatsComponent.generated.h"
 
+DECLARE_DYNAMIC_DELEGATE_TwoParams(FOnHealthUI, float, Current, float, Max)
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnHurt, float, Ratio);
 DECLARE_DYNAMIC_DELEGATE(FOnHurtEffect);
 DECLARE_DYNAMIC_DELEGATE(FOnHealEffect);
