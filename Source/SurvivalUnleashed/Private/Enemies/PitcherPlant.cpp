@@ -31,7 +31,7 @@ void APitcherPlant::BeginPlay()
 	{
 		if (MeshComponent != MoundMesh && MeshComponent->GetAttachParent() == GetRootComponent())
 		{
-			Visuals.Add({ MeshComponent, MeshComponent->GetRelativeLocation().Z });
+			Visuals.Add({ MeshComponent, static_cast<float>(MeshComponent->GetRelativeLocation().Z) });
 		}
 	}
 
@@ -278,8 +278,8 @@ bool APitcherPlant::IsSpotClear(const FVector& Point, FVector& OutGround) const
 	}
 
 	// Room to stand: no obstacle within the capsule's radius
-	const UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(GetRootComponent());
-	const float Radius = (Capsule ? Capsule->GetScaledCapsuleRadius() : 50.f) + 20.f;
+	const UCapsuleComponent* CapsuleComp = Cast<UCapsuleComponent>(GetRootComponent());
+	const float Radius = (CapsuleComp ? CapsuleComp->GetScaledCapsuleRadius() : 50.f) + 20.f;
 	if (GetWorld()->OverlapAnyTestByObjectType(Hit.ImpactPoint + FVector(0.f, 0.f, Radius), FQuat::Identity,
 		FCollisionObjectQueryParams(SUCollision::Obstacle), FCollisionShape::MakeSphere(Radius)))
 	{
