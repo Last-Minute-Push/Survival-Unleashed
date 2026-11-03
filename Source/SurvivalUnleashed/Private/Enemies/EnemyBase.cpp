@@ -93,7 +93,7 @@ float AEnemyBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 		if (I->GetLibrary()->SFX_EnemyHurt) {
 			
 			if (ConcurrencySetup) {
-				I->PlaySound(I->GetLibrary()->SFX_EnemyHurt, 1.0f, 1.0f, ConcurrencySetup);
+				I->PlaySound(I->GetLibrary()->SFX_EnemyHurt, ConcurrencySetup);
 			}
 		}
 	}
