@@ -3,7 +3,11 @@
 
 #include "Enemies/EnemyBase.h"
 #include "Enemies/EnemyData.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponentPoolMethodEnum.h"
 #include "UI/DamageNumbersUI.h"
+#include "Sound/SoundConcurrency.h"
 #include "Framework/ObjectPoolSubsystem.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -33,7 +37,8 @@ AEnemyBase::AEnemyBase()
 
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(Capsule);
-	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);	
+	
 }
 
 // Called when the game starts or when spawned
@@ -65,6 +70,8 @@ void AEnemyBase::BeginPlay()
 	LargestSeparationRadius = FMath::Max(LargestSeparationRadius, SeparationRadius);
 
 	ResetState();
+
+	
 }
 
 void AEnemyBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -84,7 +91,10 @@ float AEnemyBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
 	{
 		if (I->GetLibrary()->SFX_EnemyHurt) {
-			I->PlaySound(I->GetLibrary()->SFX_EnemyHurt);
+			
+			if (ConcurrencySetup) {
+				I->PlaySound(I->GetLibrary()->SFX_EnemyHurt, 1.0f, 1.0f, ConcurrencySetup);
+			}
 		}
 	}
 
@@ -105,6 +115,12 @@ float AEnemyBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 
 	if (CurrentHealth <= 0.f)
 	{
+		if (NiagaraDeathComponent)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, NiagaraDeathComponent, this->GetActorLocation(), this->GetActorRotation(),
+			this->GetActorScale(),true,true,ENCPoolMethod::AutoRelease,true);
+		}
+		
 		Die();
 	}
 

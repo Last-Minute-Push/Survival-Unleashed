@@ -14,6 +14,11 @@ namespace
 	const TCHAR* QualityNames[] = { TEXT("Low"), TEXT("Medium"), TEXT("High"), TEXT("Epic") };
 }
 
+UGraphicsOptionsBase::UGraphicsOptionsBase()
+{
+	ZOrderLayer = 1;
+}
+
 void UGraphicsOptionsBase::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();

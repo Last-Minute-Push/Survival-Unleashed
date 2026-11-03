@@ -149,6 +149,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Loot")
 	TSubclassOf<AEXP_PickUp> ExperiencePickupClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy|HurtAudioConcurrency")
+	USoundConcurrency* ConcurrencySetup;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy|DeathParticles")
+	class UNiagaraSystem* NiagaraDeathComponent;
+
 private:
 	struct FStatusState
 	{

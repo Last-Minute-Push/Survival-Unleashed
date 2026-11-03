@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
 #include "UpgradeButton.generated.h"
@@ -13,7 +13,7 @@
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpgrade, int, Rank);
 UCLASS()
-class SURVIVALUNLEASHED_API UUpgradeButton : public UUserWidget
+class SURVIVALUNLEASHED_API UUpgradeButton : public UHUDBase
 {
 	GENERATED_BODY()
 
@@ -28,6 +28,8 @@ protected:
 
 	int currentRank;
 public:
+	UUpgradeButton();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FText UpgradeText;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FSlateFontInfo UpgradeFontInfo;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite) FSlateColor PipUpgradeColor;
