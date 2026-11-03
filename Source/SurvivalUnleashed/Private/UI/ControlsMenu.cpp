@@ -19,6 +19,7 @@ void UControlsMenu::NativeOnInitialized()
 	}
 	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
 	GI->ControlsMenu = this;
+	GI->LoadKeyBinds();
 
 	TArray<FEnhancedActionKeyMapping>& AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(InputMapContext->GetMappings());
 	for (int32 i = 0; i < AllMappings.Num();i++) {

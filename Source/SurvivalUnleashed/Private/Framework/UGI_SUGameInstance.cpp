@@ -263,7 +263,62 @@ void UUGI_SUGameInstance::RefundAllRanks()
 void UUGI_SUGameInstance::UpdatePlayerKeyBinds()
 {
 	if (PlayerItself) {
+		SaveKeyBinds();
 		PlayerItself->UpdateKeyBinds();
+	}
+}
+void UUGI_SUGameInstance::SaveKeyBinds() {
+	if (ControlsMenu->InputMapContext) {
+		TArray<FEnhancedActionKeyMapping>& AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(ControlsMenu->InputMapContext->GetMappings());
+		for (int32 i = 0; i < AllMappings.Num();i++) {
+			if (AllMappings[i].Action == (ControlsMenu->Moves)) {
+				switch (i) {
+				case 0:
+					SaveData->ForwardInput.Key = AllMappings[i].Key;
+					break;
+				case 1:
+					SaveData->DownInput.Key = AllMappings[i].Key;
+					break;
+				case 2:
+					SaveData->LeftInput.Key = AllMappings[i].Key;
+					break;
+				case 3:
+					SaveData->RightInput.Key = AllMappings[i].Key;
+					break;
+				}
+			}
+			if (AllMappings[i].Action == (ControlsMenu->Dashes)) {
+				SaveData->DashInput.Key = AllMappings[i].Key;
+			}
+		}
+		SaveProgress();
+	}
+}
+void UUGI_SUGameInstance::LoadKeyBinds() {
+	if (ControlsMenu->InputMapContext) {
+		TArray<FEnhancedActionKeyMapping>& AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(ControlsMenu->InputMapContext->GetMappings());
+		for (int32 i = 0; i < AllMappings.Num();i++) {
+			if (AllMappings[i].Action == (ControlsMenu->Moves)) {
+				switch (i) {
+				case 0:
+					AllMappings[i].Key = SaveData->ForwardInput.Key;
+					break;
+				case 1:
+					AllMappings[i].Key = SaveData->DownInput.Key;
+					break;
+				case 2:
+					AllMappings[i].Key = SaveData->LeftInput.Key;
+					break;
+				case 3:
+					AllMappings[i].Key = SaveData->RightInput.Key;
+					break;
+				}
+			}
+			if (AllMappings[i].Action == (ControlsMenu->Dashes)) {
+				AllMappings[i].Key = SaveData->DashInput.Key;
+			}
+		}
+		UpdatePlayerKeyBinds();
 	}
 }
 

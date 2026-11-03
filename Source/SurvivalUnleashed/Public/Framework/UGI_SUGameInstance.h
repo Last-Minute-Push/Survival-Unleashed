@@ -112,6 +112,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UEnhancedInputUserSettings* PlayerControls;
 	void UpdatePlayerKeyBinds();
+	void SaveKeyBinds();
+	void LoadKeyBinds();
 
 	//----------------------------------------------------------------------//
 	// IAudioManagerInterface

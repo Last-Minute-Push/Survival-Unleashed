@@ -31,15 +31,17 @@ protected:
 	class UInputKeySelector* DownKeySelect;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	class UInputKeySelector* DashKeySelect;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UInputMappingContext* InputMapContext;
+	class AUC_Player* PlayerItself;
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UInputAction* Moves;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UInputAction* Dashes;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class AUC_Player* PlayerItself;
-public:
+	class UInputMappingContext* InputMapContext;
 	UFUNCTION()
 	void SetForward(FInputChord SelectedInput);
 	UFUNCTION()

@@ -20,8 +20,8 @@
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 #include "Engine/LocalPlayer.h" 
-#include "EnhancedInputSubsystems.h"
 #include "UserSettings/EnhancedInputUserSettings.h"
+#include "InputMappingContext.h"
 
 
 DEFINE_LOG_CATEGORY_STATIC(LogPlayer, Log, All);
@@ -461,10 +461,15 @@ void AUC_Player::UpdateKeyBinds()
 
 	if (InputSubsystem && GI)
 	{
-		// Get the UE5 built-in user settings object
+		
 		UEnhancedInputUserSettings* UserSettings = InputSubsystem->GetUserSettings();
+		InputSubsystem->ClearAllMappings();
+		InputSubsystem->AddMappingContext(GI->ControlsMenu->InputMapContext,0);
+
+
 		if (UserSettings)
 		{
+			
 			UserSettings->ApplySettings();
 			UserSettings->AsyncSaveSettings();
 		}
