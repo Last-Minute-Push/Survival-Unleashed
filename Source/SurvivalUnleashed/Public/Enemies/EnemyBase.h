@@ -17,6 +17,7 @@ namespace EnemyMaterialData
 	constexpr int32 MoveAmount = 1;
 	constexpr int32 HitFlash = 2;
 	constexpr int32 StatusTint = 3; // slots 3-6: tint RGB + strength (A = 0 means no tint)
+	constexpr int32 AttackPose = 7;
 }
 
 UENUM(BlueprintType)
@@ -62,6 +63,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	bool IsDead() const { return bIsDead; }
+
+	// Where drops should appear: near the ground under this enemy, however tall its capsule is
+	FVector GetLootLocation() const;
 
 	// Magnitude: damage per 0.5 s for Burn/Freeze, pull speed for Pull, unused for Stun.
 	// Reapplying refreshes the duration. It never stacks.
@@ -148,6 +152,11 @@ protected:
 	// Dropped on death, carrying EnemyData->ExperienceValue
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Loot")
 	TSubclassOf<AEXP_PickUp> ExperiencePickupClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy|HurtAudioConcurrency")
+	USoundConcurrency* ConcurrencySetup;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy|DeathParticles")
+	class UNiagaraSystem* NiagaraDeathComponent;
 
 private:
 	struct FStatusState
