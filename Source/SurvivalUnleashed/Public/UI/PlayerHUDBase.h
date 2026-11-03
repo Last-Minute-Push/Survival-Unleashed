@@ -42,6 +42,8 @@ public:
 
 	UFUNCTION(BlueprintCallable) void SetHealth(float percent);
 
+	UFUNCTION(BlueprintCallable) void SetTextHealth(float current, float max);
+
 	UFUNCTION(BlueprintCallable) void SetExperience(float ratio, float Max);
 
 	UFUNCTION(BlueprintCallable) void SetLevelAndExp(float Level, float EXP);

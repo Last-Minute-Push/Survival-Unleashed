@@ -74,6 +74,8 @@ void AUC_Player::BeginPlay()
 			if (PlayerHUD) {
 				PlayerHUD->AddToViewport();
 				PlayerHUD->SetHealth(1);
+				PlayerHUD->SetTextHealth(PlayerStatsComponent->GetCurrentHealth(), PlayerStatsComponent->GetMaxHealth());
+				PlayerStatsComponent->OnHealthUIEffect.AddDynamic(PlayerHUD, &UPlayerHUDBase::SetTextHealth);
 				PlayerStatsComponent->OnHurt.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetHealth);
 				PlayerStatsComponent->OnHeal.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetHealth);
 				PlayerStatsComponent->OnHurtEffect.BindDynamic(PlayerHUD, &UPlayerHUDBase::PlayHurtFeedback);

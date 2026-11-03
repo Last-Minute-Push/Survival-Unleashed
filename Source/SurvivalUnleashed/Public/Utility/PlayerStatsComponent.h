@@ -7,7 +7,7 @@
 #include "Weapons/WeaponDatabase.h"
 #include "PlayerStatsComponent.generated.h"
 
-DECLARE_DYNAMIC_DELEGATE_TwoParams(FOnHealthUI, float, Current, float, Max)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthUI, float, Current, float, Max);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnHurt, float, Ratio);
 DECLARE_DYNAMIC_DELEGATE(FOnHurtEffect);
 DECLARE_DYNAMIC_DELEGATE(FOnHealEffect);
@@ -83,6 +83,7 @@ public:
 
 	FOnHealEffect OnHealEffect;
 	FOnHurtEffect OnHurtEffect;
+	FOnHealthUI OnHealthUIEffect;
 	FOnStatUIUpdate OnStatUI;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")

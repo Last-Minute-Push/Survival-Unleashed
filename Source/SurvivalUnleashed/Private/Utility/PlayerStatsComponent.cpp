@@ -152,6 +152,7 @@ void UPlayerStatsComponent::TakeDamage(AActor* DamagedActor, float Damage, const
 			if (IsValid(DamagedActor)) {
 				if (OnHurt.IsBound() && OnHurt.GetUObject() != nullptr) {
 					OnHurt.Execute(CurrentHealth / MaxHealth);
+					OnHealthUIEffect.Broadcast(CurrentHealth, MaxHealth);
 					//UE_LOG(Game, Log, TEXT("Lost Health"));
 					//UE_LOG(Game, Log, TEXT("CurrentHealth is: %s"), *FString(UTF8_TO_TCHAR(std::to_string(CurrentHealth).c_str())));
 					OnHurtEffect.Execute();
@@ -162,6 +163,7 @@ void UPlayerStatsComponent::TakeDamage(AActor* DamagedActor, float Damage, const
 			if (IsValid(DamagedActor)) {
 				if (OnHeal.IsBound() && OnHeal.GetUObject() != nullptr) {
 					OnHeal.Execute(CurrentHealth / MaxHealth);
+					OnHealthUIEffect.Broadcast(CurrentHealth, MaxHealth);
 					//UE_LOG(Game, Log, TEXT("Lost Health"));
 					//UE_LOG(Game, Log, TEXT("CurrentHealth is: %s"), *FString(UTF8_TO_TCHAR(std::to_string(CurrentHealth).c_str())));
 					OnHealEffect.Execute();
@@ -239,6 +241,7 @@ void UPlayerStatsComponent::LevelUpMaxHealth()
 	SetCurrentHealth(CurrentHealth + 10.0f);
 	if (OnHeal.IsBound() && OnHeal.GetUObject() != nullptr) {
 		OnHeal.Execute(CurrentHealth / MaxHealth);
+		OnHealthUIEffect.Broadcast(CurrentHealth, MaxHealth);
 		//UE_LOG(Game, Log, TEXT("Lost Health"));
 		//UE_LOG(Game, Log, TEXT("CurrentHealth is: %s"), *FString(UTF8_TO_TCHAR(std::to_string(CurrentHealth).c_str())));
 	}

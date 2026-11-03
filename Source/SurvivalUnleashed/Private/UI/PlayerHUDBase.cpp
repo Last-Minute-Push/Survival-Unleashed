@@ -120,7 +120,12 @@ FText UPlayerHUDBase::GetRankName(EPlayerStats Stats)
 void UPlayerHUDBase::SetHealth(float ratio)
 {
 	HealthBar->SetPercent(ratio);
-	HealthCounter->SetText(FText::Format(FText::FromString(TEXT("{0} {1}")), FText::FromString("Health : "), FText::AsNumber((int)(ratio*100))));
+}
+
+void UPlayerHUDBase::SetTextHealth(float current, float max)
+{
+	HealthCounter->SetText(FText::Format(FText::FromString(TEXT("{0} {1} {2} {3}")), FText::FromString("Health : "),
+		FText::AsNumber((int)current), FText::FromString("/"), FText::AsNumber((int)max)));
 }
 
 void UPlayerHUDBase::SetExperience(float ratio, float Max)
