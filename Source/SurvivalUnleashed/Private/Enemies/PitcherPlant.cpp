@@ -182,7 +182,28 @@ void APitcherPlant::TickRooted(const APawn* Player, float DeltaTime)
 	{
 		SpitAcid(Player);
 		SpitCooldown = SpitInterval;
+		SpitRecoverRemaining = SpitRecoverTime;
 	}
+	UpdateSpitPose(Distance <= AcidRange, DeltaTime);
+}
+
+void APitcherPlant::UpdateSpitPose(bool bInRange, float DeltaTime)
+{
+	float Pose = 0.f;
+
+	// Just fired: lunging forward, easing back to rest
+	if (SpitRecoverRemaining > 0.f)
+	{
+		SpitRecoverRemaining = FMath::Max(0.f, SpitRecoverRemaining - DeltaTime);
+		Pose = SpitLungePose * (SpitRecoverRemaining / SpitRecoverTime);
+	}
+	// About to fire: lid opening, leaning back. Holds open if the player stepped out of range mid wind-up.
+	else if (bInRange && SpitCooldown < SpitWindup)
+	{
+		Pose = 1.f - FMath::Max(SpitCooldown, 0.f) / SpitWindup;
+	}
+
+	SetMaterialData(EnemyMaterialData::AttackPose, Pose);
 }
 
 void APitcherPlant::SetState(EState NewState)
@@ -199,7 +220,10 @@ void APitcherPlant::SetState(EState NewState)
 		SpitCooldown = FirstSpitDelay;
 		OutOfRangeTimer = 0.f;
 	}
-
+	// Any spit pose is dropped when it leaves the Rooted state (burrowing mid wind-up, for example)
+	SpitRecoverRemaining = 0.f;
+	SetMaterialData(EnemyMaterialData::AttackPose, 0.f);
+	
 	ApplyCollision();
 	UpdateVisuals();
 }

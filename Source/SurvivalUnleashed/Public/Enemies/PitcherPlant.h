@@ -95,6 +95,17 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Pitcher|Acid")
 	FVector MouthOffset = FVector(0.f, 0.f, 60.f);
 
+	// Wind-up before each spit: the lid opens and the pitcher leans back (material AttackPose 0 -> 1)
+	UPROPERTY(EditDefaultsOnly, Category = "Pitcher|Acid", meta = (ClampMin = "0.01"))
+	float SpitWindup = 0.35f;
+
+	// On firing, the pose jumps to this (leaning forward) and eases back to rest over SpitRecoverTime
+	UPROPERTY(EditDefaultsOnly, Category = "Pitcher|Acid")
+	float SpitLungePose = -0.4f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Pitcher|Acid", meta = (ClampMin = "0.01"))
+	float SpitRecoverTime = 0.3f;
+
 private:
 	enum class EState : uint8
 	{
@@ -114,6 +125,7 @@ private:
 	float SpitCooldown = 0.f;
 	float RepositionCooldownRemaining = 0.f;
 	float OutOfRangeTimer = 0.f;
+	float SpitRecoverRemaining = 0.f;
 
 	// The plant's own meshes and where the Blueprint put them, so they can be sunk below the floor
 	struct FVisual
@@ -135,4 +147,7 @@ private:
 
 	void SpitAcid(const APawn* Player);
 	void HandleAcidHit(AProjectileBase* Projectile, AActor* Target);
+
+	// Material pose for the spit: wind-up as the cooldown runs out, lunge after firing
+	void UpdateSpitPose(bool bInRange, float DeltaTime);
 };
