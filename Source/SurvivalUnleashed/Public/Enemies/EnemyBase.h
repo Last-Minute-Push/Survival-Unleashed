@@ -64,6 +64,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	bool IsDead() const { return bIsDead; }
 
+	// Whether weapons and horde queries should consider this enemy at all 
+	virtual bool IsTargetable() const { return !bIsDead; }
+
 	// Where drops should appear: near the ground under this enemy, however tall its capsule is
 	FVector GetLootLocation() const;
 
