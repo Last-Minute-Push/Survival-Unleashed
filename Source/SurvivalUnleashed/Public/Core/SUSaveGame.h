@@ -55,5 +55,5 @@ public:
 	float MusicVolume = 1.f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Settings")
-	float SfxVolume = 1.f;
+	float SoundVolume = 1.f;
 };
