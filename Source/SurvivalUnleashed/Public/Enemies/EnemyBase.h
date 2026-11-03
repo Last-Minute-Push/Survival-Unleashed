@@ -64,6 +64,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	bool IsDead() const { return bIsDead; }
 
+	// Where drops should appear: near the ground under this enemy, however tall its capsule is
+	FVector GetLootLocation() const;
+
 	// Magnitude: damage per 0.5 s for Burn/Freeze, pull speed for Pull, unused for Stun.
 	// Reapplying refreshes the duration. It never stacks.
 	UFUNCTION(BlueprintCallable, Category = "Enemy|Status")
