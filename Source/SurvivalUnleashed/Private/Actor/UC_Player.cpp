@@ -19,6 +19,10 @@
 #include "Actor/Health_PickUp.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
+#include "Engine/LocalPlayer.h" 
+#include "EnhancedInputSubsystems.h"
+#include "UserSettings/EnhancedInputUserSettings.h"
+
 
 DEFINE_LOG_CATEGORY_STATIC(LogPlayer, Log, All);
 
@@ -58,6 +62,11 @@ AUC_Player::AUC_Player()
 	PickUpRadius->SetCollisionProfileName(FName("PickupRadius"));
 	PickUpRadius->SetSphereRadius(PlayerStatsComponent->GetPickupRange());
 	PickUpRadius->OnComponentBeginOverlap.AddDynamic(this, &AUC_Player::HandleEXPOverlap);
+
+
+
+
+
 }
 
 // Called when the game starts or when spawned
@@ -144,7 +153,11 @@ void AUC_Player::BeginPlay()
 	{
 		UE_LOG(LogPlayer, Error, TEXT("No Audio Library Instance has been found!"));
 	}
-
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	if (GI) {
+		GI->PlayerItself = this;
+		GI->UpdatePlayerKeyBinds();
+	}
 }
 
 // Called every frame
@@ -434,6 +447,26 @@ void AUC_Player::HandleEXPOverlap(UPrimitiveComponent* OverlapComponent, AActor*
 		}
 		else {
 			return;
+		}
+	}
+}
+
+void AUC_Player::UpdateKeyBinds()
+{
+	ULocalPlayer* LocalPlayer = Cast<APlayerController>(GetController())->GetLocalPlayer();
+	if (!LocalPlayer) return;
+
+	UEnhancedInputLocalPlayerSubsystem* InputSubsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+
+	if (InputSubsystem && GI)
+	{
+		// Get the UE5 built-in user settings object
+		UEnhancedInputUserSettings* UserSettings = InputSubsystem->GetUserSettings();
+		if (UserSettings)
+		{
+			UserSettings->ApplySettings();
+			UserSettings->AsyncSaveSettings();
 		}
 	}
 }

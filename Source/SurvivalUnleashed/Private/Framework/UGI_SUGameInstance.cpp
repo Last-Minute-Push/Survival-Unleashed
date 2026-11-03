@@ -6,6 +6,9 @@
 #include "AudioDevice.h"
 #include "Core/SUSaveGame.h"
 #include "Kismet/GameplayStatics.h"
+#include "EnhancedInputSubsystems.h"
+#include "UserSettings/EnhancedInputUserSettings.h"
+#include "Actor/UC_Player.h"
 
 #ifndef UINT64_MAX
 #define UINT64_MAX 0xffffffffffffffffui64
@@ -255,6 +258,13 @@ void UUGI_SUGameInstance::RefundAllRanks()
 	SaveData->FocusModern = 0;
 
 	SaveProgress();
+}
+
+void UUGI_SUGameInstance::UpdatePlayerKeyBinds()
+{
+	if (PlayerItself) {
+		PlayerItself->UpdateKeyBinds();
+	}
 }
 
 void UUGI_SUGameInstance::AudioManagerTest()

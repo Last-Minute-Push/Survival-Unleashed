@@ -6,6 +6,7 @@
 #include "UserSettings/EnhancedInputUserSettings.h"
 #include "Actor/UC_Player.h"
 #include "EnhancedInputComponent.h"
+#include "Framework/UGI_SUGameInstance.h"
 
 void UControlsMenu::NativeOnInitialized()
 {
@@ -16,86 +17,100 @@ void UControlsMenu::NativeOnInitialized()
 		DownKeySelect->OnKeySelected.AddDynamic(this, &UControlsMenu::SetDown);
 		DashKeySelect->OnKeySelected.AddDynamic(this, &UControlsMenu::SetDash);
 	}
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	GI->ControlsMenu = this;
 }
 
 void UControlsMenu::SetForward(FInputChord SelectedInput)
 {
-	TArray<FEnhancedActionKeyMapping> AllMappings = InputMapContext->GetMappings();
-	for (const FEnhancedActionKeyMapping& Mapping : AllMappings) {
-		if (Mapping.Action == Moves) {
-			FEnhancedActionKeyMapping NewMapping;
-			NewMapping.Action = Moves;
-			NewMapping.Key = SelectedInput.Key;
-			InputMapContext->GetMapping(0) = NewMapping;
-			break;
+	
+	TArray<FEnhancedActionKeyMapping>& AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(InputMapContext->GetMappings());
+	for (int32 i = 0; i < AllMappings.Num();i++) {
+		if (AllMappings[i].Action == Moves) {
+			if (i == 0) {
+				AllMappings[i].Key = SelectedInput.Key;
+				break;
+			}
 		}
 	}
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	GI->UpdatePlayerKeyBinds();
 }
 
 void UControlsMenu::SetLeft(FInputChord SelectedInput)
 {
-	TArray<FEnhancedActionKeyMapping> AllMappings = InputMapContext->GetMappings();
-	for (const FEnhancedActionKeyMapping& Mapping : AllMappings) {
-		if (Mapping.Action == Moves) {
-			FEnhancedActionKeyMapping NewMapping;
-			NewMapping.Action = Moves;
-			NewMapping.Key = SelectedInput.Key;
-			InputMapContext->GetMapping(2) = NewMapping;
-			break;
+	TArray<FEnhancedActionKeyMapping>& AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(InputMapContext->GetMappings());
+	for (int32 i = 0; i < AllMappings.Num();i++) {
+		if (AllMappings[i].Action == Moves) {
+			if (i == 2) {
+				AllMappings[i].Key = SelectedInput.Key;
+				break;
+			}
 		}
 	}
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	GI->UpdatePlayerKeyBinds();
 }
 
 void UControlsMenu::SetRight(FInputChord SelectedInput)
 {
-	TArray<FEnhancedActionKeyMapping> AllMappings = InputMapContext->GetMappings();
-	for (const FEnhancedActionKeyMapping& Mapping : AllMappings) {
-		if (Mapping.Action == Moves) {
-			InputMapContext->GetMapping(3).Key = SelectedInput.Key;
-			break;
+	TArray<FEnhancedActionKeyMapping>& AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(InputMapContext->GetMappings());
+	for (int32 i = 0; i < AllMappings.Num();i++) {
+		if (AllMappings[i].Action == Moves) {
+			if (i == 3) {
+				AllMappings[i].Key = SelectedInput.Key;
+				break;
+			}
 		}
 	}
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	GI->UpdatePlayerKeyBinds();
 }
 
 void UControlsMenu::SetDown(FInputChord SelectedInput)
 {
-	TArray<FEnhancedActionKeyMapping> AllMappings = InputMapContext->GetMappings();
-	for (const FEnhancedActionKeyMapping& Mapping : AllMappings) {
-		if (Mapping.Action == Moves) {
-			FEnhancedActionKeyMapping NewMapping;
-			NewMapping.Action = Moves;
-			NewMapping.Key = SelectedInput.Key;
-			InputMapContext->GetMapping(1) = NewMapping;
-			break;
+	TArray<FEnhancedActionKeyMapping>& AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(InputMapContext->GetMappings());
+	for (int32 i = 0; i < AllMappings.Num();i++) {
+		if (AllMappings[i].Action == Moves) {
+			if (i == 1) {
+				AllMappings[i].Key = SelectedInput.Key;
+				break;
+			}
 		}
 	}
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	GI->UpdatePlayerKeyBinds();
 }
 
 void UControlsMenu::SetDash(FInputChord SelectedInput)
 {
-	TArray<FEnhancedActionKeyMapping> AllMappings = InputMapContext->GetMappings();
-	for (const FEnhancedActionKeyMapping& Mapping : AllMappings) {
-		if (Mapping.Action == Dashes) {
-			FEnhancedActionKeyMapping NewMapping;
-			NewMapping.Action = Dashes;
-			NewMapping.Key = SelectedInput.Key;
-			InputMapContext->GetMapping(0) = NewMapping;
-			break;
+	TArray<FEnhancedActionKeyMapping>& AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(InputMapContext->GetMappings());
+	for (int32 i = 0; i < AllMappings.Num();i++) {
+		if (AllMappings[i].Action == Dashes) {
+			{
+				AllMappings[i].Key = SelectedInput.Key;
+				break;
+			}
 		}
 	}
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	GI->UpdatePlayerKeyBinds();
 }
 
 void UControlsMenu::UpdatePlayerMappings()
 {
-	if (APlayerController* PC = Cast<APlayerController>(PlayerItself->GetOwner()))
+	APlayerController* PC = Cast<APlayerController>(PlayerItself->GetOwner());
+	if (PC)
 	{
-		if (ULocalPlayer* LP = PC->GetLocalPlayer())
+		ULocalPlayer* LP = PC->GetLocalPlayer();
+		if (LP)
 		{
-			if (auto* Subsystem = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+			if (UEnhancedInputLocalPlayerSubsystem* SS = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
 			{
-				// Rebuilds the runtime control mappings for this context immediately
-				Subsystem->RequestRebuildControlMappings();
+				SS->RequestRebuildControlMappings();
 			}
 		}
 	}
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	GI->UpdatePlayerKeyBinds();
 }

@@ -79,7 +79,8 @@ public:
 	void SetWeapon(EWeaponCategory Type);
 	bool isPaused;
 
-
+	UFUNCTION()
+	void UpdateKeyBinds();
 protected:
 	UPROPERTY(Category = Character, VisibleAnywhere)
 	class USpringArmComponent* SpringArm;
@@ -135,4 +136,6 @@ private:
 	void UpdatePickUpRadius(float value);
 	UFUNCTION()
 	void HandleEXPOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
+
+
 };

@@ -9,7 +9,7 @@
 #include "Audio/Interfaces/AudioManagerInterface.h"
 #include "Core/RunResults.h"
 #include "Weapons/WeaponData.h" // Focus enum
-
+#include "UI/ControlsMenu.h"
 #include "UGI_SUGameInstance.generated.h"
 
 // Activates the audio test
@@ -18,6 +18,8 @@
 /**
  *
  */
+class UEnhancedInputUserSettings;
+
 UCLASS()
 class SURVIVALUNLEASHED_API UUGI_SUGameInstance : public UGameInstance, public IAudioManagerInterface
 {
@@ -54,9 +56,14 @@ protected:
 
 	void LoadOrCreateSave();
 
+	
+	
 public:
 
 	UUGI_SUGameInstance();
+
+
+
 
 	virtual void Init() override;
 
@@ -97,6 +104,14 @@ public:
 	// Returns every spent point and clears all ranks and focus points. Saves.
 	UFUNCTION(BlueprintCallable, Category = "Permanent Upgrades") void RefundAllRanks();
 
+	// Player Controls
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class  UControlsMenu* ControlsMenu;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class AUC_Player* PlayerItself;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UEnhancedInputUserSettings* PlayerControls;
+	void UpdatePlayerKeyBinds();
 
 	//----------------------------------------------------------------------//
 	// IAudioManagerInterface
