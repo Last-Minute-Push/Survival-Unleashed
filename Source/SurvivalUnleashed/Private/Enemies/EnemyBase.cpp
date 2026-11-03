@@ -352,7 +352,7 @@ void AEnemyBase::DropLoot()
 	}
 
 	// The gem ignores pickups until it has a value, so setting it after Acquire is safe
-	const FTransform DropTransform(FRotator::ZeroRotator, GetActorLocation());
+	const FTransform DropTransform(FRotator::ZeroRotator, GetLootLocation());
 	if (AEXP_PickUp* Gem = Pool->AcquireAs<AEXP_PickUp>(ExperiencePickupClass, DropTransform))
 	{
 		Gem->SetExpValue(EnemyData->ExperienceValue);
@@ -584,4 +584,12 @@ void AEnemyBase::MoveWithSlide(const FVector& Delta)
 		Remaining.Z = 0.f;
 		AddActorWorldOffset(Remaining, true);
 	}
+}
+
+FVector AEnemyBase::GetLootLocation() const
+{
+	// Small enemies keep dropping at their center, as they always have. Tall ones drop at most MaxLootHeight above the ground, inside the player's pickup range.
+	constexpr float MaxLootHeight = 60.f;
+	const float HalfHeight = Capsule ? Capsule->GetScaledCapsuleHalfHeight() : 0.f;
+	return GetActorLocation() - FVector(0.f, 0.f, FMath::Max(0.f, HalfHeight - MaxLootHeight));
 }
