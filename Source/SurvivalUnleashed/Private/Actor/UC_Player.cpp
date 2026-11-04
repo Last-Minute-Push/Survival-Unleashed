@@ -82,10 +82,8 @@ void AUC_Player::BeginPlay()
 				PlayerStatsComponent->OnEXPPickUp.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetExperience);
 				PlayerStatsComponent->OnLevelUp.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetLevelAndExp);
 				PlayerStatsComponent->OnRadUpdate.BindDynamic(this, &AUC_Player::UpdatePickUpRadius);
-
 				PlayerStatsComponent->OnWeaponUpgrade.AddDynamic(this, &AUC_Player::SetWeapon);
 				
-
 				isPaused = false;
 
 				if (!PauseHUD)
