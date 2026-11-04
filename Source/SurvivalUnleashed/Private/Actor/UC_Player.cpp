@@ -455,21 +455,15 @@ void AUC_Player::UpdateKeyBinds()
 {
 	ULocalPlayer* LocalPlayer = Cast<APlayerController>(GetController())->GetLocalPlayer();
 	if (!LocalPlayer) return;
-
 	UEnhancedInputLocalPlayerSubsystem* InputSubsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
-
 	if (InputSubsystem && GI)
 	{
-		
 		UEnhancedInputUserSettings* UserSettings = InputSubsystem->GetUserSettings();
 		InputSubsystem->ClearAllMappings();
 		InputSubsystem->AddMappingContext(GI->ControlsMenu->InputMapContext,0);
-
-
 		if (UserSettings)
 		{
-			
 			UserSettings->ApplySettings();
 			UserSettings->AsyncSaveSettings();
 		}
