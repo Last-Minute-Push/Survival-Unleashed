@@ -51,6 +51,7 @@ void AEnemyBase::BeginPlay()
 		UE_LOG(LogEnemy, Warning, TEXT("%s has no EnemyData assigned"), *GetName());
 	}
 
+	KnockbackResistance = EnemyData->KnockbackResistance;
 	Capsule->OnComponentBeginOverlap.AddDynamic(this, &AEnemyBase::OnCapsuleBeginOverlap);
 	Capsule->OnComponentEndOverlap.AddDynamic(this, &AEnemyBase::OnCapsuleEndOverlap);
 
@@ -201,7 +202,7 @@ void AEnemyBase::ApplyKnockback(const FVector& SourceLocation, float Distance)
 		return;
 	}
 
-	const float Effective = Distance * (1.f - EnemyData->KnockbackResistance);
+	const float Effective = Distance * (1.f - KnockbackResistance);
 	if (Effective <= KINDA_SMALL_NUMBER)
 	{
 		return; // immune

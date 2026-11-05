@@ -111,6 +111,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy")
 	TObjectPtr<UEnemyData> EnemyData;
 
+	float KnockbackResistance;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Movement", meta = (ClampMin = "0"))
 	float StopDistance = 50.f;
 

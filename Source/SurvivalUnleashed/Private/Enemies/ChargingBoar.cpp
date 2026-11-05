@@ -7,6 +7,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
+#include "Enemies/EnemyData.h"
 
 namespace
 {
@@ -139,6 +140,7 @@ bool AChargingBoar::CanStartCharge(const APawn* Player) const
 void AChargingBoar::StartWindup(const APawn* Player)
 {
 	// Locked now: the player dodges by leaving the line during the wind-up
+	KnockbackResistance = 1;
 	FVector Direction = Player->GetActorLocation() - GetActorLocation();
 	Direction.Z = 0.f;
 	ChargeDirection = Direction.GetSafeNormal();
@@ -178,6 +180,7 @@ void AChargingBoar::TickCharge(APawn* Player, float DeltaTime)
 
 	if (Hit.bBlockingHit)
 	{
+		KnockbackResistance = EnemyData->KnockbackResistance;
 		// Pillars, logs, root walls and the jungle wall all use the Obstacle profile
 		const bool bHitObstacle = Hit.GetComponent() && Hit.GetComponent()->GetCollisionObjectType() == SUCollision::Obstacle;
 		if (bHitObstacle)
@@ -191,6 +194,7 @@ void AChargingBoar::TickCharge(APawn* Player, float DeltaTime)
 
 	if (ChargeRemaining <= KINDA_SMALL_NUMBER)
 	{
+		KnockbackResistance = EnemyData->KnockbackResistance;
 		CooldownRemaining = ChargeCooldown;
 		SetState(EState::Approach);
 	}
