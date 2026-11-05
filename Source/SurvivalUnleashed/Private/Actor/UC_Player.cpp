@@ -156,7 +156,7 @@ void AUC_Player::BeginPlay()
 	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
 	if (GI) {
 		GI->PlayerItself = this;
-		GI->UpdatePlayerKeyBinds();
+		GI->LoadKeyBinds();
 	}
 }
 
@@ -453,15 +453,16 @@ void AUC_Player::HandleEXPOverlap(UPrimitiveComponent* OverlapComponent, AActor*
 
 void AUC_Player::UpdateKeyBinds()
 {
-	ULocalPlayer* LocalPlayer = Cast<APlayerController>(GetController())->GetLocalPlayer();
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	ULocalPlayer * LocalPlayer = PC ? PC->GetLocalPlayer() : nullptr;
 	if (!LocalPlayer) return;
 	UEnhancedInputLocalPlayerSubsystem* InputSubsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
-	if (InputSubsystem && GI)
+	if (InputSubsystem && GI && GI->PlayerMappingContext)
 	{
 		UEnhancedInputUserSettings* UserSettings = InputSubsystem->GetUserSettings();
 		InputSubsystem->ClearAllMappings();
-		InputSubsystem->AddMappingContext(GI->ControlsMenu->InputMapContext,0);
+		InputSubsystem->AddMappingContext(GI->PlayerMappingContext, 0);
 		if (UserSettings)
 		{
 			UserSettings->ApplySettings();

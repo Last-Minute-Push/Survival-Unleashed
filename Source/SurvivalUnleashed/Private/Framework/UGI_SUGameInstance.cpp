@@ -271,10 +271,10 @@ void UUGI_SUGameInstance::UpdatePlayerKeyBinds()
 	}
 }
 void UUGI_SUGameInstance::SaveKeyBinds() {
-	if (ControlsMenu->InputMapContext) {
-		TArray<FEnhancedActionKeyMapping>& AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(ControlsMenu->InputMapContext->GetMappings());
+	if (SaveData && PlayerMappingContext) {
+		TArray<FEnhancedActionKeyMapping>&AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(PlayerMappingContext->GetMappings());
 		for (int32 i = 0; i < AllMappings.Num();i++) {
-			if (AllMappings[i].Action == (ControlsMenu->Moves)) {
+			if (AllMappings[i].Action == MoveAction) {
 				switch (i) {
 				case 0:
 					SaveData->ForwardInput.Key = AllMappings[i].Key;
@@ -290,7 +290,7 @@ void UUGI_SUGameInstance::SaveKeyBinds() {
 					break;
 				}
 			}
-			if (AllMappings[i].Action == (ControlsMenu->Dashes)) {
+			if (AllMappings[i].Action == DashAction) {
 				SaveData->DashInput.Key = AllMappings[i].Key;
 			}
 		}
@@ -298,10 +298,10 @@ void UUGI_SUGameInstance::SaveKeyBinds() {
 	}
 }
 void UUGI_SUGameInstance::LoadKeyBinds() {
-	if (ControlsMenu->InputMapContext) {
-		TArray<FEnhancedActionKeyMapping>& AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(ControlsMenu->InputMapContext->GetMappings());
+	if (SaveData && PlayerMappingContext) {
+		TArray<FEnhancedActionKeyMapping>& AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(PlayerMappingContext->GetMappings());
 		for (int32 i = 0; i < AllMappings.Num();i++) {
-			if (AllMappings[i].Action == (ControlsMenu->Moves)) {
+			if (AllMappings[i].Action == MoveAction) {
 				switch (i) {
 				case 0:
 					AllMappings[i].Key = SaveData->ForwardInput.Key;
@@ -317,7 +317,7 @@ void UUGI_SUGameInstance::LoadKeyBinds() {
 					break;
 				}
 			}
-			if (AllMappings[i].Action == (ControlsMenu->Dashes)) {
+			if (AllMappings[i].Action == DashAction) {
 				AllMappings[i].Key = SaveData->DashInput.Key;
 			}
 		}

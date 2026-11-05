@@ -19,6 +19,8 @@
  *
  */
 class UEnhancedInputUserSettings;
+class UInputMappingContext;
+class UInputAction;
 
 UCLASS()
 class SURVIVALUNLEASHED_API UUGI_SUGameInstance : public UGameInstance, public IAudioManagerInterface
@@ -65,15 +67,10 @@ protected:
 	UPROPERTY() FRunResults LastRunResults;
 
 	void LoadOrCreateSave();
-
-	
 	
 public:
 
 	UUGI_SUGameInstance();
-
-
-
 
 	virtual void Init() override;
 
@@ -119,6 +116,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Permanent Upgrades") bool TrySpendFocusPoint(Focus FocusStat, int32 FocusPointsEarned);
 	// Returns every spent point and clears all ranks and focus points. Saves.
 	UFUNCTION(BlueprintCallable, Category = "Permanent Upgrades") void RefundAllRanks();
+
+	// The player's controls. Owned here so gameplay never depends on the controls menu having been opened.
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputMappingContext> PlayerMappingContext;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> MoveAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> DashAction;
 
 	// Player Controls
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
