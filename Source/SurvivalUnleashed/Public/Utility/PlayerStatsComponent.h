@@ -130,7 +130,7 @@ private:
 	float ProjectileAmount = 1;
 
 	UPROPERTY()
-	float PickupRange = 120;
+	float PickupRange = 160;
 	UPROPERTY()
 	float MoveSpeed = 800;
 

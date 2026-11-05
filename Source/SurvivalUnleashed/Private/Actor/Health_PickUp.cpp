@@ -98,6 +98,7 @@ void AHealth_PickUp::HandlePickUp() {
 		else {
 			UGameplayStatics::ApplyDamage(SavedPlayer, -Heal, nullptr, this, nullptr);
 		}
+		SavedPlayer->AttractedActors.Remove(this);
 	}
 }
 

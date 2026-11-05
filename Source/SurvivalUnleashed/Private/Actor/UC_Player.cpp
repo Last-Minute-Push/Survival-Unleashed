@@ -17,6 +17,7 @@
 #include "Weapons/WeaponSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Actor/Health_PickUp.h"
+#include "Actor/Magnet_PickUp.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 #include "Engine/LocalPlayer.h" 
@@ -61,12 +62,7 @@ AUC_Player::AUC_Player()
 	PickUpRadius->SetupAttachment(GetRootComponent());
 	PickUpRadius->SetCollisionProfileName(FName("PickupRadius"));
 	PickUpRadius->SetSphereRadius(PlayerStatsComponent->GetPickupRange());
-	PickUpRadius->OnComponentBeginOverlap.AddDynamic(this, &AUC_Player::HandleEXPOverlap);
-
-
-
-
-
+	PickUpRadius->OnComponentBeginOverlap.AddDynamic(this, &AUC_Player::HandlePickUpOverlap);
 }
 
 // Called when the game starts or when spawned
@@ -91,7 +87,7 @@ void AUC_Player::BeginPlay()
 				PlayerStatsComponent->OnEXPPickUp.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetExperience);
 				PlayerStatsComponent->OnLevelUp.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetLevelAndExp);
 				PlayerStatsComponent->OnRadUpdate.BindDynamic(this, &AUC_Player::UpdatePickUpRadius);
-
+				
 				PlayerStatsComponent->OnWeaponUpgrade.AddDynamic(this, &AUC_Player::SetWeapon);
 				
 
@@ -153,6 +149,7 @@ void AUC_Player::BeginPlay()
 	{
 		UE_LOG(LogPlayer, Error, TEXT("No Audio Library Instance has been found!"));
 	}
+	UpdatePickUpRadius(GetPlayerStatsComp()->GetPickupRange());
 	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
 	if (GI) {
 		GI->PlayerItself = this;
@@ -225,6 +222,14 @@ void AUC_Player::Tick(float DeltaTime)
 			DashlengthTimer = 0;
 		}
 	}
+	if (Magnet == true) {
+		MagnetTimer += DeltaTime;
+		if (MagnetTimer >1.0f) {
+			UpdatePickUpRadius(GetPlayerStatsComp()->GetPickupRange());
+			MagnetTimer = 0;
+			Magnet = false;
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -253,6 +258,12 @@ void AUC_Player::SetOwnedWeapons(TArray<FOwnedWeapon>& OwnedWeapons)
 			OwnedWeapons.Add(Owned);
 		}
 	}
+}
+
+void AUC_Player::MagnetEnable()
+{
+	Magnet = true;
+	UpdatePickUpRadius(9999);
 }
 
 void AUC_Player::PlayerLost()
@@ -437,12 +448,13 @@ void AUC_Player::UpdatePickUpRadius(float value)
 	PickUpRadius->SetSphereRadius(value);
 }
 
-void AUC_Player::HandleEXPOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult)
+void AUC_Player::HandlePickUpOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult)
 {
 	if (OtherActor) {
 		AEXP_PickUp* EXP_PickUp = Cast<AEXP_PickUp>(OtherActor);
-		AHealth_PickUp* Health_PickUp = Cast< AHealth_PickUp>(OtherActor);
-		if (EXP_PickUp || Health_PickUp) {
+		AHealth_PickUp* Health_PickUp = Cast<AHealth_PickUp>(OtherActor);
+		AMagnet_PickUp* Magnet_PickUp = Cast<AMagnet_PickUp>(OtherActor);
+		if (EXP_PickUp || Health_PickUp || Magnet_PickUp) {
 			AttractedActors.Add(OtherActor);
 		}
 		else {
