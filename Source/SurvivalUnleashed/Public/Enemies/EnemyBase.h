@@ -61,6 +61,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	float GetCurrentHealth() const { return CurrentHealth; }
 
+	// Damage per contact hit. Subclasses can change it with their state (the Boar's charge uses 0 and rams instead).
+	virtual float GetContactDamage() const;
+
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	bool IsDead() const { return bIsDead; }
 
@@ -107,6 +110,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy")
 	TObjectPtr<UEnemyData> EnemyData;
+
+	float KnockbackResistance;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Movement", meta = (ClampMin = "0"))
 	float StopDistance = 50.f;
