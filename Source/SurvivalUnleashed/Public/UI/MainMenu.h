@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "Framework/UGI_SUGameInstance.h"
 #include "MainMenu.generated.h"
 
@@ -11,7 +11,7 @@
  * 
  */
 UCLASS()
-class SURVIVALUNLEASHED_API UMainMenu : public UUserWidget
+class SURVIVALUNLEASHED_API UMainMenu : public UHUDBase
 {
 	GENERATED_BODY()
 

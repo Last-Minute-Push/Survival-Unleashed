@@ -13,9 +13,11 @@ class SURVIVALUNLEASHED_API ABaseSpear : public ABaseBowToGun
 {
 	GENERATED_BODY()
 	
-	void StartThrust();    // Begins the thrust cycle and activates damage overlap events.
-	void StopThrust();     // Finalizes the thrust cycle and deactivates damage overlap events.
-	void EndThrustCycle(); // Resets the thrust cycle and delays before the next thrust cycle.
+	float MoveSpear(float DeltaTime);
+
+	void Thrust();         // Begins the thrust cycle and activates damage overlap events.
+	void Retreat();        // Finalizes the thrust cycle and deactivates damage overlap events.
+	void EndCycle();       // Resets the thrust cycle and delays before the next thrust cycle.
 
 	UFUNCTION(Category = "Damage") void ApplyDamageCollision(UPrimitiveComponent * OverlappedComponent, AActor * OtherActor, UPrimitiveComponent * OtherComp,
 		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -23,7 +25,7 @@ class SURVIVALUNLEASHED_API ABaseSpear : public ABaseBowToGun
 protected:
 	bool bIsAiming, bIsThrusting;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Thrusting") float ThrustRetreatMultiplier = 0.25f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Thrusting") float RetreatMultiplier = 0.25f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Collision") UBoxComponent* BoxCollision;
 	UPROPERTY(VisibleAnywhere, Transient, Category = "Properties|Collision")          TArray<TObjectPtr<AActor>> HitActors;
 

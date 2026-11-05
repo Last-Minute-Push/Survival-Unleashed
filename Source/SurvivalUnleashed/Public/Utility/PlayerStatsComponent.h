@@ -7,6 +7,7 @@
 #include "Weapons/WeaponDatabase.h"
 #include "PlayerStatsComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthUI, float, Current, float, Max);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnHurt, float, Ratio);
 DECLARE_DYNAMIC_DELEGATE(FOnHurtEffect);
 DECLARE_DYNAMIC_DELEGATE(FOnHealEffect);
@@ -22,7 +23,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerFocusUp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerLevelUpEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerFocusUpEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponUpgrade, EWeaponCategory, Category);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStatUIUpdate, uint8, StatType, int32, Rank);
+
 
 UENUM(BlueprintType)
 enum class EPlayerStats : uint8
@@ -46,8 +47,7 @@ enum class EPlayerStats : uint8
 	EPS_Count UMETA(Hidden)
 };
 
-
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStatUIUpdate, EPlayerStats, PlayerStatsArray, int32, Stats);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SURVIVALUNLEASHED_API UPlayerStatsComponent : public UActorComponent
@@ -83,6 +83,8 @@ public:
 
 	FOnHealEffect OnHealEffect;
 	FOnHurtEffect OnHurtEffect;
+	FOnHealthUI OnHealthUIEffect;
+	FOnStatUIUpdate OnStatUI;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
 	class ULevelUpScreen* CurrentLvlScreen;
@@ -130,7 +132,7 @@ private:
 	float ProjectileAmount = 1;
 
 	UPROPERTY()
-	float PickupRange = 120;
+	float PickupRange = 160;
 	UPROPERTY()
 	float MoveSpeed = 800;
 

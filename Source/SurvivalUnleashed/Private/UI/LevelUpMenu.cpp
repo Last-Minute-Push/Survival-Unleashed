@@ -3,3 +3,7 @@
 
 #include "UI/LevelUpMenu.h"
 
+ULevelUpMenu::ULevelUpMenu()
+{
+	ZOrderLayer = 2;
+}
