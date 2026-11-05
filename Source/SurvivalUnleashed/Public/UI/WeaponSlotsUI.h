@@ -10,13 +10,16 @@
 /**
  * 
  */
-
+struct WeaponInfo 
+{
+	EWeaponCategory Category;
+	int Level;
+};
 UCLASS()
 class SURVIVALUNLEASHED_API UWeaponSlotsUI : public UUserWidget
 {
 	GENERATED_BODY()
 
-	virtual void NativeOnInitialized() override;
 	virtual void NativeConstruct() override;
 
 protected:
@@ -31,9 +34,11 @@ protected:
 
 public:
 	
-	void SetWeaponSlot(EWeaponCategory Category, int WeaponSlot);
+	void SetWeaponSlot(EWeaponCategory Category, int Level);
 
-	void SetWeaponSlotLevel(int placeholder);
+	void SetWeaponSlotImageandLevel(EWeaponCategory Category, int Level, int index);
 
-	int SetWeaponImageIndex(EWeaponCategory Category);
+	int GetWeaponImageIndex(EWeaponCategory Category);
+
+	TArray<EWeaponCategory> WeaponIndexCategory;
 };

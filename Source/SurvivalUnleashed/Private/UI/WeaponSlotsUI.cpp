@@ -2,29 +2,66 @@
 
 
 #include "UI/WeaponSlotsUI.h"
-
-void UWeaponSlotsUI::NativeOnInitialized()
-{
-	Super::NativeOnInitialized();
-
-}
+#include "Components/WidgetSwitcher.h"
+#include "Components/TextBlock.h"
 
 void UWeaponSlotsUI::NativeConstruct()
 {
 	Super::NativeConstruct();
-
+	WeaponIndexCategory.Reserve(3);
 }
 
-void UWeaponSlotsUI::SetWeaponSlot(EWeaponCategory Category, int WeaponSlot)
+void UWeaponSlotsUI::SetWeaponSlot(EWeaponCategory Category, int Level)
 {
+	bool found = false;
 
+	for (int i = 0; i < WeaponIndexCategory.Num(); i++)
+	{
+		if (WeaponIndexCategory[i] == Category)
+		{
+			SetWeaponSlotImageandLevel(Category, Level, i);
+			found = true;
+			break;
+		}
+	}
+
+	if (found == false && WeaponIndexCategory.Num() != 3)
+	{
+		WeaponIndexCategory.Push(Category);
+		SetWeaponSlotImageandLevel(Category, Level, WeaponIndexCategory.Num() - 1);
+	}
+	
 }
 
-void UWeaponSlotsUI::SetWeaponSlotLevel(int placeholder)
+void UWeaponSlotsUI::SetWeaponSlotImageandLevel(EWeaponCategory Category, int Level, int index)
 {
+	UWidgetSwitcher* Current = nullptr;
+	UTextBlock* CurrentLevel = nullptr;
+
+	switch(index)
+	{
+	case 0:
+		Current = WeaponIconSwitcherOne;
+		CurrentLevel = SlotOneLevel;
+		break;
+	case 1:
+		Current = WeaponIconSwitcherTwo;
+		CurrentLevel = SlotTwoLevel;
+		break;
+	case 2:
+		Current = WeaponIconSwitcherThree;
+		CurrentLevel = SlotThreeLevel;
+		break;
+	}
+
+	if (Current)
+	{
+		Current->SetActiveWidgetIndex(GetWeaponImageIndex(Category));
+		CurrentLevel->SetText(FText::Format(FText::FromString(TEXT("{0} {1}")), FText::FromString("Level : "), FText::AsNumber(Level+1)));
+	}
 }
 
-int UWeaponSlotsUI::SetWeaponImageIndex(EWeaponCategory Category)
+int UWeaponSlotsUI::GetWeaponImageIndex(EWeaponCategory Category)
 {
 	
 	switch (Category)

@@ -3,6 +3,7 @@
 #define LOCTEXT_NAMESPACE "MyNamespace"
 
 #include "UI/PlayerHUDBase.h"
+#include "UI/WeaponSlotsUI.h"
 #include "Components/ProgressBar.h"
 #include "Components/HorizontalBox.h"
 #include "CommonNumericTextBlock.h"
@@ -192,6 +193,11 @@ void UPlayerHUDBase::SetStatsText(uint8 ChosenStats, int32 Ranks)
 				}
 			}
 	*/
+}
+
+void UPlayerHUDBase::SetWeaponSlots(EWeaponCategory category, int level)
+{
+	WeaponSlots->SetWeaponSlot(category, level);
 }
 
 FText UPlayerHUDBase::GetCurrentTimer()
