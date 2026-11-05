@@ -82,6 +82,8 @@ public:
 
 	UPROPERTY()
 	TArray<TWeakObjectPtr<AActor>> AttractedActors;
+	UFUNCTION()
+	void UpdateKeyBinds();
 protected:
 	UPROPERTY(Category = Character, VisibleAnywhere)
 	class USpringArmComponent* SpringArm;
