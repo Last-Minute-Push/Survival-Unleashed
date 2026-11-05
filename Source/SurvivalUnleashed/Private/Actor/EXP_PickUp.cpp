@@ -71,17 +71,6 @@ void AEXP_PickUp::BeginPlay()
 
 }
 
-bool AEXP_PickUp::CanPickUp(AActor* OtherActor)
-{
-	bool result = false;
-	AUC_Player* ThePlayer = Cast<AUC_Player>(OtherActor);
-	if (ThePlayer) {
-		result = true;
-		SavedPlayer = ThePlayer;
-	}
-	return result;
-}
-
 bool AEXP_PickUp::CanPickUpCompCheck(AActor* OtherActor, UPrimitiveComponent* OverlapComponent)
 {
 	bool result = false;
@@ -111,6 +100,7 @@ void AEXP_PickUp::HandlePickUp()
 {
 	if (SavedPlayer) {
 		SavedPlayer->GetPlayerStatsComp()->UpdateExpANDLevel(EXPValue);
+		SavedPlayer->AttractedActors.Remove(this);
 	}
 }
 
