@@ -93,9 +93,13 @@ void AProjectileBase::Launch(AActor* OwningWeapon, const FProjectileLaunchParams
 	// so they never send a new begin-overlap. Hit them now.
 	Collision->UpdateOverlaps(); // the pool enabled collision without moving us, so the overlap list may be stale
 	TArray<AActor*> Touching;
-	Collision->GetOverlappingActors(Touching, AEnemyBase::StaticClass());
+	Collision->GetOverlappingActors(Touching);
 	for (AActor* Target : Touching)
 	{
+		if (!IsValidTarget(Target))
+		{
+			continue;
+		}
 		HandleHit(Target);
 		if (bSpent)
 		{
@@ -137,7 +141,7 @@ void AProjectileBase::Tick(float DeltaTime)
 void AProjectileBase::OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (OtherActor && OtherActor->IsA<AEnemyBase>())
+	if (OtherActor && IsValidTarget(OtherActor))
 	{
 		HandleHit(OtherActor);
 	}
@@ -145,6 +149,12 @@ void AProjectileBase::OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedCom
 	{
 		bSpent = true; // stopped by a pillar, log, or wall
 	}
+}
+
+bool AProjectileBase::IsValidTarget(const AActor* Target) const
+{
+	const AEnemyBase* Enemy = Cast<AEnemyBase>(Target);
+	return Enemy && Enemy->IsTargetable();
 }
 
 void AProjectileBase::HandleHit(AActor* Target)
