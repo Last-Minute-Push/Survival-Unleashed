@@ -34,7 +34,7 @@ class UEnemyData;
 class UHordeSubsystem;
 class AEXP_PickUp;
 class UCapsuleComponent;
-class USkeletalMeshComponent;
+class UStaticMeshComponent;
 
 UCLASS(Abstract)
 class SURVIVALUNLEASHED_API AEnemyBase : public AActor, public IPoolable
@@ -63,6 +63,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	bool IsDead() const { return bIsDead; }
+
+	// Whether weapons and horde queries should consider this enemy at all 
+	virtual bool IsTargetable() const { return !bIsDead; }
 
 	// Where drops should appear: near the ground under this enemy, however tall its capsule is
 	FVector GetLootLocation() const;
@@ -100,7 +103,7 @@ protected:
 	TObjectPtr<UCapsuleComponent> Capsule;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	TObjectPtr<USkeletalMeshComponent> Mesh;
+	TObjectPtr<UStaticMeshComponent> Mesh;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy")
 	TObjectPtr<UEnemyData> EnemyData;

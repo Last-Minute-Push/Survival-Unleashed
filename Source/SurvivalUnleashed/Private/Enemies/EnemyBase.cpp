@@ -10,7 +10,7 @@
 #include "Sound/SoundConcurrency.h"
 #include "Framework/ObjectPoolSubsystem.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
@@ -35,7 +35,7 @@ AEnemyBase::AEnemyBase()
 	Capsule->SetGenerateOverlapEvents(true);
 	RootComponent = Capsule;
 
-	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
+	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(Capsule);
 	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);	
 	
