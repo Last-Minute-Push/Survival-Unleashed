@@ -34,7 +34,7 @@ class UEnemyData;
 class UHordeSubsystem;
 class AEXP_PickUp;
 class UCapsuleComponent;
-class USkeletalMeshComponent;
+class UStaticMeshComponent;
 
 UCLASS(Abstract)
 class SURVIVALUNLEASHED_API AEnemyBase : public AActor, public IPoolable
@@ -60,6 +60,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	float GetCurrentHealth() const { return CurrentHealth; }
+
+	// Damage per contact hit. Subclasses can change it with their state (the Boar's charge uses 0 and rams instead).
+	virtual float GetContactDamage() const;
 
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	bool IsDead() const { return bIsDead; }
@@ -100,7 +103,7 @@ protected:
 	TObjectPtr<UCapsuleComponent> Capsule;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	TObjectPtr<USkeletalMeshComponent> Mesh;
+	TObjectPtr<UStaticMeshComponent> Mesh;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy")
 	TObjectPtr<UEnemyData> EnemyData;

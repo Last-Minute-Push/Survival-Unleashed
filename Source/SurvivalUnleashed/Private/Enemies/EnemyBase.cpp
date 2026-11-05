@@ -10,7 +10,7 @@
 #include "Sound/SoundConcurrency.h"
 #include "Framework/ObjectPoolSubsystem.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
@@ -35,10 +35,10 @@ AEnemyBase::AEnemyBase()
 	Capsule->SetGenerateOverlapEvents(true);
 	RootComponent = Capsule;
 
-	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
+	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(Capsule);
-	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);	
-	
+	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 }
 
 // Called when the game starts or when spawned
@@ -71,7 +71,7 @@ void AEnemyBase::BeginPlay()
 
 	ResetState();
 
-	
+
 }
 
 void AEnemyBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -91,7 +91,7 @@ float AEnemyBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
 	{
 		if (I->GetLibrary()->SFX_EnemyHurt) {
-			
+
 			if (ConcurrencySetup) {
 				I->PlaySound(I->GetLibrary()->SFX_EnemyHurt, ConcurrencySetup);
 			}
@@ -118,9 +118,9 @@ float AEnemyBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 		if (NiagaraDeathComponent)
 		{
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, NiagaraDeathComponent, this->GetActorLocation(), this->GetActorRotation(),
-			this->GetActorScale(),true,true,ENCPoolMethod::AutoRelease,true);
+				this->GetActorScale(), true, true, ENCPoolMethod::AutoRelease, true);
 		}
-		
+
 		Die();
 	}
 
@@ -180,7 +180,12 @@ void AEnemyBase::DealContactDamage()
 		return;
 	}
 
-	UGameplayStatics::ApplyDamage(Player, EnemyData->ContactDamage * DamageMultiplier, nullptr, this, nullptr);
+	UGameplayStatics::ApplyDamage(Player, GetContactDamage() * DamageMultiplier, nullptr, this, nullptr);
+}
+
+float AEnemyBase::GetContactDamage() const
+{
+	return EnemyData ? EnemyData->ContactDamage : 0.f;
 }
 
 void AEnemyBase::ApplyDifficulty(float InHealthMultiplier, float InDamageMultiplier)
