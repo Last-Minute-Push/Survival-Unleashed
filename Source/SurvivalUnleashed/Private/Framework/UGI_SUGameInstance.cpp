@@ -6,6 +6,9 @@
 #include "AudioDevice.h"
 #include "Core/SUSaveGame.h"
 #include "Kismet/GameplayStatics.h"
+#include "EnhancedInputSubsystems.h"
+#include "UserSettings/EnhancedInputUserSettings.h"
+#include "Actor/UC_Player.h"
 
 #ifndef UINT64_MAX
 #define UINT64_MAX 0xffffffffffffffffui64
@@ -258,6 +261,68 @@ void UUGI_SUGameInstance::RefundAllRanks()
 	SaveData->FocusModern = 0;
 
 	SaveProgress();
+}
+
+void UUGI_SUGameInstance::UpdatePlayerKeyBinds()
+{
+	if (PlayerItself) {
+		SaveKeyBinds();
+		PlayerItself->UpdateKeyBinds();
+	}
+}
+void UUGI_SUGameInstance::SaveKeyBinds() {
+	if (SaveData && PlayerMappingContext) {
+		TArray<FEnhancedActionKeyMapping>&AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(PlayerMappingContext->GetMappings());
+		for (int32 i = 0; i < AllMappings.Num();i++) {
+			if (AllMappings[i].Action == MoveAction) {
+				switch (i) {
+				case 0:
+					SaveData->ForwardInput.Key = AllMappings[i].Key;
+					break;
+				case 1:
+					SaveData->DownInput.Key = AllMappings[i].Key;
+					break;
+				case 2:
+					SaveData->LeftInput.Key = AllMappings[i].Key;
+					break;
+				case 3:
+					SaveData->RightInput.Key = AllMappings[i].Key;
+					break;
+				}
+			}
+			if (AllMappings[i].Action == DashAction) {
+				SaveData->DashInput.Key = AllMappings[i].Key;
+			}
+		}
+		SaveProgress();
+	}
+}
+void UUGI_SUGameInstance::LoadKeyBinds() {
+	if (SaveData && PlayerMappingContext) {
+		TArray<FEnhancedActionKeyMapping>& AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(PlayerMappingContext->GetMappings());
+		for (int32 i = 0; i < AllMappings.Num();i++) {
+			if (AllMappings[i].Action == MoveAction) {
+				switch (i) {
+				case 0:
+					AllMappings[i].Key = SaveData->ForwardInput.Key;
+					break;
+				case 1:
+					AllMappings[i].Key = SaveData->DownInput.Key;
+					break;
+				case 2:
+					AllMappings[i].Key = SaveData->LeftInput.Key;
+					break;
+				case 3:
+					AllMappings[i].Key = SaveData->RightInput.Key;
+					break;
+				}
+			}
+			if (AllMappings[i].Action == DashAction) {
+				AllMappings[i].Key = SaveData->DashInput.Key;
+			}
+		}
+		UpdatePlayerKeyBinds();
+	}
 }
 
 #if AUDIO_MANAGER_TEST
