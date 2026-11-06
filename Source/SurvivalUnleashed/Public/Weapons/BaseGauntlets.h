@@ -3,40 +3,43 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Weapons/BaseBowToGun.h"
+#include "Weapons/BaseWeapon.h"
 #include "BaseGauntlets.generated.h"
 
 class UBoxComponent;
+class UGauntletData;
+class UHordeSubsystem;
+
+DECLARE_DELEGATE_OneParam(FOnStartState, UGauntletData* /*Gauntlet*/);
+DECLARE_DELEGATE_TwoParams(FOnUpdateState, UGauntletData* /*Gauntlet*/, float /*DeltaTime*/);
+DECLARE_DELEGATE_OneParam(FOnExitState, UGauntletData* /*Gauntlet*/);
+
+// Change the parameters from & to *, createdefaultsubobject the UGauntletData (hope it works), and make sure it's pointing to the same memory address by checking if lol changed
 
 USTRUCT(BlueprintType)
-struct FGauntlet
+struct FGauntletState
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly) float                                                Direction;
-	UPROPERTY(BlueprintReadOnly) FGauntletState&                                      State;
-	UPROPERTY(BlueprintReadOnly) TWeakObjectPtr<FGauntlet>                            Other;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly) TObjectPtr<USceneComponent>        GauntletPivot;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly) TObjectPtr<USkeletalMeshComponent> Mesh;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly) TObjectPtr<UBoxComponent>          BoxCollision;
+	FOnStartState Start;
+	FOnUpdateState Update;
+	FOnExitState Exit;
 
-	FGauntlet(FGauntletState& _State) : State(_State) {}
-};
+	FGauntletState() {};
 
-struct FGauntletState
-{
-	void (ABaseGauntlets::*Start)(FGauntlet&);
-	void (ABaseGauntlets::*Update)(FGauntlet&, float);
-	void (ABaseGauntlets::*Exit)(FGauntlet&);
-
-	FGauntletState(void (ABaseGauntlets::*StartFP)(FGauntlet&), void (ABaseGauntlets::*UpdateFP)(FGauntlet&, float), void (ABaseGauntlets::*ExitFP)(FGauntlet&))
+	FGauntletState(UObject* UserObject, FName StartName, FName UpdateName, FName ExitName)
 	{
-		Start = StartFP;
-		Update = UpdateFP;
-		Exit = ExitFP;
+		Start.BindUFunction(UserObject, StartName);
+		Update.BindUFunction(UserObject, UpdateName);
+		Exit.BindUFunction(UserObject, ExitName);
 	}
 
-	FGauntletState() : Start(nullptr), Update(nullptr), Exit(nullptr) {}
+	~FGauntletState()
+	{
+		Start.Unbind();
+		Update.Unbind();
+		Exit.Unbind();
+	}
 };
 
 /**
@@ -49,16 +52,26 @@ class SURVIVALUNLEASHED_API ABaseGauntlets : public ABaseWeapon
 
 	int32 PunchCount = 0;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Properties") UGauntletData* Left;
+	UPROPERTY(EditDefaultsOnly, Category = "Properties") UGauntletData* Right;
+	UPROPERTY(EditDefaultsOnly, Category = "Properties") UGauntletData* First;
+
+	UGauntletData* GetOther(UGauntletData* Gauntlet) { return (Gauntlet == Left) ? Right : Left; }
+	void SetState(UGauntletData* Gauntlet, FGauntletState* State);
+
 	// Start Functions
-	void Punch(FGauntlet& Gauntlet);                                                // STATE_PUNCHING
-	void Retreat(FGauntlet& Gauntlet);                                              // STATE_RETREAT
+	UFUNCTION(BlueprintCallable) void Punch(UGauntletData* Gauntlet);                          // STATE_PUNCHING
+	UFUNCTION(BlueprintCallable) void Retreat(UGauntletData* Gauntlet);                        // STATE_RETREAT
 
 	// Update Functions
-	void MoveGauntlets(FGauntlet& Gauntlet, float DeltaTime);                       // STATE_PUNCHING, STATE_RETREAT
+	UFUNCTION(BlueprintCallable) void MoveGauntlets(UGauntletData* Gauntlet, float DeltaTime); // STATE_PUNCHING, STATE_RETREAT
 
 	// Exit Functions
-	void EndPunch(FGauntlet& Gauntlet);                                             // STATE_PUNCHING
-	void EndRetreat(FGauntlet& Gauntlet);		                                    // STATE_RETREAT
+	UFUNCTION(BlueprintCallable) void EndPunch(UGauntletData* Gauntlet);                       // STATE_PUNCHING
+	UFUNCTION(BlueprintCallable) void EndRetreat(UGauntletData* Gauntlet);		               // STATE_RETREAT
+
+	UFUNCTION(BlueprintCallable) void ApplyDamageCollision(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+		                                                   int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 protected:
 	float Range;     // Data->Range	
@@ -67,9 +80,6 @@ protected:
 	float Cooldown;  // Data->Cooldown
 	FTimerHandle TPunchCooldown;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties") FGauntlet Left;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties") FGauntlet Right;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties") TWeakObjectPtr<FGauntlet> First;
 
 	UPROPERTY(Transient) UHordeSubsystem* Horde;
 
@@ -81,6 +91,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Punching", meta = (ClampMin = "1")) int32 PunchCountMax = 2;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Punching", meta = (ClampMin = "0")) float ArcRadius = 60.f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Punching", meta = (ClampMin = "0")) float PunchHitDelay = 0.25f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Punching", meta = (ClampMin = "0")) float EnemyFacingReach = 2400.f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Punching")                          USceneComponent* GauntletPivotLeft;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Punching")                          USceneComponent* GauntletPivotRight;
 	

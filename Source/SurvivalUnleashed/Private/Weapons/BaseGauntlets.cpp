@@ -2,56 +2,80 @@
 
 #include "Weapons/BaseGauntlets.h"
 #include "Components/BoxComponent.h"
+#include "Enemies/HordeSubsystem.h"
+#include "Weapons/GauntletData.h"
+#include "Weapons/BaseBowToGun.h"
 #include "Weapons/WeaponData.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogBaseGauntlets, Log, All);
 
-ABaseGauntlets::ABaseGauntlets() : Left(StateCooldown), Right(StateCooldown)
+ABaseGauntlets::ABaseGauntlets()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
 
 	// Component Initialization
-	Left.GauntletPivot  = GauntletPivotLeft  = CreateDefaultSubobject<USceneComponent>("GauntletPivotLeft");
-	Left.Mesh           = MeshLeft           = CreateDefaultSubobject<USkeletalMeshComponent>("MeshLeft");
-	Left.BoxCollision   = BoxCollisionLeft   = CreateDefaultSubobject<UBoxComponent>("BoxCollisionLeft");
+	Left                                      = CreateDefaultSubobject<UGauntletData>("Left");
+	Right                                     = CreateDefaultSubobject<UGauntletData>("Right");
 
-	Right.GauntletPivot = GauntletPivotRight = CreateDefaultSubobject<USceneComponent>("GauntletPivotRight");
-	Right.Mesh          = MeshRight          = CreateDefaultSubobject<USkeletalMeshComponent>("MeshRight");
-	Right.BoxCollision  = BoxCollisionRight  = CreateDefaultSubobject<UBoxComponent>("BoxCollisionRight");
+	Left->GauntletPivot  = GauntletPivotLeft  = CreateDefaultSubobject<USceneComponent>("GauntletPivotLeft");
+	Left->Mesh           = MeshLeft           = CreateDefaultSubobject<USkeletalMeshComponent>("MeshLeft");
+	Left->BoxCollision   = BoxCollisionLeft   = CreateDefaultSubobject<UBoxComponent>("BoxCollisionLeft");
+
+	Right->GauntletPivot = GauntletPivotRight = CreateDefaultSubobject<USceneComponent>("GauntletPivotRight");
+	Right->Mesh          = MeshRight          = CreateDefaultSubobject<USkeletalMeshComponent>("MeshRight");
+	Right->BoxCollision  = BoxCollisionRight  = CreateDefaultSubobject<UBoxComponent>("BoxCollisionRight");
 
 	// Component Attachment
-	GauntletPivotLeft->SetupAttachment(Pivot);
+	GauntletPivotLeft->SetupAttachment(Mesh);
 	MeshLeft->SetupAttachment(GauntletPivotLeft);
 	BoxCollisionLeft->SetupAttachment(MeshLeft);
-
-	GauntletPivotRight->SetupAttachment(Pivot);
+	GauntletPivotRight->SetupAttachment(Mesh);
 	MeshRight->SetupAttachment(GauntletPivotRight);
 	BoxCollisionRight->SetupAttachment(MeshRight);
 
+	// Collision
+	BoxCollisionLeft->SetGenerateOverlapEvents(false);
+	BoxCollisionRight->SetGenerateOverlapEvents(false);
+
 	// State Machine
-	StatePunch = FGauntletState(Punch, MoveGauntlets, EndPunch);
-	StateRetreat  = FGauntletState(Retreat, MoveGauntlets, EndRetreat);
+	StatePunch.Start.BindUFunction(this, FName("Punch"));
+	StatePunch.Update.BindUFunction(this, FName("MoveGauntlets"));
+	StatePunch.Exit.BindUFunction(this, FName("EndPunch"));
 
-	// Final Gauntlet initializatons
-	Left.Other = &Right;
-	Right.Other = &Left;
+	StateRetreat.Start.BindUFunction(this, FName("Retreat"));
+	StateRetreat.Update.BindUFunction(this, FName("MoveGauntlets"));
+	StateRetreat.Exit.BindUFunction(this, FName("EndRetreat"));
 
-	First = &Right;
+	Left->State = &StateCooldown;
+	Right->State = &StateCooldown;
+
+	First = Right;
+
+	bAbsoluteRotation = true;
 }
 
 void ABaseGauntlets::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (UHordeSubsystem* H = GetWorld()->GetSubsystem<UHordeSubsystem>())
+	{
+		Horde = H;
+	}
+	else UE_LOG(LogBaseGauntlets, Error, TEXT("Failed to retrieve HordeSubystem in ABaseGauntlets!"));
+
+	BoxCollisionLeft->OnComponentBeginOverlap.AddDynamic(this, &ABaseGauntlets::ApplyDamageCollision);
+	BoxCollisionRight->OnComponentBeginOverlap.AddDynamic(this, &ABaseGauntlets::ApplyDamageCollision);
+
 	// - Gauntlets Properties - 
 	if (Data)
 	{
-		Range          = Data->Range / FMath::Max(ArcRadius + 1.f, 1.f);
+		Range          = Data->Range;
 		Height         = Data->Height;
 		Radius         = Data->DistanceFromPlayer;
 		Cooldown       = Data->Cooldown;
-		Left.Direction = -(Right.Direction = Data->AttackSpeed / FMath::Max(ArcRadius + 1.f, 1.f));
+		Left->Direction = -(Right->Direction = -Data->AttackSpeed);
 	}
 	else
 	{
@@ -61,32 +85,37 @@ void ABaseGauntlets::BeginPlay()
 		Height   = 0.f;
 		Radius   = 0.f;
 		Cooldown = 0.f;
-		Left.Direction = Right.Direction = 0.f;
+		Left->Direction = Right->Direction = 0.f;
 	}
 
-	// - Location -
-	
-	// Radius and Width (DistanceBetweenGauntlets)
-	Left.GauntletPivot->AddLocalOffset(FVector(-DistanceBetweenGauntlets + ArcRadius, Radius, 0.f));
-	Right.GauntletPivot->AddLocalOffset(FVector(DistanceBetweenGauntlets - ArcRadius, Radius, 0.f));
-	// Arc Radius
-	Left.Mesh->AddLocalOffset(FVector(-ArcRadius, 0.f, 0.f));
-	Right.Mesh->AddLocalOffset(FVector(ArcRadius, 0.f, 0.f));
+	// - Location -	
 
+	// Radius and Width (DistanceBetweenGauntlets)
+	Left->GauntletPivot->AddLocalOffset(FVector(DistanceBetweenGauntlets - ArcRadius, Radius, 0.f));
+	Right->GauntletPivot->AddLocalOffset(FVector(-DistanceBetweenGauntlets + ArcRadius, Radius, 0.f));
+	// Arc Radius
+	Left->Mesh->AddLocalOffset(FVector(ArcRadius, 0.f, 0.f));
+	Right->Mesh->AddLocalOffset(FVector(-ArcRadius, 0.f, 0.f));
+
+
+	/* - PUNCHING STATES -
+	*  
+	*  Cooldown State: Longer state of rest before restarting a cycle of punches
+	* 
+	*  Punch State: Active state of punching; forwards swinging motion
+	* 
+	*  Hit Delay State: Shorter state of rest before activating a punch or retreat
+	* 
+	*  Retreat State: Active state of retrieving a punch; backwards swinging motion
+	* 
+	*  State change for an individual Gauntlet
+	*  [Cooldown -> Punching -> Hit Delay -> Retreat -> Hit Delay -> Punching again for PunchCountMax number of times -> [...] -> Retreat -> Cooldown]
+	*/
+
+	// Starts the first punch
 	GetWorldTimerManager().SetTimer(TPunchCooldown, [this]()
 	{
-		if (!First.IsValid())
-		{
-			UE_LOG(LogBaseGauntlets, Error, TEXT("First variable pointer was never initialized or deleted in ABaseGauntlets::BeginPlay timer lambda!"));
-			return;
-		}
-
-		First->State = StatePunch;
-		if (void (ABaseGauntlets::*Start)(FGauntlet&) = First->State.Start)
-		{
-	    	(this->*Start)(*First.Get());
-		}
-		
+		SetState(First, &StatePunch);
 	}, Cooldown, false);
 }
 
@@ -94,19 +123,16 @@ void ABaseGauntlets::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (auto Update = Left.State.Update)
-	{
-		(this->*Update)(Left, DeltaTime);
-	}
+	// We call update if an update function is bound to the current state
+	Left->State->Update.ExecuteIfBound(Left, DeltaTime);
+	Right->State->Update.ExecuteIfBound(Right, DeltaTime);
 
-	if (auto Update = Right.State.Update)
-	{
-		(this->*Update)(Right, DeltaTime);
-	}
+	UE_LOG(LogBaseGauntlets, Error, TEXT("CollisionState: %i:%i"), Left->BoxCollision->GetGenerateOverlapEvents(), Right->BoxCollision->GetGenerateOverlapEvents());
 
-	if (&Left.State == &StateCooldown || &Right.State == &StateCooldown)
+	// Only face the enemy when both Gunatlets are in cooldown
+	if (Left->State == &StateCooldown && Right->State == &StateCooldown)
 	{
-		ABaseBowToGun::FaceNearestEnemy(Pivot, Horde, (AActor*)Parent, Range);
+		ABaseBowToGun::FaceNearestEnemy(Mesh, Horde, (AActor*)Parent, EnemyFacingReach, true);
 	}
 }
 
@@ -116,96 +142,107 @@ void ABaseGauntlets::EndPlay(EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-void ABaseGauntlets::Punch(FGauntlet& Gauntlet)
+void ABaseGauntlets::Punch(UGauntletData* Gauntlet)
 {
+	// Start of the punch. 
+	// We activate overlap events to apply damage to each enemy 
+	// and face the gauntlets to the nearest enemy (only once!) before initiating the punch
 	++PunchCount;
-	Gauntlet.BoxCollision->SetGenerateOverlapEvents(true);
-	ABaseBowToGun::FaceNearestEnemy(Pivot, Horde, (AActor*)Parent, Range);
-
-	if (&Gauntlet.Other->State == &StateCooldown && Gauntlet.Other.IsValid())
-	{
-		Gauntlet.Other->State = StateHitDelay;
-	}
+	Gauntlet->BoxCollision->SetGenerateOverlapEvents(true);
+	ABaseBowToGun::FaceNearestEnemy(Mesh, Horde, (AActor*)Parent, EnemyFacingReach, true);
 }
 
-void ABaseGauntlets::Retreat(FGauntlet& Gauntlet)
+void ABaseGauntlets::SetState(UGauntletData* Gauntlet, FGauntletState* State)
 {
-	if (PunchCount < PunchCountMax && Gauntlet.Other.IsValid())
-	{
-		Gauntlet.Other->State = StatePunch;
-	}
+	Gauntlet->State = State;
+	Gauntlet->State->Start.ExecuteIfBound(Gauntlet);
 }
 
-void ABaseGauntlets::MoveGauntlets(FGauntlet& Gauntlet, float DeltaTime)
+void ABaseGauntlets::Retreat(UGauntletData* Gauntlet)
 {
-	Gauntlet.GauntletPivot->AddLocalRotation(FQuat(0.f, 0.f, ((&Gauntlet.State == &StatePunch) ? Gauntlet.Direction : -Gauntlet.Direction) * DeltaTime, 1.f));
-	
-	void (ABaseGauntlets::*Exit)(FGauntlet&) = nullptr;
-	float Angle = Gauntlet.GauntletPivot->GetRelativeRotation().Yaw;
-	
-	if (Gauntlet.Direction < 0.f)
+	// Start of the retreat.
+	if (PunchCount < PunchCountMax) // Do we still have punches left?
 	{
-		if ((Angle <= -Range || Angle >= 0.f) && (Exit = Gauntlet.State.Exit))
-		{
-			(this->*Exit)(Gauntlet);
-		}
+		SetState(GetOther(Gauntlet), &StatePunch); // Yes, activate the other gauntlet for punching
 	}
-	else if ((Angle >= Range || Angle <= 0.f) && (Exit = Gauntlet.State.Exit))
-	{
-		(this->*Exit)(Gauntlet);
-	}
-}
-
-void ABaseGauntlets::EndPunch(FGauntlet& Gauntlet)
-{
-	Gauntlet.State = StateHitDelay;
-	Gauntlet.BoxCollision->SetGenerateOverlapEvents(false);
-	Gauntlet.GauntletPivot->SetRelativeRotation(FRotator(0.f, 0.f, (Gauntlet.Direction < 0.f) ? -Range : Range));
-
-	TWeakObjectPtr<FGauntlet> GauntletWeak = &Gauntlet;
-	GetWorldTimerManager().SetTimer(TPunchCooldown, [this, GauntletWeak]()
-	{
-		if (!GauntletWeak.IsValid())
+	else // No, initiate the cooldown protocol for both gauntlets
+	{ // (this gauntlet will finish its retreat state to then go to the cooldown state
+		GetWorldTimerManager().ClearTimer(TPunchCooldown);
+		GetWorldTimerManager().SetTimer(TPunchCooldown, [this, Gauntlet]()
 		{
-			UE_LOG(LogBaseGauntlets, Error, TEXT("Gauntlet Weak Pointer was invalidated in ABaseGauntlets::EndPunch timer lambda!"));
-			return;
-		}
-
-		GauntletWeak->State = StateRetreat;
-		if (void (ABaseGauntlets::*Start)(FGauntlet&) = GauntletWeak->State.Start)
-		{
-			(this->*Start)(*GauntletWeak.Get());
-		}
-	}, PunchHitDelay, false);
-}
-
-void ABaseGauntlets::EndRetreat(FGauntlet& Gauntlet)
-{
-	Gauntlet.GauntletPivot->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
-	if (PunchCount >= PunchCountMax)
-	{
-		Gauntlet.State = StateCooldown;
-
-		TWeakObjectPtr<FGauntlet> GauntletWeak = First;
-		GetWorldTimerManager().SetTimer(TPunchCooldown, [this, GauntletWeak]()
-		{
-			if (!GauntletWeak.IsValid())
-			{
-				UE_LOG(LogBaseGauntlets, Error, TEXT("Gauntlet Weak Pointer was invalidated in ABaseGauntlets::EndRetreat timer lambda!"));
-				return;
-			}
-
-			GauntletWeak->State = StatePunch;
-			if (void (ABaseGauntlets::*Start)(FGauntlet&) = GauntletWeak->State.Start)
-			{
-				(this->*Start)(*GauntletWeak.Get());
-			}
+			PunchCount = 0;
+			SetState(First, &StatePunch);
 		}, Cooldown, false);
 	}
-	Gauntlet.State = StateHitDelay;
+}
+
+void ABaseGauntlets::MoveGauntlets(UGauntletData* Gauntlet, float DeltaTime)
+{
+	// Updates the positioning of the Gauntlet weapons
+	Gauntlet->GauntletPivot->AddLocalRotation(FQuat(0.f, 0.f, ((Gauntlet->State == &StatePunch) ? Gauntlet->Direction : -Gauntlet->Direction) * DeltaTime, 1.f));
+	
+	float Angle = Gauntlet->GauntletPivot->GetRelativeRotation().Yaw;
+	
+	if (Gauntlet->Direction < 0.f) // Is this using Right's direction?
+	{
+		if ((Angle <= -Range || Angle >= 0.f)) // Yes! Did it go past its range?
+		{
+			Gauntlet->State->Exit.ExecuteIfBound(Gauntlet); // Yep! Call the exit function
+		}
+	}
+	else if ((Angle >= Range || Angle <= 0.f)) // No, it's left! Did it go past its range?
+	{
+		Gauntlet->State->Exit.ExecuteIfBound(Gauntlet); // Yep! Call the exit function
+	}
+}
+
+void ABaseGauntlets::EndPunch(UGauntletData* Gauntlet)
+{
+	// End of the punch.
+	// We disable overlap events to prevent applying damage to enemies while not actively punching,
+	// clamp the rotation of the Gauntlet, and remove the HitActors to ensure 
+	// we can punch the same enemies with another punch.
+	HitActors.Empty();
+	Gauntlet->BoxCollision->SetGenerateOverlapEvents(false);
+	Gauntlet->GauntletPivot->SetRelativeRotation(FRotator(0.f, (Gauntlet->Direction < 0.f) ? -Range : Range, 0.f));
+
+	// StateHitDelay will be active and keep the Gauntlet dormant until the
+	// delay timer runs out and activates this Gauntlet's retreat procedure
+	SetState(Gauntlet, &StateHitDelay);
+
+	GetWorldTimerManager().SetTimer(TPunchCooldown, [this, Gauntlet]()
+	{
+		SetState(Gauntlet, &StateRetreat);
+	}, PunchHitDelay, false);
+}
+void ABaseGauntlets::EndRetreat(UGauntletData* Gauntlet)
+{
+	// End of the retreat.
+
+	Gauntlet->GauntletPivot->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
+	if (PunchCount >= PunchCountMax)
+	{
+		Gauntlet->State = &StateCooldown;
+	}
+	else
+	{
+		Gauntlet->State = &StateHitDelay;
+	}
+}
+
+void ABaseGauntlets::ApplyDamageCollision(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	                                      int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!HitActors.Contains(OtherActor))
+	{
+		HitActors.Add(OtherActor);
+		Super::ApplyDamage(this, OtherActor);
+	}
 }
 
 void ABaseGauntlets::StopWeapon()
 {
+	Super::StopWeapon();
+
 	GetWorldTimerManager().ClearTimer(TPunchCooldown);
 }
