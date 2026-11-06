@@ -127,8 +127,6 @@ void ABaseGauntlets::Tick(float DeltaTime)
 	Left->State->Update.ExecuteIfBound(Left, DeltaTime);
 	Right->State->Update.ExecuteIfBound(Right, DeltaTime);
 
-	UE_LOG(LogBaseGauntlets, Error, TEXT("CollisionState: %i:%i"), Left->BoxCollision->GetGenerateOverlapEvents(), Right->BoxCollision->GetGenerateOverlapEvents());
-
 	// Only face the enemy when both Gunatlets are in cooldown
 	if (Left->State == &StateCooldown && Right->State == &StateCooldown)
 	{
