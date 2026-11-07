@@ -288,5 +288,10 @@ EWeaponUpgradeStatus UWeaponSubsystem::CreateWeapon(FWeaponCreateParams& Params,
 		WeaponComponent->SetAbsolute(false, true, false);
 	}
 
+	if (Params.bStartWeapon)
+	{
+		Weapon->StartWeapon();
+	}
+
 	return EWeaponUpgradeStatus::E_Success;
 }
