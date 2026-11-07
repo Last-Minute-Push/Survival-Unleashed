@@ -37,8 +37,8 @@ AEnemyBase::AEnemyBase()
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(Capsule);
-	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);	
-	
+	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 }
 
 // Called when the game starts or when spawned
@@ -51,6 +51,7 @@ void AEnemyBase::BeginPlay()
 		UE_LOG(LogEnemy, Warning, TEXT("%s has no EnemyData assigned"), *GetName());
 	}
 
+	KnockbackResistance = EnemyData->KnockbackResistance;
 	Capsule->OnComponentBeginOverlap.AddDynamic(this, &AEnemyBase::OnCapsuleBeginOverlap);
 	Capsule->OnComponentEndOverlap.AddDynamic(this, &AEnemyBase::OnCapsuleEndOverlap);
 
@@ -71,7 +72,7 @@ void AEnemyBase::BeginPlay()
 
 	ResetState();
 
-	
+
 }
 
 void AEnemyBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -91,7 +92,7 @@ float AEnemyBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
 	{
 		if (I->GetLibrary()->SFX_EnemyHurt) {
-			
+
 			if (ConcurrencySetup) {
 				I->PlaySound(I->GetLibrary()->SFX_EnemyHurt, ConcurrencySetup);
 			}
@@ -118,9 +119,9 @@ float AEnemyBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 		if (NiagaraDeathComponent)
 		{
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, NiagaraDeathComponent, this->GetActorLocation(), this->GetActorRotation(),
-			this->GetActorScale(),true,true,ENCPoolMethod::AutoRelease,true);
+				this->GetActorScale(), true, true, ENCPoolMethod::AutoRelease, true);
 		}
-		
+
 		Die();
 	}
 
@@ -180,7 +181,12 @@ void AEnemyBase::DealContactDamage()
 		return;
 	}
 
-	UGameplayStatics::ApplyDamage(Player, EnemyData->ContactDamage * DamageMultiplier, nullptr, this, nullptr);
+	UGameplayStatics::ApplyDamage(Player, GetContactDamage() * DamageMultiplier, nullptr, this, nullptr);
+}
+
+float AEnemyBase::GetContactDamage() const
+{
+	return EnemyData ? EnemyData->ContactDamage : 0.f;
 }
 
 void AEnemyBase::ApplyDifficulty(float InHealthMultiplier, float InDamageMultiplier)
@@ -196,7 +202,7 @@ void AEnemyBase::ApplyKnockback(const FVector& SourceLocation, float Distance)
 		return;
 	}
 
-	const float Effective = Distance * (1.f - EnemyData->KnockbackResistance);
+	const float Effective = Distance * (1.f - KnockbackResistance);
 	if (Effective <= KINDA_SMALL_NUMBER)
 	{
 		return; // immune
