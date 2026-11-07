@@ -31,9 +31,9 @@ protected:
 	float Speed;     // Data->AttackSpeed
 	FTimerHandle TThrustCooldown;
 
-	UPROPERTY(Transient) UHordeSubsystem* Horde;
+	UPROPERTY(Transient) TObjectPtr<UHordeSubsystem> Horde;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Thrusting") float RetreatMultiplier = 0.25f;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Collision") UBoxComponent* BoxCollision;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Collision") TObjectPtr<UBoxComponent> BoxCollision;
 	UPROPERTY(VisibleAnywhere, Transient, Category = "Properties|Collision")          TArray<TObjectPtr<AActor>> HitActors;
 
 	virtual void BeginPlay();
@@ -43,5 +43,6 @@ protected:
 public:
 	ABaseSpear();
 
+	virtual void StartWeapon() override;
 	virtual void StopWeapon() override;
 };

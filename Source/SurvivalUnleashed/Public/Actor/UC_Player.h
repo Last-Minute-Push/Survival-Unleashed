@@ -76,6 +76,9 @@ public:
 	inline int32 GetInventoryMaxSlots() const { return InventoryMaxSlots; }
 	UFUNCTION(BlueprintCallable, Category = "Weapons")
 	inline void SetInventoryMaxSlots(int32 Slots) { InventoryMaxSlots = Slots; }
+	
+	UFUNCTION(BlueprintCallable, Category = "Weapons")
+	void StartWeapons();
 	UFUNCTION(BlueprintCallable, Category = "Weapons")
 	void SetWeapon(EWeaponCategory Type);
 	bool isPaused;

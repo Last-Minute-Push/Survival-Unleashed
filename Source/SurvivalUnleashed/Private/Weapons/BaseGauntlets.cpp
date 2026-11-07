@@ -90,33 +90,12 @@ void ABaseGauntlets::BeginPlay()
 
 	// - Location -	
 
-	// Radius and Width (DistanceBetweenGauntlets)
-	Left->GauntletPivot->AddLocalOffset(FVector(DistanceBetweenGauntlets - ArcRadius, Radius, 0.f));
-	Right->GauntletPivot->AddLocalOffset(FVector(-DistanceBetweenGauntlets + ArcRadius, Radius, 0.f));
+    // Width (DistanceBetweenGauntlets) and Radius
+	Left->GauntletPivot->SetRelativeLocation(FVector(DistanceBetweenGauntlets - ArcRadius, Radius, 0.f));
+	Right->GauntletPivot->SetRelativeLocation(FVector(-DistanceBetweenGauntlets + ArcRadius, Radius, 0.f));
 	// Arc Radius
-	Left->Mesh->AddLocalOffset(FVector(ArcRadius, 0.f, 0.f));
-	Right->Mesh->AddLocalOffset(FVector(-ArcRadius, 0.f, 0.f));
-
-
-	/* - PUNCHING STATES -
-	*  
-	*  Cooldown State: Longer state of rest before restarting a cycle of punches
-	* 
-	*  Punch State: Active state of punching; forwards swinging motion
-	* 
-	*  Hit Delay State: Shorter state of rest before activating a punch or retreat
-	* 
-	*  Retreat State: Active state of retrieving a punch; backwards swinging motion
-	* 
-	*  State change for an individual Gauntlet
-	*  [Cooldown -> Punching -> Hit Delay -> Retreat -> Hit Delay -> Punching again for PunchCountMax number of times -> [...] -> Retreat -> Cooldown]
-	*/
-
-	// Starts the first punch
-	GetWorldTimerManager().SetTimer(TPunchCooldown, [this]()
-	{
-		SetState(First, &StatePunch);
-	}, Cooldown, false);
+	Left->Mesh->SetRelativeLocation(FVector(ArcRadius, 0.f, 0.f));
+	Right->Mesh->SetRelativeLocation(FVector(-ArcRadius, 0.f, 0.f));
 }
 
 void ABaseGauntlets::Tick(float DeltaTime)
@@ -199,7 +178,7 @@ void ABaseGauntlets::EndPunch(UGauntletData* Gauntlet)
 	// End of the punch.
 	// We disable overlap events to prevent applying damage to enemies while not actively punching,
 	// clamp the rotation of the Gauntlet, and remove the HitActors to ensure 
-	// we can punch the same enemies with another punch.
+	// we can punch the same set of enemies we punched earlier with another punch.
 	HitActors.Empty();
 	Gauntlet->BoxCollision->SetGenerateOverlapEvents(false);
 	Gauntlet->GauntletPivot->SetRelativeRotation(FRotator(0.f, (Gauntlet->Direction < 0.f) ? -Range : Range, 0.f));
@@ -216,7 +195,7 @@ void ABaseGauntlets::EndPunch(UGauntletData* Gauntlet)
 void ABaseGauntlets::EndRetreat(UGauntletData* Gauntlet)
 {
 	// End of the retreat.
-
+	// We clamp the rotation and set the next state.
 	Gauntlet->GauntletPivot->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
 	if (PunchCount >= PunchCountMax)
 	{
@@ -236,6 +215,40 @@ void ABaseGauntlets::ApplyDamageCollision(UPrimitiveComponent* OverlappedCompone
 		HitActors.Add(OtherActor);
 		Super::ApplyDamage(this, OtherActor);
 	}
+}
+
+void ABaseGauntlets::StartWeapon()
+{
+	Super::StartWeapon();
+
+	// - Location -	
+
+	// Resetting the location
+
+	// Width (DistanceBetweenGauntlets) and Radius
+	Left->GauntletPivot->SetRelativeLocation(FVector(DistanceBetweenGauntlets - ArcRadius, Radius, 0.f));
+	Right->GauntletPivot->SetRelativeLocation(FVector(-DistanceBetweenGauntlets + ArcRadius, Radius, 0.f));
+	// Arc Radius
+	Left->Mesh->SetRelativeLocation(FVector(ArcRadius, 0.f, 0.f));
+	Right->Mesh->SetRelativeLocation(FVector(-ArcRadius, 0.f, 0.f));
+
+	Left->State = &StateCooldown;
+	Right->State = &StateCooldown;
+
+	/* - PUNCHING STATES -
+	*  
+	*  Cooldown State: Longer state of rest before restarting a cycle of punches
+	* 
+	*  Punch State: Active state of punching; forwards swinging motion
+	* 
+	*  Hit Delay State: Shorter state of rest before activating a punch or retreat
+	* 
+	*  Retreat State: Active state of retrieving a punch; backwards swinging motion
+	* 
+	*  State change for an individual Gauntlet
+	*  [Cooldown -> Punching -> Hit Delay -> Retreat -> Hit Delay -> Punching again for PunchCountMax number of times -> [...] -> Retreat -> Cooldown]
+	*/
+	SetState(First, &StatePunch);
 }
 
 void ABaseGauntlets::StopWeapon()

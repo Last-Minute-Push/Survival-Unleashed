@@ -37,6 +37,7 @@ void ABaseSpear::BeginPlay()
 		Height   = Data->Height;
 		Radius   = Data->DistanceFromPlayer;
 		Range    = Data->Range + Radius;
+		Speed    = Data->AttackSpeed;
 	}
 	else
 	{
@@ -46,12 +47,10 @@ void ABaseSpear::BeginPlay()
 		Height   = 0.f;
 		Radius   = 0.f;
 		Range    = 0.f;
+		Speed    = 0.f;
 	}
 
 	bIsAiming = true;
-
-	// Begins the thrust cycle	
-	GetWorldTimerManager().SetTimer(TThrustCooldown, this, &ABaseSpear::Thrust, Cooldown);
 }
 
 void ABaseSpear::Tick(float DeltaTime)
@@ -59,7 +58,7 @@ void ABaseSpear::Tick(float DeltaTime)
 	// We only aim while we're not thrusting
 	if (bIsAiming)
 	{
-		ABaseBowToGun::FaceNearestEnemy(Pivot, Horde, (AActor*)Parent, Range/*, false*/);
+		ABaseBowToGun::FaceNearestEnemy(Pivot, Horde, (AActor*)Parent, Range, true/*, false*/);
 		return;
 	}
 
@@ -126,6 +125,13 @@ void ABaseSpear::ApplyDamageCollision(UPrimitiveComponent* OverlappedComponent, 
 		HitActors.Add(OtherActor);
 		ApplyDamage(this, OtherActor);
 	}
+}
+
+void ABaseSpear::StartWeapon()
+{
+	Super::StartWeapon();
+
+	Thrust();
 }
 
 void ABaseSpear::StopWeapon()

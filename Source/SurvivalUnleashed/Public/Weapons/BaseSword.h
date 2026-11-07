@@ -18,6 +18,7 @@ class SURVIVALUNLEASHED_API ABaseSword : public ABaseWeapon
 {
 	GENERATED_BODY()
 
+
 	void StartSwing();
 	void StopSwing();
 
@@ -25,7 +26,7 @@ class SURVIVALUNLEASHED_API ABaseSword : public ABaseWeapon
 		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	void Swing(bool bRight, float DeltaTime) const;
-	inline void HideSword(bool bHide) const { Pivot->AddLocalOffset(FVector(0.f, 0.f, bHide ? SwingDisappearingDistance : -SwingDisappearingDistance)); }
+	void HideSword(bool bHide);
 
 public:
 	ABaseSword();
@@ -39,9 +40,11 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UFUNCTION(BlueprintPure, Category = "Swing") virtual bool IsSwinging() const { return bIsSwinging; }
+	virtual void StartWeapon() override;
 	virtual void StopWeapon() override;
 
 protected:
+	bool bIsHidden;
 	bool bIsSwinging;
 	float Height;
 	float Radius;
@@ -62,5 +65,4 @@ protected:
 	UPROPERTY(VisibleAnywhere, Transient, Category = "Properties|Collision")            TArray<TObjectPtr<AActor>> HitActors;      // Collection of enemies that were previously hit by the sword's current swing
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Components")                     class UBoxComponent* BoxCollision;         // Collision used to hit enemies between swings
 	UPROPERTY(VisibleAnywhere, Category = "Properties|Niagara")                         class UNiagaraComponent* NiagaraComponent; // Niagara swing effect for the sword
-	
 };

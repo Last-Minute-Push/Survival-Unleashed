@@ -61,11 +61,9 @@ void ABaseBowToGun::BeginPlay()
 	}
 
 	// Location
-	Mesh->AddLocalOffset(FVector(0.f, Radius, Height));
+	Mesh->SetRelativeLocation(FVector(0.f, Radius, Height));
 	Mesh->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
-
 	HideProjectile(true);
-	GetWorldTimerManager().SetTimer(TFireCooldown, this, &ABaseBowToGun::StartAim, Cooldown);
 }
 
 void ABaseBowToGun::Tick(float DeltaTime)
@@ -151,6 +149,17 @@ void ABaseBowToGun::StopAim()
 	HideProjectile(true);
 
 	GetWorldTimerManager().SetTimer(TFireCooldown, this, &ABaseBowToGun::StartAim, Cooldown);
+}
+
+void ABaseBowToGun::StartWeapon()
+{
+	Super::StartWeapon();
+
+	// Location
+	Mesh->SetRelativeLocation(FVector(0.f, Radius, Height));
+	Mesh->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
+
+	StartAim();
 }
 
 void ABaseBowToGun::StopWeapon()
