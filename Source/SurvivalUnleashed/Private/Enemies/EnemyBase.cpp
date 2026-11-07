@@ -3,10 +3,14 @@
 
 #include "Enemies/EnemyBase.h"
 #include "Enemies/EnemyData.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponentPoolMethodEnum.h"
 #include "UI/DamageNumbersUI.h"
+#include "Sound/SoundConcurrency.h"
 #include "Framework/ObjectPoolSubsystem.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
@@ -31,9 +35,10 @@ AEnemyBase::AEnemyBase()
 	Capsule->SetGenerateOverlapEvents(true);
 	RootComponent = Capsule;
 
-	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
+	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(Capsule);
-	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);	
+	
 }
 
 // Called when the game starts or when spawned
@@ -65,6 +70,8 @@ void AEnemyBase::BeginPlay()
 	LargestSeparationRadius = FMath::Max(LargestSeparationRadius, SeparationRadius);
 
 	ResetState();
+
+	
 }
 
 void AEnemyBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -84,7 +91,10 @@ float AEnemyBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
 	{
 		if (I->GetLibrary()->SFX_EnemyHurt) {
-			I->PlaySound(I->GetLibrary()->SFX_EnemyHurt);
+			
+			if (ConcurrencySetup) {
+				I->PlaySound(I->GetLibrary()->SFX_EnemyHurt, ConcurrencySetup);
+			}
 		}
 	}
 
@@ -105,6 +115,12 @@ float AEnemyBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 
 	if (CurrentHealth <= 0.f)
 	{
+		if (NiagaraDeathComponent)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, NiagaraDeathComponent, this->GetActorLocation(), this->GetActorRotation(),
+			this->GetActorScale(),true,true,ENCPoolMethod::AutoRelease,true);
+		}
+		
 		Die();
 	}
 
@@ -336,7 +352,7 @@ void AEnemyBase::DropLoot()
 	}
 
 	// The gem ignores pickups until it has a value, so setting it after Acquire is safe
-	const FTransform DropTransform(FRotator::ZeroRotator, GetActorLocation());
+	const FTransform DropTransform(FRotator::ZeroRotator, GetLootLocation());
 	if (AEXP_PickUp* Gem = Pool->AcquireAs<AEXP_PickUp>(ExperiencePickupClass, DropTransform))
 	{
 		Gem->SetExpValue(EnemyData->ExperienceValue);
@@ -568,4 +584,12 @@ void AEnemyBase::MoveWithSlide(const FVector& Delta)
 		Remaining.Z = 0.f;
 		AddActorWorldOffset(Remaining, true);
 	}
+}
+
+FVector AEnemyBase::GetLootLocation() const
+{
+	// Small enemies keep dropping at their center, as they always have. Tall ones drop at most MaxLootHeight above the ground, inside the player's pickup range.
+	constexpr float MaxLootHeight = 60.f;
+	const float HalfHeight = Capsule ? Capsule->GetScaledCapsuleHalfHeight() : 0.f;
+	return GetActorLocation() - FVector(0.f, 0.f, FMath::Max(0.f, HalfHeight - MaxLootHeight));
 }

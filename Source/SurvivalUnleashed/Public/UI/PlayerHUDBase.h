@@ -23,31 +23,26 @@ protected:
 	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UProgressBar* HealthBar;
-
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* HealthCounter;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UProgressBar* EXPBar;
-
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* TimerText;
-
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* EXPGainCounter;
-
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* LevelCounter;
-
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* KillCounter;
-
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* FocusCounter;
-
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* PersonalBest;
-
-	//UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UHorizontalBox* StatBox;
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UVerticalBox* StatsBox;
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim)) class UWidgetAnimation* Fading;
 
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim)) class UWidgetAnimation* FadingHeal;
 
-	FText GetRankName(uint8 Stats);
+	FText GetRankName(EPlayerStats Stats);
 
 public:
 
 	UFUNCTION(BlueprintCallable) void SetHealth(float percent);
+
+	UFUNCTION(BlueprintCallable) void SetTextHealth(float current, float max);
 
 	UFUNCTION(BlueprintCallable) void SetExperience(float ratio, float Max);
 
@@ -59,12 +54,11 @@ public:
 
 	UFUNCTION(BlueprintCallable) void PlayHealFeedback();
 
-	UFUNCTION(BlueprintCallable) void SetStatsText(uint8 ChosenStats, int32 Ranks);
+	UFUNCTION(BlueprintCallable) void SetStatsText(EPlayerStats ChosenStats, int32 Ranks);
 
 	FVector EndPoint;
 
-	TArray<FText> RankArray;
-	TArray<uint32> RankIndex;
+	TArray<EPlayerStats> RankIndex;
 
 
 	float Timer;
