@@ -118,22 +118,22 @@ private:
 	//PlayerStats, 0 = not enabled!
 
 	//Flat values
-	UPROPERTY()
-	float MaxHealth = 10;
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
+	float MaxHealth = 100;
 	UPROPERTY()
 	float CurrentHealth = 0;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float DashCooldown = 2;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float DashLength = 0.25;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float Regen = 0; // this is in seconds
 	UPROPERTY()
 	float ProjectileAmount = 1;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float PickupRange = 160;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float MoveSpeed = 800;
 
 	//% Chance stats
@@ -148,7 +148,7 @@ private:
 	UPROPERTY()
 	float WeaponAttack = 1;
 	UPROPERTY()
-	float Defense = 2;
+	float Defense = 1;
 	UPROPERTY()
 	float AttackSpeed = 1;
 	UPROPERTY()
