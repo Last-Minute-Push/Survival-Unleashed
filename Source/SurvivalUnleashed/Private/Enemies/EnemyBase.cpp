@@ -158,14 +158,17 @@ void AEnemyBase::ResetState()
 	GetWorldTimerManager().ClearTimer(ContactDamageHandle);
 }
 
-void AEnemyBase::Die()
+void AEnemyBase::Die(bool bDropLoot)
 {
 	bIsDead = true;
 	GetWorldTimerManager().ClearTimer(ContactDamageHandle);
 
 	// Broadcast before releasing so listeners can still read location and data
 	OnDied.Broadcast(this);
-	DropLoot();
+	if (bDropLoot)
+	{
+		DropLoot();
+	}
 
 	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
 	{
