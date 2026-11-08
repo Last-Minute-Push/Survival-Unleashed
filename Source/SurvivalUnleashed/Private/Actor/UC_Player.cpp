@@ -259,7 +259,7 @@ void AUC_Player::SetOwnedWeapons(TArray<FOwnedWeapon>& OwnedWeapons)
 		{
 			FOwnedWeapon Owned;
 			Owned.Data = It->Key;
-			Owned.Level = W->GetWeaponUpgrade() + 1;
+			Owned.Level = W->GetWeaponUpgrade();
 			Owned.MaxLevel = WeaponSubsystem->GetCategoryUpgradeSize(It->Key);
 			OwnedWeapons.Add(Owned);
 		}
