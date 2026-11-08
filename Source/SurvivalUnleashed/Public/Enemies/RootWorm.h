@@ -48,7 +48,7 @@ protected:
 	TObjectPtr<UStaticMeshComponent> RippleMesh;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Root Worm", meta = (ClampMin = "0"))
-	float AmbushRange = 1000.f;
+	float AmbushRange = 450.f;
 
 	// Radius of the warning ring and of the eruption
 	UPROPERTY(EditDefaultsOnly, Category = "Root Worm", meta = (ClampMin = "1"))
