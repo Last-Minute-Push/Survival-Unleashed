@@ -5,6 +5,7 @@
 #include "UI/PlayerHUDBase.h"
 #include "Components/ProgressBar.h"
 #include "Components/VerticalBox.h"
+#include "Components/HorizontalBox.h"
 #include "CommonNumericTextBlock.h"
 #include "Components/Image.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
@@ -19,7 +20,7 @@ void UPlayerHUDBase::NativeConstruct()
 	Timer = 0;
 	UpdateTimer(Timer);
 	RankIndex.Reserve(6);
-	BossInfoHolder->SetVisibility(ESlateVisibility::Hidden);
+	BossHUDHolder->SetVisibility(ESlateVisibility::Hidden);
 
 	isPaused = false;
 }
@@ -173,7 +174,7 @@ void UPlayerHUDBase::PlayHealFeedback()
 
 void UPlayerHUDBase::SpawnBossInfo(const FText& BossName, float MaxHealth)
 {
-	BossInfoHolder->SetVisibility(ESlateVisibility::Visible);
+	BossHUDHolder->SetVisibility(ESlateVisibility::Visible);
 	BossNameText->SetText(BossName);
 	BossHealthBar->SetPercent(1.f);
 	BossHealthCounter->SetText(FText::Format(FText::FromString(TEXT("{0} {1} {2} {3}")), FText::FromString("Health : "),
@@ -189,7 +190,7 @@ void UPlayerHUDBase::ChangeBossHealth(float CurrentHealth, float MaxHealth)
 
 void UPlayerHUDBase::BossDeathInfo()
 {
-	BossInfoHolder->SetVisibility(ESlateVisibility::Hidden);
+	BossHUDHolder->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UPlayerHUDBase::SetStatsText(EPlayerStats ChosenStats, int32 Ranks)

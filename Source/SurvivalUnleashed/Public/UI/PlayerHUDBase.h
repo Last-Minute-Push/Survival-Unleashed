@@ -29,7 +29,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UProgressBar* BossHealthBar;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* BossHealthCounter;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* BossNameText;
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UVerticalBox* BossInfoHolder;
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UHorizontalBox* BossHUDHolder;
 	//---EXP---
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UProgressBar* EXPBar;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* EXPGainCounter;
