@@ -126,7 +126,7 @@ void UPlayerHUDBase::SetHealth(float ratio)
 void UPlayerHUDBase::SetTextHealth(float current, float max)
 {
 	HealthCounter->SetText(FText::Format(FText::FromString(TEXT("{0} {1} {2} {3}")), FText::FromString("Health : "),
-		FText::AsNumber((int)current), FText::FromString("/"), FText::AsNumber((int)max)));
+		FText::AsNumber(FMath::CeilToInt(current)), FText::FromString("/"), FText::AsNumber(FMath::CeilToInt(max))));
 }
 
 void UPlayerHUDBase::SetExperience(float ratio, float Max)

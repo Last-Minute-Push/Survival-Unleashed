@@ -34,7 +34,7 @@ class UEnemyData;
 class UHordeSubsystem;
 class AEXP_PickUp;
 class UCapsuleComponent;
-class USkeletalMeshComponent;
+class UStaticMeshComponent;
 
 UCLASS(Abstract)
 class SURVIVALUNLEASHED_API AEnemyBase : public AActor, public IPoolable
@@ -61,8 +61,14 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	float GetCurrentHealth() const { return CurrentHealth; }
 
+	// Damage per contact hit. Subclasses can change it with their state (the Boar's charge uses 0 and rams instead).
+	virtual float GetContactDamage() const;
+
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	bool IsDead() const { return bIsDead; }
+
+	// Whether weapons and horde queries should consider this enemy at all 
+	virtual bool IsTargetable() const { return !bIsDead; }
 
 	// Where drops should appear: near the ground under this enemy, however tall its capsule is
 	FVector GetLootLocation() const;
@@ -100,10 +106,12 @@ protected:
 	TObjectPtr<UCapsuleComponent> Capsule;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	TObjectPtr<USkeletalMeshComponent> Mesh;
+	TObjectPtr<UStaticMeshComponent> Mesh;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy")
 	TObjectPtr<UEnemyData> EnemyData;
+
+	float KnockbackResistance;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Movement", meta = (ClampMin = "0"))
 	float StopDistance = 50.f;
@@ -124,6 +132,10 @@ protected:
 
 	// For subclasses that need their own neighbor queries (flocking)
 	UHordeSubsystem* GetHorde() const { return Horde; }
+
+	// Death: broadcasts OnDied, drops loot unless told not to, and returns this enemy to the pool.
+	// Protected so subclasses can die on their own terms (the Puffball's self-burst drops no gem).
+	void Die(bool bDropLoot = true);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Steering", meta = (ClampMin = "0"))
 	float SeekWeight = 1.f;
@@ -220,9 +232,6 @@ private:
 
 	// Resets the enemy's state to its initial values
 	void ResetState();
-
-	// Handles the enemy's death logic
-	void Die();
 
 	// Deals contact damage to the player
 	void DealContactDamage();

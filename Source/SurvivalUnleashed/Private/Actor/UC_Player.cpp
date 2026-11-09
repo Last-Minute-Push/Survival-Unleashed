@@ -63,6 +63,7 @@ AUC_Player::AUC_Player()
 	PickUpRadius->SetCollisionProfileName(FName("PickupRadius"));
 	PickUpRadius->SetSphereRadius(PlayerStatsComponent->GetPickupRange());
 	PickUpRadius->OnComponentBeginOverlap.AddDynamic(this, &AUC_Player::HandlePickUpOverlap);
+	
 }
 
 // Called when the game starts or when spawned
@@ -125,6 +126,7 @@ void AUC_Player::BeginPlay()
 		FWeaponCreateParams Params;
 		Params.Attachment = GetCapsuleComponent();
 		Params.Player = this;
+		Params.bStartWeapon = false;
 
 		for (auto It = StartingWeapons.begin(); It != StartingWeapons.end(); ++It)
 		{
@@ -258,7 +260,7 @@ void AUC_Player::SetOwnedWeapons(TArray<FOwnedWeapon>& OwnedWeapons)
 		{
 			FOwnedWeapon Owned;
 			Owned.Data = It->Key;
-			Owned.Level = W->GetWeaponUpgrade() + 1;
+			Owned.Level = W->GetWeaponUpgrade();
 			Owned.MaxLevel = WeaponSubsystem->GetCategoryUpgradeSize(It->Key);
 			OwnedWeapons.Add(Owned);
 		}
@@ -301,10 +303,18 @@ UPlayerStatsComponent* AUC_Player::GetPlayerStatsComp()
 	return PlayerStatsComponent;
 }
 
+void AUC_Player::StartWeapons()
+{
+	for (auto It = WeaponInventory.begin(); It != WeaponInventory.end(); ++It)
+		if (ABaseWeapon* W = Cast<ABaseWeapon>(It->Value->GetChildActor()))
+			W->StartWeapon();
+}
+
 void AUC_Player::SetWeapon(EWeaponCategory Type)
 {
 	FWeaponCreateParams P;
 	P.Attachment = GetCapsuleComponent();
+	P.bStartWeapon = true;
 	P.Player = this;
 	P.Type = Type;
 

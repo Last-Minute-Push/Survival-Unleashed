@@ -21,6 +21,8 @@ class SURVIVALUNLEASHED_API ABaseWeapon : public AActor
 {
 	GENERATED_BODY()
 	
+	bool bIsActive;
+	FTimerHandle TStartTimerTest, TStartTimerTest2;
 
 public:
 
@@ -32,11 +34,13 @@ public:
 
 
 	UPROPERTY(BlueprintAssignable, Category = "Damage") FOnWeaponHit OnWeaponHit;
-	
+	UFUNCTION(BlueprintCallable, Category = "Weapon") virtual void StartWeapon();
 	UFUNCTION(BlueprintCallable, Category = "Weapon") virtual void StopWeapon();
 	UFUNCTION(BlueprintCallable, Category = "Weapon") static float ComputeWeaponHit(UWeaponData* W, UPlayerStatsComponent* P/*, UEnemyStats* E*/);
+
 	static float ComputeHitFromBase(float BaseDamage, UPlayerStatsComponent* P); // same formula, for weapons whose damage changes per level
 	UFUNCTION(BlueprintCallable, Category = "Weapon") inline bool AbsoluteRotation() const { return bAbsoluteRotation; }
+	UFUNCTION(BlueprintCallable, Category = "Weapon") inline bool GetActiveStatus() const { return bIsActive; }
 
 	UFUNCTION(BlueprintCallable, Category = "WeaponType") inline EWeaponCategory GetEWeaponCategory() const { return Type; }
 	inline void SetWeaponCategory(EWeaponCategory InType) { Type = InType; }
@@ -50,11 +54,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Properties") bool bAbsoluteRotation;                  // Rotates on its own regard
 	UPROPERTY(VisibleAnywhere, Category = "Properties|WeaponType") EWeaponCategory Type;          // Identifies the category of this weapon
 	UPROPERTY(VisibleAnywhere, Category = "Properties|WeaponType") int32 Upgrade;                 // Identifies the upgrade of this weapon
-	UPROPERTY(VisibleAnywhere, Category = "Properties|Mesh") USkeletalMeshComponent* Mesh;        // Weapon's mesh
-	UPROPERTY(EditDefaultsOnly, Category = "Properties|Stats") UWeaponData* Data;                 // Weapon's own data
-	UPROPERTY(VisibleAnywhere, Category = "Properties|Stats") AUC_Player* Parent;                 // Reference to the player parent 
-	UPROPERTY(VisibleAnywhere, Category = "Properties|Stats") UPlayerStatsComponent* ParentStats; // Reference to the player parent's stats component
-	UPROPERTY(VisibleAnywhere, Category = "Properties|Components") USceneComponent* Pivot;        // Pivot used for the swinging motion; rotates only the sword and collision box
+	UPROPERTY(VisibleAnywhere, Category = "Properties|Mesh") TObjectPtr<USkeletalMeshComponent> Mesh;        // Weapon's mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Properties|Stats") TObjectPtr<UWeaponData> Data;                 // Weapon's own data
+	UPROPERTY(VisibleAnywhere, Category = "Properties|Stats") TObjectPtr<AUC_Player> Parent;                 // Reference to the player parent 
+	UPROPERTY(VisibleAnywhere, Category = "Properties|Stats") TObjectPtr<UPlayerStatsComponent> ParentStats; // Reference to the player parent's stats component
+	UPROPERTY(VisibleAnywhere, Category = "Properties|Components") TObjectPtr<USceneComponent> Pivot;        // Pivot used for the swinging motion; rotates only the sword and collision box
 
 	virtual void ApplyDamage(AActor* Source, AActor* Target);
 

@@ -27,6 +27,7 @@ struct FWeaponCreateParams
 	UPROPERTY(EditAnywhere) TWeakObjectPtr<AUC_Player> Player;
 	UPROPERTY(EditAnywhere) EWeaponCategory Type;
 	UPROPERTY(EditAnywhere) int32 DebugUpgrade = -1; // Left at negative one if not debugging a weapon
+	UPROPERTY(EditAnywhere) bool bStartWeapon;
 };
 
 /**

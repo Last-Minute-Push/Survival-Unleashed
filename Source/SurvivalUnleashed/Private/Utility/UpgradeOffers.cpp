@@ -39,7 +39,7 @@ TArray<FUpgradeOffer> UpgradeOffers::Generate(const FBuildSnapshot& Build, int32
 	{
 		if (Owned.Level < Owned.MaxLevel) // max-level weapons drop out
 		{
-			Weapons.Add(MakeWeaponOffer(Owned.Data, Owned.Level));
+			Weapons.Add(MakeWeaponOffer(Owned.Data, Owned.Level + 1));
 		}
 	}
 	if (Build.OwnedWeapons.Num() < MaxWeapons) // new weapons only while a slot is free

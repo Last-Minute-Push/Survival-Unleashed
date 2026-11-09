@@ -292,6 +292,10 @@ EWeaponUpgradeStatus UWeaponSubsystem::CreateWeapon(FWeaponCreateParams& Params,
 	}
 
 	OnWeaponsUIUpdate.Broadcast(Weapon->GetEWeaponCategory(), Weapon->GetWeaponUpgrade());
+	if (Params.bStartWeapon)
+	{
+		Weapon->StartWeapon();
+	}
 
 	return EWeaponUpgradeStatus::E_Success;
 }
