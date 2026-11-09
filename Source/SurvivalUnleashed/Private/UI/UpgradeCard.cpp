@@ -2,6 +2,7 @@
 #include "Components/Button.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Components/WidgetSwitcher.h"
 #include "Weapons/WeaponData.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 
@@ -31,10 +32,12 @@ void UUpgradeCard::SetOffer(const FUpgradeOffer& InOffer)
 	if (Offer.Kind == EUpgradeKind::Stat)
 	{
 		Info = StatInfo.Find(Offer.Stat);
+		WeaponIconSwitcher->SetVisibility(ESlateVisibility::Hidden);
 	}
 	else if (Offer.Kind == EUpgradeKind::Weapon)
 	{
 		Info = WeaponInfo.Find(Offer.Weapon);
+		GetWeaponImageIndex(Offer.Weapon);
 	}
 
 	if (Info)
@@ -66,12 +69,6 @@ void UUpgradeCard::SetOffer(const FUpgradeOffer& InOffer)
 		DescriptionText->SetText(Info ? Info->Description : FText::GetEmpty());
 	}
 
-	if (IconImage)
-	{
-		UTexture2D* Icon = Info ? Info->Icon.Get() : nullptr;
-		IconImage->SetBrushFromTexture(Icon);
-		IconImage->SetVisibility(Icon ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Hidden);
-	}
 }
 
 void UUpgradeCard::HandleClicked()
@@ -112,4 +109,49 @@ void UUpgradeCard::HandleHoverSFX() {
 void UUpgradeCard::SetButtonClickSFX(USoundBase* SFX)
 {
 	CurrentButtonClicked = SFX;
+}
+
+void UUpgradeCard::GetWeaponImageIndex(EWeaponCategory Category)
+{
+
+
+	switch (Category)
+	{
+	case EWeaponCategory::EBP_Sword:
+		WeaponIconSwitcher->SetActiveWidgetIndex(1);
+		//return 1;
+		break;
+	case EWeaponCategory::EBP_Gauntlets:
+		WeaponIconSwitcher->SetActiveWidgetIndex(2);
+		//return 2;
+		break;
+	case EWeaponCategory::EBP_Axe:
+		WeaponIconSwitcher->SetActiveWidgetIndex(3);
+		//return 3;
+		break;
+	case EWeaponCategory::EBP_Spear:
+		WeaponIconSwitcher->SetActiveWidgetIndex(4);
+		//return 4;
+		break;
+	case EWeaponCategory::EBP_BowToGun:
+		WeaponIconSwitcher->SetActiveWidgetIndex(5);
+		//return 5;
+	case EWeaponCategory::EBP_IceStaff:
+		WeaponIconSwitcher->SetActiveWidgetIndex(6);
+		//return 6;
+		break;
+	case EWeaponCategory::EBP_EarthStaff:
+		WeaponIconSwitcher->SetActiveWidgetIndex(7);
+		//return 7;
+		break;
+	case EWeaponCategory::EBP_FireStaff:
+		WeaponIconSwitcher->SetActiveWidgetIndex(8);
+		//return 8;
+		break;
+	case EWeaponCategory::EBP_LightningStaff:
+		WeaponIconSwitcher->SetActiveWidgetIndex(9);
+		//return 9;
+		break;
+	}
+	//return 0;
 }
