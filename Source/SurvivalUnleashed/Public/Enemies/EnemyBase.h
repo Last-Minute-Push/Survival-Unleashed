@@ -133,6 +133,10 @@ protected:
 	// For subclasses that need their own neighbor queries (flocking)
 	UHordeSubsystem* GetHorde() const { return Horde; }
 
+	// Death: broadcasts OnDied, drops loot unless told not to, and returns this enemy to the pool.
+	// Protected so subclasses can die on their own terms (the Puffball's self-burst drops no gem).
+	void Die(bool bDropLoot = true);
+
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Steering", meta = (ClampMin = "0"))
 	float SeekWeight = 1.f;
 
@@ -228,9 +232,6 @@ private:
 
 	// Resets the enemy's state to its initial values
 	void ResetState();
-
-	// Handles the enemy's death logic
-	void Die();
 
 	// Deals contact damage to the player
 	void DealContactDamage();

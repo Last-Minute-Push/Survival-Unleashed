@@ -77,16 +77,17 @@ void ABaseSword::BeginPlay()
 
     SwingArcHalf              = SwingArc * 0.5f;
     SwingDisappearingDelay    = SwingDisappearingDelay < SwingPatternCooldown ? SwingDisappearingDelay : 0.f;
+
+    // Collision
     BoxCollision->SetGenerateOverlapEvents(false);
     SetActorEnableCollision(false);
 
     // Location
-    Mesh->AddLocalOffset(FVector(0.f, Radius, Height));
-    BoxCollision->AddLocalOffset(FVector(0.f, Radius, Height + CollisionHeightOffset));
-    Pivot->AddLocalRotation(FRotator(0.f, SwingArcHalf, 0.f));
+    Mesh->SetRelativeLocation(FVector(0.f, Radius, Height));
+    BoxCollision->SetRelativeLocation(FVector(0.f, Radius, Height + CollisionHeightOffset));
+    Pivot->SetRelativeRotation(FRotator(0.f, -SwingArcHalf, 0.f));
 
-    // Starting delay
-    GetWorldTimerManager().SetTimer(TSwingStart, this, &ABaseSword::StartSwing, SwingPatternCooldown);
+    bIsHidden = false;
 }
 
 void ABaseSword::Tick(float DeltaTime)
@@ -156,6 +157,14 @@ void ABaseSword::Swing(bool bRight, float DeltaTime) const
     Pivot->AddLocalRotation(FQuat(0.f, 0.f, (bRight ? -SwingSpeed * ParentStats->GetAttackSpeed() : SwingSpeed * ParentStats->GetAttackSpeed()) * DeltaTime, 1.f));
 }
 
+void ABaseSword::HideSword(bool bHide)
+{
+    if (bIsHidden == bHide) return;
+    bIsHidden = bHide;
+
+    Pivot->AddLocalOffset(FVector(0.f, 0.f, bHide ? SwingDisappearingDistance : -SwingDisappearingDistance));
+}
+
 void ABaseSword::StartSwing()
 {
     HitActors.Empty();
@@ -174,6 +183,23 @@ void ABaseSword::StopSwing()
     SetActorTickEnabled(false);
     SetActorEnableCollision(false);
     BoxCollision->SetGenerateOverlapEvents(false);
+}
+
+void ABaseSword::StartWeapon()
+{
+    Super::StartWeapon();
+
+    // Collision
+    BoxCollision->SetGenerateOverlapEvents(false);
+    SetActorEnableCollision(false);
+
+    // Location
+    Mesh->SetRelativeLocation(FVector(0.f, Radius, Height));
+    BoxCollision->SetRelativeLocation(FVector(0.f, Radius, Height + CollisionHeightOffset));
+    Pivot->SetRelativeRotation(FRotator(0.f, -SwingArcHalf, 0.f));
+    HideSword(false);
+
+    StartSwing();
 }
 
 void ABaseSword::StopWeapon()
