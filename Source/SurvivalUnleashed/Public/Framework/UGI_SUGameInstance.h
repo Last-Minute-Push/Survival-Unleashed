@@ -85,6 +85,14 @@ public:
 	UFUNCTION() void QuitTheGame();
 
 	//----------------------------------------------------------------------//
+	//EXP Merge Handling
+	//----------------------------------------------------------------------//
+
+	UPROPERTY()
+	TArray<TWeakObjectPtr<AActor>> EXPActors;
+	void EXPCountCheck();
+
+	//----------------------------------------------------------------------//
     // Weapon Database
     //----------------------------------------------------------------------//
 	UFUNCTION() inline UWeaponDatabase* GetWeaponDatabase() const { return Database; }

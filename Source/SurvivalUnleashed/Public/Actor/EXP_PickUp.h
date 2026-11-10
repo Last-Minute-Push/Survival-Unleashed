@@ -25,27 +25,34 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UPaperSpriteComponent* Sprite3; //holds tier3 look
 
-	UPROPERTY(VisibleAnywhere)
-	class USphereComponent* Radius;
+	bool MergeMode = false;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) //for testing
 	int EXPValue = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) 
-	int EXPRadius = 400; //how far an exp can pick up other exp;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite) 
 	int Tier2Requirment = 100; //what the exp amount needed for tier 2 exp look
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) 
 	int Tier3Requirment = 250; //what the exp amount needed for tier 3 exp look
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MergeTimer = 10.0f; //how long to wait until merge
-	UPROPERTY(EditAnywhere, BlueprintReadWrite) 
-	float DisableMergeTimer = 1.0f; //how long to wait to stop allow merging.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FTimerHandle TimerHandle;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float EXPMinFlySpeed = 400.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float EXPMaxFlySpeed = 1200.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float EXPFlySpeedRamp = 90.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float EXPFlySpeed = 0;
+	UPROPERTY()
+	TArray<TWeakObjectPtr<AActor>> AttractedActors;
 	void SetExpValue(int Amount); //for enemies to set the expvalue
+
+
+	void Merge(AEXP_PickUp* Mergeinto, AEXP_PickUp* Mergewith);
+	UFUNCTION()
+	void EnableEXPTick();
+	UFUNCTION()
+	void DisableEXPTick();
 
 	// IPoolable
 	virtual void OnPoolAcquire_Implementation() override;
@@ -57,17 +64,15 @@ protected:
 	UPROPERTY()
 	class AUC_Player* SavedPlayer;
 	bool CanPickUpCompCheck(AActor* OtherActor, UPrimitiveComponent* OverlapComponent);
+
 	void PostPickUp();
 	void HandlePickUp();
 	UFUNCTION()
 	void HandleOverLap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
 	int GetEXPValue();
-	UFUNCTION()
-	void MergeClock();
-	UFUNCTION()
-	void EnableMerge();
-	UFUNCTION()
-	void DisableMerge();
-	bool OneTime = true;
-	bool DontRemove = false;
+
+
+	void FlySpeedSet();
+
+	UBoxComponent* GetBoxComponent();
 };

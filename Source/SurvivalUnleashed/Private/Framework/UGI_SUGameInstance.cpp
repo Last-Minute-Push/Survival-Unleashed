@@ -9,6 +9,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "UserSettings/EnhancedInputUserSettings.h"
 #include "Actor/UC_Player.h"
+#include "Actor/EXP_PickUp.h"
 
 #ifndef UINT64_MAX
 #define UINT64_MAX 0xffffffffffffffffui64
@@ -106,6 +107,27 @@ void UUGI_SUGameInstance::QuitTheGame()
 		{
 			PC->ConsoleCommand("quit force");
 			return;
+		}
+	}
+}
+
+void UUGI_SUGameInstance::EXPCountCheck()
+{
+	if (EXPActors.Num() >= 300) {
+		AEXP_PickUp* EXP = Cast<AEXP_PickUp>(EXPActors[0]);
+		if (EXP) {
+			for (int i = 1; i < EXPActors.Num(); i++) {
+				if (PlayerItself) {
+					if (!PlayerItself->AttractedActors.Contains(EXPActors[i])) {
+						EXP->AttractedActors.Add(EXPActors[i]);
+					}
+				}
+				else {
+					EXP->AttractedActors.Add(EXPActors[i]);
+				}
+
+			}
+			EXP->EnableEXPTick();
 		}
 	}
 }

@@ -14,7 +14,8 @@
 AEXP_PickUp::AEXP_PickUp()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = false;
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>("BoxCollision");
 	RootComponent = BoxCollision;
 	Sprite = CreateDefaultSubobject<UPaperSpriteComponent>("Sprite");
@@ -27,10 +28,10 @@ AEXP_PickUp::AEXP_PickUp()
 	Sprite->SetVisibility(true);
 	Sprite2->SetVisibility(false);
 	Sprite3->SetVisibility(false);
-	Radius = CreateDefaultSubobject<USphereComponent>("PickUpRadius");
-	Radius->SetupAttachment(BoxCollision);
-	Radius->SetSphereRadius(EXPRadius);
-	Radius->Deactivate();
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	if (GI) {
+		GI->EXPActors.Add(this);
+	}
 }
 
 void AEXP_PickUp::SetExpValue(int Amount)
@@ -73,6 +74,15 @@ void AEXP_PickUp::SetExpValue(int Amount)
 	}
 
 	EXPValue = Amount;
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	AEXP_PickUp* MerginEXP = Cast<AEXP_PickUp>(GI->EXPActors[0]);
+	if (this != MerginEXP) {
+		if (GI->EXPActors.Num() > 300) {
+			Merge(MerginEXP, this);
+			GI->EXPActors.Remove(this);
+		}
+	}
+
 }
 
 void AEXP_PickUp::OnPoolAcquire_Implementation()
@@ -80,23 +90,32 @@ void AEXP_PickUp::OnPoolAcquire_Implementation()
 	// Fresh gem: no value until the enemy sets one, no remembered player
 	EXPValue = 0;
 	SavedPlayer = nullptr;
-	OneTime = true; //let it enable merge again on next remake
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	if (GI) {
+		GI->EXPActors.Add(this);
+	}
+	GI->EXPCountCheck();
 }
 
 void AEXP_PickUp::OnPoolRelease_Implementation()
 {
+
 	SavedPlayer = nullptr;
-	OneTime = true; //let it enable merge again on next remake
+
 }
 
 // Called when the game starts or when spawned
 void AEXP_PickUp::BeginPlay()
 {
 	Super::BeginPlay();
-	if (OneTime == true) {
-		MergeClock();
-		OneTime = false;
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	if (GI) {
+		if (this) {
+			GI->EXPActors.Add(this);
+			GI->EXPCountCheck();
+		}
 	}
+
 }
 
 bool AEXP_PickUp::CanPickUpCompCheck(AActor* OtherActor, UPrimitiveComponent* OverlapComponent)
@@ -115,12 +134,17 @@ bool AEXP_PickUp::CanPickUpCompCheck(AActor* OtherActor, UPrimitiveComponent* Ov
 	return result;
 }
 
+
 void AEXP_PickUp::PostPickUp()
 {
+	DisableEXPTick();
 	Sprite->SetVisibility(true);
 	Sprite2->SetVisibility(false);
 	Sprite3->SetVisibility(false); //reset tier look for next one as well!
-
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	if (GI) {
+		GI->EXPActors.Remove(this);
+	}
 	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
 	{
 		Pool->Release(this);
@@ -138,9 +162,17 @@ void AEXP_PickUp::HandlePickUp()
 
 void AEXP_PickUp::HandleOverLap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult)
 {
-	if (EXPValue <= 0)
+	if (EXPValue <= 0 || OtherActor == this)
 	{
 		return; // not ready yet; SetExpValue will collect it if the player is still here
+	}
+	if (this->MergeMode == true && !this->AttractedActors.IsEmpty()) {
+		AEXP_PickUp* EXP = Cast<AEXP_PickUp>(OtherActor);
+		if (EXP) {
+			AttractedActors.Remove(OtherActor);
+			Merge(this, EXP);
+		}
+		EXP;
 	}
 
 	if (CanPickUpCompCheck(OtherActor, OtherComp)) {
@@ -154,61 +186,51 @@ int AEXP_PickUp::GetEXPValue()
 	return EXPValue;
 }
 
-void AEXP_PickUp::MergeClock()// starts the merge loop
+
+
+void AEXP_PickUp::FlySpeedSet()
 {
-	
-	if (GetWorld()) {
-		GetWorldTimerManager().SetTimer(TimerHandle, this, &AEXP_PickUp::EnableMerge, MergeTimer, false);
-	}
-	else {
-		OneTime = true; //try again
-	}
+	EXPFlySpeed = EXPMinFlySpeed;
 }
 
-void AEXP_PickUp::EnableMerge() //enable merge for a second
+UBoxComponent* AEXP_PickUp::GetBoxComponent()
 {
-	Radius->Activate(true);
-	Radius->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	DontRemove = true;
-	TArray<AActor*> OverlappingActors;
-	Radius->GetOverlappingActors(OverlappingActors, AEXP_PickUp::StaticClass());
-	for (AActor* Actor : OverlappingActors)
-	{
-		if (Actor)
-		{
-			if (Actor != this) {
-				AEXP_PickUp* EXP_PickUp = Cast<AEXP_PickUp>(Actor);
-				if (EXP_PickUp) {
-					if (EXP_PickUp->GetEXPValue() > 0) {
-						SetExpValue(GetEXPValue() + EXP_PickUp->GetEXPValue());
-						GetWorld()->GetTimerManager().ClearTimer(EXP_PickUp->TimerHandle);
-						EXP_PickUp->PostPickUp();
-					}
-				}
-				else {
-					return;
-				}
-			}
-		}
-	}
-	if (GetWorld()) {
-		GetWorldTimerManager().SetTimer(TimerHandle, this, &AEXP_PickUp::DisableMerge, DisableMergeTimer, false);
-	}
+	return BoxCollision;
 }
 
-void AEXP_PickUp::DisableMerge() //makes this merge thing loop until it gets picked up;
+void AEXP_PickUp::EnableEXPTick()
 {
-	Radius->Deactivate();
-	if (GetWorld()) {
-		GetWorldTimerManager().SetTimer(TimerHandle, this, &AEXP_PickUp::EnableMerge, MergeTimer, false);
-	}
+	SetActorTickEnabled(true);
+	MergeMode = true;
 }
+
+void AEXP_PickUp::DisableEXPTick()
+{
+	SetActorTickEnabled(false);
+	FlySpeedSet();
+}
+
 
 // Called every frame
 void AEXP_PickUp::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	for (int32 i = 0; i < AttractedActors.Num(); i++) {
+		AActor* Actor = AttractedActors[i].Get();
+		if (Actor) {
+			FVector Direction = (this->GetActorLocation() - Actor->GetActorLocation()).GetSafeNormal();
+			FVector Offset = Direction * EXPFlySpeed * DeltaTime;
+			Actor->AddActorLocalOffset(Offset, false);
+		}
+	}
+	EXPFlySpeed = FMath::Clamp(EXPFlySpeed + (EXPFlySpeedRamp * DeltaTime), EXPMinFlySpeed, EXPMaxFlySpeed);
 }
-
+void  AEXP_PickUp::Merge(AEXP_PickUp* Mergeinto, AEXP_PickUp* Mergewith) {
+	if (Mergewith) {
+		if (Mergewith->GetEXPValue() > 0) {
+			Mergeinto->SetExpValue(Mergeinto->GetEXPValue() + Mergewith->GetEXPValue());
+			Mergewith->PostPickUp();
+		}
+	}
+}
 
