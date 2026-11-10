@@ -181,11 +181,8 @@ void AEXP_PickUp::EnableMerge() //enable merge for a second
 				if (EXP_PickUp) {
 					if (EXP_PickUp->GetEXPValue() > 0) {
 						SetExpValue(GetEXPValue() + EXP_PickUp->GetEXPValue());
-						if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
-						{
-							Pool->Release(EXP_PickUp);
-						}
-						else Destroy();
+						GetWorld()->GetTimerManager().ClearTimer(EXP_PickUp->TimerHandle);
+						EXP_PickUp->PostPickUp();
 					}
 				}
 				else {
