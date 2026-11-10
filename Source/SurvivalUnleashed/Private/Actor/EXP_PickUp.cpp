@@ -7,6 +7,7 @@
 #include "PaperSpriteComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Framework/ObjectPoolSubsystem.h"
+#include "Components/SphereComponent.h"
 
 
 // Sets default values
@@ -17,8 +18,20 @@ AEXP_PickUp::AEXP_PickUp()
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>("BoxCollision");
 	RootComponent = BoxCollision;
 	Sprite = CreateDefaultSubobject<UPaperSpriteComponent>("Sprite");
+	Sprite2 = CreateDefaultSubobject<UPaperSpriteComponent>("Sprite2");
+	Sprite3 = CreateDefaultSubobject<UPaperSpriteComponent>("Sprite3");
 	Sprite->SetupAttachment(BoxCollision);
+	Sprite2->SetupAttachment(BoxCollision);
+	Sprite3->SetupAttachment(BoxCollision);
 	BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &AEXP_PickUp::HandleOverLap);
+	Sprite->SetVisibility(true);
+	Sprite2->SetVisibility(false);
+	Sprite3->SetVisibility(false);
+	Radius = CreateDefaultSubobject<USphereComponent>("PickUpRadius");
+	Radius->SetupAttachment(BoxCollision);
+	Radius->SetSphereRadius(EXPRadius);
+	Radius->Deactivate();
+	Radius->OnComponentBeginOverlap.AddDynamic(this, &AEXP_PickUp::HandleEXPOverlap);
 }
 
 void AEXP_PickUp::SetExpValue(int Amount)
@@ -48,6 +61,16 @@ void AEXP_PickUp::SetExpValue(int Amount)
 			}
 		}
 	}
+	if (Amount >= Tier3Requirment) {
+		Sprite->SetVisibility(false);
+		Sprite2->SetVisibility(false);
+		Sprite3->SetVisibility(true);
+	}
+	else if (Amount >= Tier2Requirment) {
+		Sprite->SetVisibility(false);
+		Sprite2->SetVisibility(true);
+		Sprite3->SetVisibility(false);
+	}
 
 	EXPValue = Amount;
 }
@@ -57,18 +80,23 @@ void AEXP_PickUp::OnPoolAcquire_Implementation()
 	// Fresh gem: no value until the enemy sets one, no remembered player
 	EXPValue = 0;
 	SavedPlayer = nullptr;
+	OneTime = true;
 }
 
 void AEXP_PickUp::OnPoolRelease_Implementation()
 {
 	SavedPlayer = nullptr;
+	OneTime = true;
 }
 
 // Called when the game starts or when spawned
 void AEXP_PickUp::BeginPlay()
 {
 	Super::BeginPlay();
-
+	if (OneTime == true) {
+		MergeClock();
+		OneTime = false;
+	}
 }
 
 bool AEXP_PickUp::CanPickUpCompCheck(AActor* OtherActor, UPrimitiveComponent* OverlapComponent)
@@ -89,6 +117,10 @@ bool AEXP_PickUp::CanPickUpCompCheck(AActor* OtherActor, UPrimitiveComponent* Ov
 
 void AEXP_PickUp::PostPickUp()
 {
+	Sprite->SetVisibility(true);
+	Sprite2->SetVisibility(false);
+	Sprite3->SetVisibility(false); //reset tier look for next one as well!
+
 	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
 	{
 		Pool->Release(this);
@@ -117,6 +149,70 @@ void AEXP_PickUp::HandleOverLap(UPrimitiveComponent* OverlapComponent, AActor* O
 	}
 }
 
+int AEXP_PickUp::GetEXPValue()
+{
+	return EXPValue;
+}
+
+void AEXP_PickUp::MergeClock()// starts the merge loop
+{
+	
+	if (GetWorld()) {
+		GetWorldTimerManager().SetTimer(TimerHandle, this, &AEXP_PickUp::EnableMerge, MergeTimer, false);
+	}
+	else {
+		OneTime = true; //try again
+	}
+		
+	
+}
+
+void AEXP_PickUp::EnableMerge() //enable merge for a second
+{
+	Radius->Activate(true);
+	Radius->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	DontRemove = true;
+	TArray<AActor*> OverlappingActors;
+	Radius->GetOverlappingActors(OverlappingActors, AEXP_PickUp::StaticClass());
+	for (AActor* Actor : OverlappingActors)
+	{
+		if (Actor)
+		{
+			if (Actor != this) {
+				AEXP_PickUp* EXP_PickUp = Cast<AEXP_PickUp>(Actor);
+				if (EXP_PickUp) {
+					if (EXP_PickUp->GetEXPValue() > 0) {
+						SetExpValue(GetEXPValue() + EXP_PickUp->GetEXPValue());
+						if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
+						{
+							Pool->Release(EXP_PickUp);
+						}
+						else Destroy();
+					}
+				}
+				else {
+					return;
+				}
+			}
+		}
+	}
+	if (GetWorld()) {
+		GetWorldTimerManager().SetTimer(TimerHandle, this, &AEXP_PickUp::DisableMerge, DisableMergeTimer, false);
+	}
+		
+	
+}
+
+void AEXP_PickUp::DisableMerge() //makes this merge thing loop until it gets picked up;
+{
+	Radius->Deactivate();
+	if (GetWorld()) {
+		GetWorldTimerManager().SetTimer(TimerHandle, this, &AEXP_PickUp::EnableMerge, MergeTimer, false);
+	}
+		
+
+}
+
 // Called every frame
 void AEXP_PickUp::Tick(float DeltaTime)
 {
@@ -124,3 +220,23 @@ void AEXP_PickUp::Tick(float DeltaTime)
 
 }
 
+
+void AEXP_PickUp::HandleEXPOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor) {
+		AEXP_PickUp* EXP_PickUp = Cast<AEXP_PickUp>(OtherActor);
+		if (EXP_PickUp) {
+			if (EXP_PickUp->GetEXPValue() > 0) {
+				SetExpValue(GetEXPValue() + EXP_PickUp->GetEXPValue());
+				if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
+				{
+					Pool->Release(EXP_PickUp);
+				}
+				else Destroy();
+			}
+		}
+		else {
+			return;
+		}
+	}
+}

@@ -20,9 +20,31 @@ public:
 	class UBoxComponent* BoxCollision;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UPaperSpriteComponent* Sprite;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	class UPaperSpriteComponent* Sprite2; //holds tier2 look
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	class UPaperSpriteComponent* Sprite3; //holds tier3 look
+
+	UPROPERTY(VisibleAnywhere)
+	class USphereComponent* Radius;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) //for testing
 	int EXPValue = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) 
+	int EXPRadius = 400; //how far an exp can pick up other exp;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) 
+	int Tier2Requirment = 100; //what the exp amount needed for tier 2 exp look
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) 
+	int Tier3Requirment = 250; //what the exp amount needed for tier 3 exp look
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MergeTimer = 10.0f; //how long to wait until merge
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) 
+	float DisableMergeTimer = 5.0f; //how long to wait to stop allow merging.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FTimerHandle TimerHandle;
+
+
 	void SetExpValue(int Amount); //for enemies to set the expvalue
 
 	// IPoolable
@@ -39,6 +61,15 @@ protected:
 	void HandlePickUp();
 	UFUNCTION()
 	void HandleOverLap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
-
-
+	int GetEXPValue();
+	UFUNCTION()
+	void HandleEXPOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void MergeClock();
+	UFUNCTION()
+	void EnableMerge();
+	UFUNCTION()
+	void DisableMerge();
+	bool OneTime = true;
+	bool DontRemove = false;
 };
