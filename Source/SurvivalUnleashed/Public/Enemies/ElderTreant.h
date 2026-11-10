@@ -8,7 +8,6 @@
 
 class UDecalComponent;
 class UMaterialInstanceDynamic;
-class ASpawnDirector;
 class ARootWall;
 
 /**
@@ -115,8 +114,6 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> SlamDecalMaterial;
 
-	TWeakObjectPtr<ASpawnDirector> SpawnDirector;
-
 	bool IsSlamming() const { return SlamWindupRemaining > 0.f; }
 
 	void StartSlam();
@@ -128,9 +125,4 @@ private:
 
 	void SummonVines();
 	void RaiseRootWalls();
-
-	// Traces down for the floor at Point. With bMustBeClear, fails on top of or inside an obstacle.
-	bool FindGround(const FVector& Point, bool bMustBeClear, FVector& OutGround) const;
-
-	ASpawnDirector* GetSpawnDirector();
 };
