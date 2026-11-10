@@ -15,6 +15,8 @@
 #include "Enemies/EnemyData.h"
 #include "HAL/IConsoleManager.h"
 #include "Framework/SUCollision.h"
+#include "Enemies/BossBase.h"
+#include "Enemies/BossEventSubsystem.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogSpawnDirector, Log, All);
 
@@ -35,6 +37,12 @@ void ASpawnDirector::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (UBossEventSubsystem* BossEvents = GetWorld()->GetSubsystem<UBossEventSubsystem>())
+	{
+		BossEvents->OnBossSpawned.AddUObject(this, &ASpawnDirector::HandleBossSpawned);
+		BossEvents->OnBossDied.AddUObject(this, &ASpawnDirector::HandleBossDied);
+	}
+
 	if (!EnemyClass && !Timeline)
 	{
 		UE_LOG(LogSpawnDirector, Warning, TEXT("%s has no Timeline or EnemyClass set"), *GetName());
@@ -50,7 +58,9 @@ void ASpawnDirector::BeginPlay()
 			Timeline->GetAllEnemyClasses(Classes);
 			for (const TSubclassOf<AEnemyBase>& Class : Classes)
 			{
-				Pool->Prewarm(Class, TimelinePrewarmPerClass);
+				// One of each boss is enough
+				const bool bIsBoss = Class && Class->IsChildOf(ABossBase::StaticClass());
+				Pool->Prewarm(Class, bIsBoss ? 1 : TimelinePrewarmPerClass);
 			}
 		}
 		else
@@ -137,6 +147,11 @@ void ASpawnDirector::SpawnTick()
 		BatchSize = Phase->BatchSize;
 	}
 
+	if (bBossFightActive)
+	{
+		Target = FMath::FloorToInt(Target * BossFightTargetScale);
+	}
+
 	const int32 ToSpawn = FMath::Clamp(Target - ActiveEnemyCount, 0, BatchSize);
 
 	for (int32 i = 0; i < ToSpawn; ++i)
@@ -174,7 +189,7 @@ AEnemyBase* ASpawnDirector::SpawnEnemy(TSubclassOf<AEnemyBase> Class, const FVec
 	++ActiveEnemyCount;
 	ActiveEnemies.Add(Enemy);
 
-	if (Timeline)
+	if (Timeline && !Enemy->IsA<ABossBase>())
 	{
 		const float Minutes = GetRunTime() / 60.f;
 		Enemy->ApplyDifficulty(1.f + Timeline->HealthScalePerMinute * Minutes,
@@ -185,6 +200,9 @@ AEnemyBase* ASpawnDirector::SpawnEnemy(TSubclassOf<AEnemyBase> Class, const FVec
 
 void ASpawnDirector::ProcessEvents(float RunTime, const FVector& PlayerLocation)
 {
+	// A boss's fight starts on its first Tick, so also block a second boss due in this same call
+	bool bBossSpawnedNow = false;
+
 	for (int32 i = 0; i < Timeline->Events.Num() && i < NextEventTimes.Num(); ++i)
 	{
 		if (RunTime < NextEventTimes[i])
@@ -194,6 +212,13 @@ void ASpawnDirector::ProcessEvents(float RunTime, const FVector& PlayerLocation)
 
 		const FSpawnEvent& Event = Timeline->Events[i];
 		if (!Event.EnemyClass)
+		{
+			continue;
+		}
+
+		// One boss at a time: a boss that comes due mid-fight stays due until the current one dies
+		const bool bIsBoss = Event.EnemyClass->IsChildOf(ABossBase::StaticClass());
+		if (bIsBoss && (bBossFightActive || bBossSpawnedNow))
 		{
 			continue;
 		}
@@ -222,6 +247,7 @@ void ASpawnDirector::ProcessEvents(float RunTime, const FVector& PlayerLocation)
 			}
 			SpawnEnemy(Event.EnemyClass, MemberLocation, PlayerLocation);
 		}
+		bBossSpawnedNow |= bIsBoss;
 	}
 }
 
@@ -587,4 +613,14 @@ void ASpawnDirector::Tick(float DeltaSeconds)
 	DrawDebugCircle(GetWorld(), PlayerLocation, GetRecycleDistance(PlayerLocation), 64, FColor::Magenta, false, -1.f, 0, 6.f,
 		FVector(1.f, 0.f, 0.f), FVector(0.f, 1.f, 0.f), false);
 #endif
+}
+
+void ASpawnDirector::HandleBossSpawned(const FText& BossName, float MaxHealth)
+{
+	bBossFightActive = true;
+}
+
+void ASpawnDirector::HandleBossDied()
+{
+	bBossFightActive = false;
 }
