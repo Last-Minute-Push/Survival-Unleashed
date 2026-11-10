@@ -31,6 +31,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* KillCounter;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* FocusCounter;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* PersonalBest;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UWeaponSlotsUI* WeaponSlots;
+
+	//UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UHorizontalBox* StatBox;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UVerticalBox* StatsBox;
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim)) class UWidgetAnimation* Fading;
 
@@ -55,6 +59,8 @@ public:
 	UFUNCTION(BlueprintCallable) void PlayHealFeedback();
 
 	UFUNCTION(BlueprintCallable) void SetStatsText(EPlayerStats ChosenStats, int32 Ranks);
+
+	UFUNCTION(BlueprintCallable) void SetWeaponSlots(EWeaponCategory category, int level);
 
 	FVector EndPoint;
 
