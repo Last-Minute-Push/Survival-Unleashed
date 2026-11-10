@@ -114,6 +114,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	UPlayerStatsComponent* PlayerStatsComponent;
 
+	UPROPERTY(EditDefaultsOnly, Category = "PickUpAudioConcurrency")
+	USoundConcurrency* PickUpConcurrency;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -130,6 +133,7 @@ private:
 	bool CanDash = true;
 	bool Magnet = false;
 	float MagnetTimer = 0;
+	float EXPPitch = 1.f;
 
 
 	UFUNCTION() 
@@ -144,4 +148,5 @@ private:
 	void UpdatePickUpRadius(float value);
 	UFUNCTION()
 	void HandlePickUpOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
+	UFUNCTION() void PlayEXPSound();
 };

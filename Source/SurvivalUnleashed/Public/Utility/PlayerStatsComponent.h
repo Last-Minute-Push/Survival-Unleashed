@@ -14,6 +14,7 @@ DECLARE_DYNAMIC_DELEGATE(FOnHealEffect);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnDeath, float, Ratio);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnHeal, float, Ratio);
 DECLARE_DYNAMIC_DELEGATE_TwoParams(FOnEXPPickUp, float, Ratio, float,Max);
+DECLARE_DYNAMIC_DELEGATE(FOnEXPEffect);
 DECLARE_DYNAMIC_DELEGATE_TwoParams(FOnLevelUp, float, Level, float, EXP);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnEXPRadiusUpdate, float, NewExpRadius);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHit);
@@ -83,6 +84,7 @@ public:
 
 	FOnHealEffect OnHealEffect;
 	FOnHurtEffect OnHurtEffect;
+	FOnEXPEffect OnEXPEffect;
 	FOnHealthUI OnHealthUIEffect;
 	FOnStatUIUpdate OnStatUI;
 

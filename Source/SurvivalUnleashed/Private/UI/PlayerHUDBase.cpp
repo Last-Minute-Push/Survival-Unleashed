@@ -142,6 +142,8 @@ void UPlayerHUDBase::SetLevelAndExp(float Level, float EXP)
 {
 	LevelCounter->SetText(FText::Format(FText::FromString(TEXT("{0} {1}")), FText::FromString("Level: "), FText::AsNumber(Level)));
 	EXPGainCounter->SetText(FText::Format(FText::FromString(TEXT("{0} {1}")), FText::FromString("EXP: "), FText::AsNumber(EXP)));
+
+	
 }
 
 void UPlayerHUDBase::SetPersonalBestTime(FText Time)
@@ -166,8 +168,18 @@ void UPlayerHUDBase::PlayHurtFeedback()
 
 void UPlayerHUDBase::PlayHealFeedback()
 {
+
 	if (FadingHeal)
 	PlayAnimation(FadingHeal);
+
+	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
+	{
+		if (I->GetLibrary()->SFX_HealthPickUp) {
+
+			I->PlaySound(I->GetLibrary()->SFX_HealthPickUp);
+		}
+
+	}
 }
 
 void UPlayerHUDBase::SetStatsText(EPlayerStats ChosenStats, int32 Ranks)

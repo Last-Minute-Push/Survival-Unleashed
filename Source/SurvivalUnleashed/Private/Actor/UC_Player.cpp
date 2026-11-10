@@ -22,6 +22,7 @@
 #include "Audio/Interfaces/AudioManagerInterface.h"
 #include "Engine/LocalPlayer.h" 
 #include "UserSettings/EnhancedInputUserSettings.h"
+#include "Components/AudioComponent.h"
 #include "InputMappingContext.h"
 
 
@@ -88,6 +89,7 @@ void AUC_Player::BeginPlay()
 				PlayerStatsComponent->OnHealEffect.BindDynamic(PlayerHUD, &UPlayerHUDBase::PlayHealFeedback);
 				PlayerStatsComponent->OnDeath.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetHealth);
 				PlayerStatsComponent->OnEXPPickUp.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetExperience);
+				PlayerStatsComponent->OnEXPEffect.BindDynamic(this, &AUC_Player::PlayEXPSound);
 				PlayerStatsComponent->OnLevelUp.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetLevelAndExp);
 				PlayerStatsComponent->OnLevelUp.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetLevelAndExp);
 				PlayerStatsComponent->OnRadUpdate.BindDynamic(this, &AUC_Player::UpdatePickUpRadius);
@@ -468,12 +470,29 @@ void AUC_Player::HandlePickUpOverlap(UPrimitiveComponent* OverlapComponent, AAct
 		AEXP_PickUp* EXP_PickUp = Cast<AEXP_PickUp>(OtherActor);
 		AHealth_PickUp* Health_PickUp = Cast<AHealth_PickUp>(OtherActor);
 		AMagnet_PickUp* Magnet_PickUp = Cast<AMagnet_PickUp>(OtherActor);
-		if (EXP_PickUp || Health_PickUp || Magnet_PickUp) {
+
+		if (EXP_PickUp)
+		{
+			
+			AttractedActors.Add(OtherActor);
+		}
+		/*if (EXP_PickUp || Health_PickUp || Magnet_PickUp) {
 			AttractedActors.Add(OtherActor);
 		}
 		else {
 			return;
+		}*/
+	}
+}
+
+void AUC_Player::PlayEXPSound()
+{
+	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
+	{
+		if (I->GetLibrary()->SFX_EXPPickUp) {
+			I->PlaySound(I->GetLibrary()->SFX_EXPPickUp);
 		}
+
 	}
 }
 
