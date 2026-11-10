@@ -44,7 +44,6 @@ protected:
 	//---PERSONAL BEST---
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* PersonalBest;
 	//---STATS---
-
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UWeaponSlotsUI* WeaponSlots;
 
 	//UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UHorizontalBox* StatBox;
