@@ -40,7 +40,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MergeTimer = 10.0f; //how long to wait until merge
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) 
-	float DisableMergeTimer = 5.0f; //how long to wait to stop allow merging.
+	float DisableMergeTimer = 1.0f; //how long to wait to stop allow merging.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FTimerHandle TimerHandle;
 
@@ -62,8 +62,6 @@ protected:
 	UFUNCTION()
 	void HandleOverLap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
 	int GetEXPValue();
-	UFUNCTION()
-	void HandleEXPOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void MergeClock();
 	UFUNCTION()

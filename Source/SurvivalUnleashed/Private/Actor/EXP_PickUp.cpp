@@ -31,7 +31,6 @@ AEXP_PickUp::AEXP_PickUp()
 	Radius->SetupAttachment(BoxCollision);
 	Radius->SetSphereRadius(EXPRadius);
 	Radius->Deactivate();
-	Radius->OnComponentBeginOverlap.AddDynamic(this, &AEXP_PickUp::HandleEXPOverlap);
 }
 
 void AEXP_PickUp::SetExpValue(int Amount)
@@ -61,6 +60,7 @@ void AEXP_PickUp::SetExpValue(int Amount)
 			}
 		}
 	}
+	//when to become the next tier of exp
 	if (Amount >= Tier3Requirment) {
 		Sprite->SetVisibility(false);
 		Sprite2->SetVisibility(false);
@@ -80,13 +80,13 @@ void AEXP_PickUp::OnPoolAcquire_Implementation()
 	// Fresh gem: no value until the enemy sets one, no remembered player
 	EXPValue = 0;
 	SavedPlayer = nullptr;
-	OneTime = true;
+	OneTime = true; //let it enable merge again on next remake
 }
 
 void AEXP_PickUp::OnPoolRelease_Implementation()
 {
 	SavedPlayer = nullptr;
-	OneTime = true;
+	OneTime = true; //let it enable merge again on next remake
 }
 
 // Called when the game starts or when spawned
@@ -163,8 +163,6 @@ void AEXP_PickUp::MergeClock()// starts the merge loop
 	else {
 		OneTime = true; //try again
 	}
-		
-	
 }
 
 void AEXP_PickUp::EnableMerge() //enable merge for a second
@@ -199,8 +197,6 @@ void AEXP_PickUp::EnableMerge() //enable merge for a second
 	if (GetWorld()) {
 		GetWorldTimerManager().SetTimer(TimerHandle, this, &AEXP_PickUp::DisableMerge, DisableMergeTimer, false);
 	}
-		
-	
 }
 
 void AEXP_PickUp::DisableMerge() //makes this merge thing loop until it gets picked up;
@@ -209,8 +205,6 @@ void AEXP_PickUp::DisableMerge() //makes this merge thing loop until it gets pic
 	if (GetWorld()) {
 		GetWorldTimerManager().SetTimer(TimerHandle, this, &AEXP_PickUp::EnableMerge, MergeTimer, false);
 	}
-		
-
 }
 
 // Called every frame
@@ -221,22 +215,3 @@ void AEXP_PickUp::Tick(float DeltaTime)
 }
 
 
-void AEXP_PickUp::HandleEXPOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult)
-{
-	if (OtherActor) {
-		AEXP_PickUp* EXP_PickUp = Cast<AEXP_PickUp>(OtherActor);
-		if (EXP_PickUp) {
-			if (EXP_PickUp->GetEXPValue() > 0) {
-				SetExpValue(GetEXPValue() + EXP_PickUp->GetEXPValue());
-				if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
-				{
-					Pool->Release(EXP_PickUp);
-				}
-				else Destroy();
-			}
-		}
-		else {
-			return;
-		}
-	}
-}
