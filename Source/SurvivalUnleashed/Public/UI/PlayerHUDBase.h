@@ -44,6 +44,10 @@ protected:
 	//---PERSONAL BEST---
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* PersonalBest;
 	//---STATS---
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UWeaponSlotsUI* WeaponSlots;
+
+	//UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UHorizontalBox* StatBox;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UVerticalBox* StatsBox;
 	//---HUD ANIMATIONS---
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim)) class UWidgetAnimation* Fading;
@@ -84,6 +88,10 @@ public:
 
 	//---SETSTATSTEXT: Sets the Stats text for each text block---
 	UFUNCTION(BlueprintCallable) void SetStatsText(EPlayerStats ChosenStats, int32 Ranks);
+
+	UFUNCTION(BlueprintCallable) void SetWeaponSlots(EWeaponCategory category, int level);
+
+	FVector EndPoint;
 
 	TArray<EPlayerStats> RankIndex;
 	float Timer;
