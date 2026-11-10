@@ -31,16 +31,6 @@ ABaseWeapon::ABaseWeapon()
 void ABaseWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-
-	GetWorldTimerManager().SetTimer(TStartTimerTest, [this]()
-		{
-			StopWeapon();
-		}, 5.f, false);
-
-	GetWorldTimerManager().SetTimer(TStartTimerTest2, [this]()
-		{
-			StartWeapon();
-		}, 10.f, false);
 }
 
 // Called every frame
