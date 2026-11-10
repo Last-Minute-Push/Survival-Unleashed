@@ -27,7 +27,7 @@ struct FDebugValueData
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleAnywhere) TObjectPtr<UDebugValue> Widget;
-	UPROPERTY(EditAnywhere) TEnumAsByte<EDebugValueType> Type;
+	UPROPERTY(EditAnywhere)    TEnumAsByte<EDebugValueType> Type;
 
 	union
 	{
@@ -50,9 +50,9 @@ struct FDebugCategoryData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)	FName Name;
-	UPROPERTY(VisibleAnywhere) TObjectPtr<UDebugCategory> Wiget;
-	UPROPERTY(EditAnywhere) TMap<FName, FDebugValueData> DebugValues;
+	UPROPERTY(EditAnywhere)	   FName Title;
+	UPROPERTY(VisibleAnywhere) TObjectPtr<UDebugOverlay> Widget;
+	UPROPERTY(EditAnywhere)    TMap<FName, FDebugValueData> DebugValues;
 };
 
 USTRUCT(BlueprintType)
@@ -60,9 +60,9 @@ struct FDebugOverlayData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere) FName Title;
+	UPROPERTY(EditAnywhere)    FName Title;
 	UPROPERTY(VisibleAnywhere) TObjectPtr<UDebugOverlay> Widget;
-	UPROPERTY(EditAnywhere) TArray<FDebugCategoryData> Categories;
+	UPROPERTY(EditAnywhere)    TArray<FDebugCategoryData> Categories;
 };
 
 /**
@@ -74,5 +74,8 @@ class SURVIVALUNLEASHED_API UDebugOverlayDatabase : public UPrimaryDataAsset
 	GENERATED_BODY()
 	
 public:
+	UPROPERTY(EditDefaultsOnly) TSubclassOf<UUserWidget> OverlayClass;
+	UPROPERTY(EditDefaultsOnly) TSubclassOf<UUserWidget> CateogryClass;
+	UPROPERTY(EditDefaultsOnly) TSubclassOf<UUserWidget> ValueClass;
 	UPROPERTY(EditDefaultsOnly) TArray<FDebugOverlayData> Database;
 };

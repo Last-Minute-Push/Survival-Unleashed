@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
 #include "DebugOverlay.generated.h"
 
-class UTextBlock;
-class UVerticalBox;
 /**
  * 
  */
@@ -15,8 +15,13 @@ UCLASS()
 class SURVIVALUNLEASHED_API UDebugOverlay : public UUserWidget
 {
 	GENERATED_BODY()
-	
-public:
+
+protected:
+
 	UPROPERTY(EditDefaultsOnly, meta = (BindWidget)) TObjectPtr<UTextBlock> Title;
 	UPROPERTY(EditDefaultsOnly, meta = (BindWidget)) TObjectPtr<UVerticalBox> Container;
+
+public:
+	void AddToContainer(TWeakObjectPtr<UUserWidget> Widget);
+	void SetTitle(const FName& String);
 };

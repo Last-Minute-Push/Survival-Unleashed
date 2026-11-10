@@ -21,8 +21,10 @@ class SURVIVALUNLEASHED_API UDebugOverlaySubsystem : public UTickableWorldSubsys
 	TObjectPtr<UDebugOverlayDatabase> DataOrigin;
 	TMap<TTuple<FName, FName, FName>, FDebugValueData> DataFrontend;
 
+	TObjectPtr<UDebugOverlay> CurrentOverlay;
+
 public:
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 
-	void InitializeDebugOverlay(const FString& OverlayName, const bool bUpdatePerFrame = true);
+	void InitializeDebugOverlay(const FString& Overlay = "", const bool bUpdatePerFrame = true);
 };
