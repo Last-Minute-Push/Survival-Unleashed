@@ -3,6 +3,7 @@
 
 #include "UI/PermaUpgradeMenu.h"
 #include "UI/ButtonBase.h"
+#include "UI/UpgradeButton.h"
 
 void UPermaUpgradeMenu::NativeOnInitialized()
 {
