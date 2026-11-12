@@ -202,7 +202,7 @@ void AUC_Player::Tick(float DeltaTime)
 			RegenTimer = 0;
 		}
 	}
-	if (IsDashing == false) {
+	if (GetPlayerStatsComp()->PlayerState == GetPlayerStatsComp()->EPlayerStates::Roam) {
 		clearDirectionTimer += DeltaTime;
 		if (clearDirectionTimer > directionhold) {
 			LastKnownInput = FVector2D::Zero();
@@ -214,7 +214,7 @@ void AUC_Player::Tick(float DeltaTime)
 		}
 	}
 
-	if (IsDashing == true) {
+	if (GetPlayerStatsComp()->PlayerState == GetPlayerStatsComp()->EPlayerStates::Dash) {
 		DashlengthTimer += DeltaTime;
 		if (!(DashlengthTimer >= GetPlayerStatsComp()->GetDashLength())) {
 			FVector Direction = (Forward * LastKnownInput.Y) + (Right * LastKnownInput.X);
@@ -224,7 +224,7 @@ void AUC_Player::Tick(float DeltaTime)
 		else {
 			EnableCollision();
 			SetPlayerSpeed(GetPlayerStatsComp()->GetMoveSpeed());
-			IsDashing = false;
+			GetPlayerStatsComp()->PlayerState = GetPlayerStatsComp()->EPlayerStates::Roam;
 			DashCDTimer = 0;
 			DashlengthTimer = 0;
 		}
@@ -324,7 +324,7 @@ void AUC_Player::SetWeapon(EWeaponCategory Type)
 void AUC_Player::Move(const FInputActionValue& Value)
 {
 	const FVector2D Input = Value.Get<FVector2D>();
-	if (IsDashing == false) {
+	if (GetPlayerStatsComp()->PlayerState == GetPlayerStatsComp()->EPlayerStates::Roam) {
 		LastKnownInput = Input;
 		AddMovementInput(Forward, Input.Y);
 		AddMovementInput(Right, Input.X);
@@ -335,7 +335,7 @@ void AUC_Player::Move(const FInputActionValue& Value)
 void AUC_Player::Dash(const FInputActionValue& Value)
 {
 	if (CanDash == true && LastKnownInput != FVector2D::Zero()) {
-		IsDashing = true;
+		GetPlayerStatsComp()->PlayerState = GetPlayerStatsComp()->EPlayerStates::Dash;
 		CanDash = false;
 		if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
 		{
@@ -368,15 +368,7 @@ void AUC_Player::SetPlayerSpeed(float value)
 	this->GetCharacterMovement()->MaxWalkSpeed = value;
 }
 
-void AUC_Player::EnableCollision()
-{
-	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
-}
 
-void AUC_Player::DisableCollision()
-{
-	GetCapsuleComponent()->SetGenerateOverlapEvents(false);
-}
 
 void AUC_Player::LevelUpPause()
 {

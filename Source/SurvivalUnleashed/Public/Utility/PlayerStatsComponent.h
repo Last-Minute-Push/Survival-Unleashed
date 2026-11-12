@@ -99,6 +99,13 @@ public:
 	};
 	TArray<ELevelUpStyle> QueueStyle;
 
+	enum EPlayerStates
+	{
+		Roam,
+		Dash
+	};
+	EPlayerStates PlayerState = Roam;
+
 	void CallLevelUp();
 	void CallFocusStat();
 

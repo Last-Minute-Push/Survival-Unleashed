@@ -212,7 +212,7 @@ void UPlayerStatsComponent::TakeDamage(AActor* DamagedActor, float Damage, const
 
 void UPlayerStatsComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	//EVASION CHECKFIRST!!!
+	
 	if (GetEvasion() > 0 && Damage > 0) // Don't dodge heals
 	{
 		float chance = FMath::FRand();

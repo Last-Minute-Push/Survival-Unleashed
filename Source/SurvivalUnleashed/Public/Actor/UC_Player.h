@@ -128,7 +128,6 @@ private:
 	float DashlengthTimer = 0;
 	float clearDirectionTimer = 0;
 	float directionhold = 0.2f;
-	bool IsDashing = false;
 	bool CanDash = true;
 	bool Magnet = false;
 	float MagnetTimer = 0;
