@@ -337,6 +337,14 @@ void AUC_Player::Dash(const FInputActionValue& Value)
 	if (CanDash == true && LastKnownInput != FVector2D::Zero()) {
 		IsDashing = true;
 		CanDash = false;
+		if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
+		{
+			if (DashSFX) {
+
+				I->PlaySound(DashSFX);
+			}
+		}
+
 		DisableCollision();
 		SetPlayerSpeed(GetPlayerStatsComp()->GetMoveSpeed() * 4);
 	}

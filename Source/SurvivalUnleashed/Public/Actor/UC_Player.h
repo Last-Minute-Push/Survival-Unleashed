@@ -113,6 +113,8 @@ protected:
 	uint8 InventoryMaxSlots;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	UPlayerStatsComponent* PlayerStatsComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	USoundBase* DashSFX;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
