@@ -18,6 +18,7 @@
 #include "Actor/EXP_PickUp.h"
 #include "Debug/SUDebug.h"
 #include "DrawDebugHelpers.h"
+#include "Framework/UGI_SUGameInstance.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogEnemy, Log, All);
@@ -362,7 +363,10 @@ void AEnemyBase::DropLoot()
 
 	// The gem ignores pickups until it has a value, so setting it after Acquire is safe
 	const FTransform DropTransform(FRotator::ZeroRotator, GetLootLocation());
-	if (AEXP_PickUp* Gem = Pool->AcquireAs<AEXP_PickUp>(ExperiencePickupClass, DropTransform))
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	if (GI->EXPActors.Num() >= 300) {
+		GI->AddEXPtoNearestOne(this->GetActorLocation(), EnemyData->ExperienceValue);
+	}else if (AEXP_PickUp* Gem = Pool->AcquireAs<AEXP_PickUp>(ExperiencePickupClass, DropTransform))
 	{
 		Gem->SetExpValue(EnemyData->ExperienceValue);
 	}

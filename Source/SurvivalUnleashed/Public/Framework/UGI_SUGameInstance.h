@@ -67,7 +67,7 @@ protected:
 	UPROPERTY() FRunResults LastRunResults;
 
 	void LoadOrCreateSave();
-	
+
 public:
 
 	UUGI_SUGameInstance();
@@ -95,6 +95,7 @@ public:
 	UPROPERTY()
 	TWeakObjectPtr<AActor> ClosestEXPActor;
 	void EXPCountCheck();
+	void AddEXPtoNearestOne(FVector EnemyLocation, int32 EXPvalue);
 
 	//----------------------------------------------------------------------//
     // Weapon Database
