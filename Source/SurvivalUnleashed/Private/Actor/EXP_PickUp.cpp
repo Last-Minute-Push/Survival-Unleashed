@@ -30,7 +30,7 @@ AEXP_PickUp::AEXP_PickUp()
 	Sprite3->SetVisibility(false);
 	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
 	if (GI) {
-		GI->EXPActors.Add(this);
+		GI->LastestEXPActor = this;
 	}
 }
 
@@ -75,13 +75,10 @@ void AEXP_PickUp::SetExpValue(int Amount)
 
 	EXPValue = Amount;
 	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
-	AEXP_PickUp* MerginEXP = Cast<AEXP_PickUp>(GI->EXPActors[0]);
-	if (this != MerginEXP) {
-		if (GI->EXPActors.Num() > 300) {
-			Merge(MerginEXP, this);
-			GI->EXPActors.Remove(this);
-		}
+	if (GI) {
+		GI->LastestEXPActor = this;
 	}
+	GI->EXPCountCheck();
 
 }
 
@@ -92,7 +89,7 @@ void AEXP_PickUp::OnPoolAcquire_Implementation()
 	SavedPlayer = nullptr;
 	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
 	if (GI) {
-		GI->EXPActors.Add(this);
+		GI->LastestEXPActor = this;
 	}
 	GI->EXPCountCheck();
 }
@@ -112,6 +109,10 @@ void AEXP_PickUp::BeginPlay()
 	if (GI) {
 		if (this) {
 			GI->EXPActors.Add(this);
+			if (GI->EXPActors.Num() <= 300) {
+
+			}
+			GI->LastestEXPActor = this;
 			GI->EXPCountCheck();
 		}
 	}
@@ -172,10 +173,11 @@ void AEXP_PickUp::HandleOverLap(UPrimitiveComponent* OverlapComponent, AActor* O
 			AttractedActors.Remove(OtherActor);
 			Merge(this, EXP);
 		}
-		EXP;
-	}
-
-	if (CanPickUpCompCheck(OtherActor, OtherComp)) {
+		if (AttractedActors.IsEmpty()) {
+			MergeMode = false;
+			DisableEXPTick();
+		}
+	}else if (CanPickUpCompCheck(OtherActor, OtherComp)) {
 		HandlePickUp();
 		PostPickUp();
 	}

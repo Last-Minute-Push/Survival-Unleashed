@@ -90,6 +90,10 @@ public:
 
 	UPROPERTY()
 	TArray<TWeakObjectPtr<AActor>> EXPActors;
+	UPROPERTY()
+	TWeakObjectPtr<AActor> LastestEXPActor;
+	UPROPERTY()
+	TWeakObjectPtr<AActor> ClosestEXPActor;
 	void EXPCountCheck();
 
 	//----------------------------------------------------------------------//
