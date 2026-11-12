@@ -31,6 +31,7 @@ public:
 	bool HasRunStarted() const { return bRunStarted; }
 	int32 GetCountdownRemaining() const { return CountdownRemaining; } // for widgets created mid-countdown
 	float GetRunTime() const; // 0 until the countdown ends; pauses with the game
+	void SkipRunTime(float Seconds) { if (bRunStarted) { RunStartTime -= Seconds; } }
 protected:
 	AUGM_SUPlayAreaGameMode();
 	virtual void BeginPlay() override;
