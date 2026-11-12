@@ -5,6 +5,7 @@
 #include "UI/ButtonBase.h"
 #include "UI/OptionsMenuBase.h"
 #include "UI/PermaUpgradeMenu.h"
+#include "Components/Image.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 #include"../SurvivalUnleashed.h"
 
@@ -14,6 +15,7 @@ void UMainMenu::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
+	PlayAnimation(OpenFade);
 
 	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
 	{

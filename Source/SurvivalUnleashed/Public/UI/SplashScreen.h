@@ -16,7 +16,13 @@ class SURVIVALUNLEASHED_API USplashScreen : public UUserWidget
 
 	virtual void NativeOnInitialized() override;
 
+	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
+
 protected:
 
-	
+	UPROPERTY(Transient, meta = (BindWidgetAnim)) class UWidgetAnimation* SplashIntroAnimation;
+
+public:
+	UFUNCTION() void SkippedIntro();
+	FWidgetAnimationDynamicEvent OnSplashFinish;
 };
