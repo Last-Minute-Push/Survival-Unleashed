@@ -118,6 +118,7 @@ void AUC_Player::BeginPlay()
 	if (UWeaponSubsystem* SS = GetWorld()->GetSubsystem<UWeaponSubsystem>())
 	{
 		WeaponSubsystem = SS;
+		WeaponSubsystem->OnWeaponsUIUpdate.AddDynamic(PlayerHUD, &UPlayerHUDBase::SetWeaponSlots);
 	}
 	WeaponInventory.Reserve(InventoryMaxSlots);
 	if (!StartingWeapons.IsEmpty())
