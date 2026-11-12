@@ -14,8 +14,6 @@ UCLASS()
 class SURVIVALUNLEASHED_API UDebugValue : public UUserWidget
 {
 	GENERATED_BODY()
-
-	inline void SetNull(TObjectPtr<UTextBlock> Text) { Text->SetText(FText::FromString("null")); }
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, meta = (BindWidget)) TObjectPtr<UTextBlock> VarName;
@@ -28,11 +26,18 @@ protected:
 public:
 	void SetName(const FName& String);
 
-	void SetValue(const TWeakObjectPtr<bool> Value);
-	void SetValue(const TWeakObjectPtr<int32> Value);
-	void SetValue(const TWeakObjectPtr<float> Value);
-	void SetValue(const TWeakObjectPtr<FVector2D> Value);
-	void SetValue(const TWeakObjectPtr<FVector> Value);
-	void SetValue(const TWeakObjectPtr<FVector4> Value);
-	void SetValue(const TWeakObjectPtr<FString> Value);
+	void SetNull();
+	void SetValue(const bool& Value);
+
+	void SetValue(const int32& Value);
+
+	void SetValue(const float& Value);
+
+	void SetValue(const FVector2D& Value);
+
+	void SetValue(const FVector& Value);
+
+	void SetValue(const FVector4& Value);
+
+	void SetValue(const FString& Value);
 };

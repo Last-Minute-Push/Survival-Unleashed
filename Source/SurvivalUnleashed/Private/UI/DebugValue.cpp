@@ -10,91 +10,51 @@ void UDebugValue::SetName(const FName& String)
 	VarName->SetText(FText::FromName(String));
 }
 
-void UDebugValue::SetValue(const TWeakObjectPtr<bool> Value)
+void UDebugValue::SetNull()
 {
-	if (!Value.IsValid())
-	{
-		SetNull(Val1);
-		return;
-	}
-
-	Val1->SetText(FText::FromString(Value.Get() ? "true" : "false"));
+	Val1->SetText(FText::FromString("null"));
+	Val2->SetText(FText::FromString(""));
+	Val3->SetText(FText::FromString(""));
+	Val4->SetText(FText::FromString(""));
 }
 
-void UDebugValue::SetValue(const TWeakObjectPtr<int32> Value)
+void UDebugValue::SetValue(const bool& Value)
 {
-	if (!Value.IsValid())
-	{
-		SetNull(Val1);
-		return;
-	}
-
-	Val1->SetText(FText::FromString(FString::FromInt(*Value)));
+	Val1->SetText(FText::FromString(Value ? "true" : "false"));
 }
 
-void UDebugValue::SetValue(const TWeakObjectPtr<float> Value)
+void UDebugValue::SetValue(const int32& Value)
 {
-	if (!Value.IsValid())
-	{
-		SetNull(Val1);
-		return;
-	}
-
-	Val1->SetText(FText::FromString(FString::SanitizeFloat(*Value, 6)));
+	Val1->SetText(FText::FromString(FString::FromInt(Value)));
 }
 
-void UDebugValue::SetValue(const TWeakObjectPtr<FVector2D> Value)
+void UDebugValue::SetValue(const float& Value)
 {
-	if (!Value.IsValid())
-	{
-		SetNull(Val1);
-		SetNull(Val2);
-		return;
-	}
-
-	Val1->SetText(FText::FromString(FString::SanitizeFloat(Value->X, 6)));
-	Val2->SetText(FText::FromString(FString::SanitizeFloat(Value->Y, 6)));
+	Val1->SetText(FText::FromString(FString::SanitizeFloat(Value, 6)));
 }
 
-void UDebugValue::SetValue(const TWeakObjectPtr<FVector> Value)
+void UDebugValue::SetValue(const FVector2D& Value)
 {
-	if (!Value.IsValid())
-	{
-		SetNull(Val1);
-		SetNull(Val2);
-		SetNull(Val3);
-		return;
-	}
-
-	Val1->SetText(FText::FromString(FString::SanitizeFloat(Value->X, 6)));
-	Val2->SetText(FText::FromString(FString::SanitizeFloat(Value->Y, 6)));
-	Val3->SetText(FText::FromString(FString::SanitizeFloat(Value->Z, 6)));
+	Val1->SetText(FText::FromString(FString::SanitizeFloat(Value.X, 6)));
+	Val2->SetText(FText::FromString(FString::SanitizeFloat(Value.Y, 6)));
 }
 
-void UDebugValue::SetValue(const TWeakObjectPtr<FVector4> Value)
+void UDebugValue::SetValue(const FVector& Value)
 {
-	if (!Value.IsValid())
-	{
-		SetNull(Val1);
-		SetNull(Val2);
-		SetNull(Val3);
-		SetNull(Val4);
-		return;
-	}
-
-	Val1->SetText(FText::FromString(FString::SanitizeFloat(Value->X, 6)));
-	Val2->SetText(FText::FromString(FString::SanitizeFloat(Value->Y, 6)));
-	Val3->SetText(FText::FromString(FString::SanitizeFloat(Value->Z, 6)));
-	Val4->SetText(FText::FromString(FString::SanitizeFloat(Value->W, 6)));
+	Val1->SetText(FText::FromString(FString::SanitizeFloat(Value.X, 6)));
+	Val2->SetText(FText::FromString(FString::SanitizeFloat(Value.Y, 6)));
+	Val3->SetText(FText::FromString(FString::SanitizeFloat(Value.Z, 6)));
 }
 
-void UDebugValue::SetValue(const TWeakObjectPtr<FString> Value)
+void UDebugValue::SetValue(const FVector4& Value)
 {
-	if (!Value.IsValid())
-	{
-		SetNull(Val1);
-		return;
-	}
+	Val1->SetText(FText::FromString(FString::SanitizeFloat(Value.X, 6)));
+	Val2->SetText(FText::FromString(FString::SanitizeFloat(Value.Y, 6)));
+	Val3->SetText(FText::FromString(FString::SanitizeFloat(Value.Z, 6)));
+	Val4->SetText(FText::FromString(FString::SanitizeFloat(Value.W, 6)));
+}
 
-	Val1->SetText(FText::FromString(*Value));
+void UDebugValue::SetValue(const FString& Value)
+{
+	Val1->SetText(FText::FromString(Value));
 }

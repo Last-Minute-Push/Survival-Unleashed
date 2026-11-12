@@ -62,6 +62,8 @@ public:
 	void ResumeGame();
 	void PlayerLost();
 
+	UFUNCTION() inline FVector GetLocation() { return GetMesh()->GetRelativeLocation(); }
+
 	UCapsuleComponent* GetCapsuleComponent();
 	USphereComponent* GetRadiusComponent();
 

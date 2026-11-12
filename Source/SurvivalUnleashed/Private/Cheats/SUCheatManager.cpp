@@ -4,6 +4,7 @@
 #include "Actor/UC_Player.h"
 #include "Utility/PlayerStatsComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "Debug/DebugOverlaySubsystem.h"
 #include "Engine/Engine.h"
 #include "EngineUtils.h"
 
@@ -100,6 +101,46 @@ void USUCheatManager::LevelUp(int32 Count)
 #endif
 }
 
+void USUCheatManager::DebugOverlay(const FString& Type, const bool bUpdatePerFrame)
+{
+#if UE_WITH_CHEAT_MANAGER
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+	{
+		EDebugOverlayInit R = Ovl->InitializeDebugOverlay(Type, bUpdatePerFrame);
+
+		switch (R)
+		{
+		case ENoneExist:
+			Say(FString::Printf(TEXT("No overlay type matches \"%s\"; displaying default. Try ListOverlays."), *Type));
+			break;
+		case EFailed:
+			Say(TEXT("No overlay database: the game instance has no overlay database set."));
+		}
+	}
+#endif
+}
+
+void USUCheatManager::ListOverlays()
+{
+#if UE_WITH_CHEAT_MANAGER
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+	{
+		TArray<FString> OverlayNames;
+		Ovl->GetOverlayNames(OverlayNames);
+
+		if (OverlayNames.IsEmpty())
+		{
+			Say(TEXT("No overlay data: the game instance has no overlay database set."));
+			return;
+		}
+		for (const FString& Overlay : OverlayNames)
+		{
+			Say(Overlay);
+		}
+	}
+#endif
+}
+
 ASpawnDirector* USUCheatManager::FindSpawnDirector() const
 {
 	for (TActorIterator<ASpawnDirector> It(GetWorld()); It; ++It)
@@ -119,4 +160,3 @@ void USUCheatManager::Say(const FString& Message) const
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, Message); // on screen for 5 s
 	}
 }
-

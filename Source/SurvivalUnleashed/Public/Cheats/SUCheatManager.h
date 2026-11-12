@@ -37,6 +37,12 @@ public:
 	UFUNCTION(Exec)
 	void LevelUp(int32 Count);
 
+	UFUNCTION(Exec)
+	void DebugOverlay(const FString& Type, const bool bUpdatePerFrame);
+
+	UFUNCTION(Exec)
+	void ListOverlays();
+
 private:
 	ASpawnDirector* FindSpawnDirector() const;
 	void Say(const FString& Message) const;

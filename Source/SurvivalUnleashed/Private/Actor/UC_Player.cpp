@@ -19,6 +19,7 @@
 #include "Actor/Health_PickUp.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
+#include "Debug/DebugOverlaySubsystem.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPlayer, Log, All);
 
@@ -145,8 +146,14 @@ void AUC_Player::BeginPlay()
 		UE_LOG(LogPlayer, Error, TEXT("No Audio Library Instance has been found!"));
 	}
 
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+	{
+		FOnOverlayUpdateBool GetVector3;
+		//GetVector3.BindUFunction(this, TEXT("GetLocation"));
+		GetVector3.BindLambda([this]() { return isPaused; });
+		Ovl->AttachToOverlay("Test Overlay", "Test Category", "Paused", GetVector3);
+	}
 }
-
 // Called every frame
 void AUC_Player::Tick(float DeltaTime)
 {
