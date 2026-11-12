@@ -20,6 +20,7 @@
 #include "DrawDebugHelpers.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 #include "Framework/SUCollision.h"
+#include "Enemies/FlowField.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogEnemy, Log, All);
 
@@ -69,6 +70,8 @@ void AEnemyBase::BeginPlay()
 		Horde->RegisterEnemy(this);
 	}
 
+	// Pooled enemies run BeginPlay once, so this is one lookup per enemy for the whole run
+	FlowField = Cast<AFlowField>(UGameplayStatics::GetActorOfClass(this, AFlowField::StaticClass()));
 	LargestSeparationRadius = FMath::Max(LargestSeparationRadius, SeparationRadius);
 
 	ResetState();
@@ -487,7 +490,9 @@ FVector AEnemyBase::GetDesiredDirection() const
 		const FVector ToPlayer = Player->GetActorLocation() - GetActorLocation();
 		if (ToPlayer.SizeSquared2D() > FMath::Square(StopDistance))
 		{
-			Seek = ToPlayer.GetSafeNormal2D();
+			// Around obstacles through the flow field, or straight at the player if there isn't one
+			const AFlowField * Field = FlowField.Get();
+			Seek = Field ? Field->GetSeekDirection(GetActorLocation(), Player->GetActorLocation()) : ToPlayer.GetSafeNormal2D();
 		}
 	}
 

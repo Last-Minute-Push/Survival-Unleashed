@@ -35,6 +35,7 @@ class UHordeSubsystem;
 class AEXP_PickUp;
 class UCapsuleComponent;
 class UStaticMeshComponent;
+class AFlowField;
 
 UCLASS(Abstract)
 class SURVIVALUNLEASHED_API AEnemyBase : public AActor, public IPoolable
@@ -238,6 +239,9 @@ private:
 
 	UPROPERTY(Transient)
 	UHordeSubsystem* Horde;
+
+	// Found once at BeginPlay. Without one in the level, enemies seek in a straight line as before.
+	TWeakObjectPtr<AFlowField> FlowField;
 
 	// Reused every frame to avoid allocating a new array per enemy per frame
 	mutable TArray<AEnemyBase*> NeighborScratch;
