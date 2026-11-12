@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "Utility/UpgradeOffers.h"
 #include "LevelUpScreen.generated.h"
 
@@ -13,7 +13,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSetOwnedWeapons, TArray<FOwnedWea
  *
  */
 UCLASS()
-class SURVIVALUNLEASHED_API ULevelUpScreen : public UUserWidget
+class SURVIVALUNLEASHED_API ULevelUpScreen : public UHUDBase
 {
 	GENERATED_BODY()
 private:
@@ -27,6 +27,8 @@ private:
 	bool bOfferTaken = false; // ignores a second click before the screen closes
 
 public:
+	ULevelUpScreen();
+
 	UPROPERTY()
 	class AUC_Player* CurrentPlayer;
 	UPROPERTY()
@@ -42,8 +44,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintAssignable)
 	FOnSetOwnedWeapons OnSetOwnedWeapons;
 
-	// Every weapon a level-up can offer. Leave empty until the weapon inventory (514) is hooked up: offers are stats only until then.
-	UPROPERTY(EditDefaultsOnly, Category = "Level Up")
+	// Every weapon a level-up can offer.
+	UPROPERTY(BlueprintReadOnly, Category = "Level Up")
 	TArray<EWeaponCategory> WeaponPool;
 	
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "Types/SlateEnums.h"
 #include "GraphicsOptionsBase.generated.h"
 
@@ -11,7 +11,7 @@ class UButtonBase;
 
 /** Graphics tab of the Options menu. Reads and writes UGameUserSettings (saved to GameUserSettings.ini). */
 UCLASS()
-class SURVIVALUNLEASHED_API UGraphicsOptionsBase : public UUserWidget
+class SURVIVALUNLEASHED_API UGraphicsOptionsBase : public UHUDBase
 {
 	GENERATED_BODY()
 
@@ -29,6 +29,8 @@ protected:
 	UFUNCTION() void WindowModeChanged(FString SelectedItem, ESelectInfo::Type SelectionType);
 
 private:
+	UGraphicsOptionsBase();
+
 	// Same order as ResolutionCombo's options, so a selected index maps straight to a resolution
 	TArray<FIntPoint> Resolutions;
 

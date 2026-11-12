@@ -5,6 +5,11 @@
 #include "UI/ButtonBase.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 
+UResultsBase::UResultsBase()
+{
+	ZOrderLayer = 2;
+}
+
 void UResultsBase::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
@@ -21,7 +26,6 @@ void UResultsBase::NativeOnInitialized()
 	{
 		//UE_LOG(Game, Log, TEXT(">>>>Error: Wrong Game Instance"))
 	}
-
 }
 
 void UResultsBase::SetTextTimer(FText timer)

@@ -9,9 +9,12 @@ DEFINE_LOG_CATEGORY_STATIC(LogSpear, Log, All);
 
 ABaseSpear::ABaseSpear()
 {
+	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>("BoxCollision");
-	BoxCollision->AttachToComponent(Mesh, FAttachmentTransformRules(EAttachmentRule::KeepRelative, EAttachmentRule::KeepRelative, EAttachmentRule::KeepRelative, false));
+	BoxCollision->SetupAttachment(Mesh);
+
+	bAbsoluteRotation = true;
 }
 
 void ABaseSpear::BeginPlay()
@@ -21,22 +24,33 @@ void ABaseSpear::BeginPlay()
 	// Delegate Binding
 	BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &ABaseSpear::ApplyDamageCollision);
 
+	if (UHordeSubsystem* H = GetWorld()->GetSubsystem<UHordeSubsystem>())
+	{
+		Horde = H;
+	}
+	else UE_LOG(LogSpear, Error, TEXT("Failed to retrieve HordeSubystem in ABaseBowToGun!"));
+
 	// Thrust Properties
 	if (Data)
 	{
 		Cooldown = Data->Cooldown;
-		Range   += Radius;
+		Height   = Data->Height;
+		Radius   = Data->DistanceFromPlayer;
+		Range    = Data->Range + Radius;
+		Speed    = Data->AttackSpeed;
 	}
 	else
 	{
-		UE_LOG(LogSpear, Error, TEXT("ABaseSpear's WeaponData asset was not set!"))
+		UE_LOG(LogSpear, Error, TEXT("ABaseSpear's WeaponData asset was not set!"));
+
+		Cooldown = 0.f;
+		Height   = 0.f;
+		Radius   = 0.f;
+		Range    = 0.f;
+		Speed    = 0.f;
 	}
 
 	bIsAiming = true;
-
-	// Begins the thrust cycle	
-	GetWorldTimerManager().ClearTimer(TFireCooldown);
-	GetWorldTimerManager().SetTimer(TFireCooldown, this, &ABaseSpear::StartThrust, Cooldown);
 }
 
 void ABaseSpear::Tick(float DeltaTime)
@@ -44,22 +58,21 @@ void ABaseSpear::Tick(float DeltaTime)
 	// We only aim while we're not thrusting
 	if (bIsAiming)
 	{
-		FaceNearestEnemy(Pivot, true/*, false*/);
+		ABaseBowToGun::FaceNearestEnemy(Pivot, Horde, (AActor*)Parent, Range, true/*, false*/);
 		return;
 	}
 
 	// Thrusting movement
-	float CurrentThrustDistance = Mesh->GetRelativeLocation().Y;
-	Mesh->AddRelativeLocation(FVector(0.f, (bIsThrusting) ? Speed * DeltaTime : -Speed * ThrustRetreatMultiplier * DeltaTime, 0.f));
+	float CurrentDistance = MoveSpear(DeltaTime);
 
 	// Did we reach our range?
-	if (bIsThrusting && CurrentThrustDistance > Range)
+	if (bIsThrusting && CurrentDistance > Range)
 	{
-		StopThrust(); // Yes, we fully thrusted our spear
+		Retreat(); // Yes, we fully thrusted our spear
 	}
-	else if (CurrentThrustDistance < Radius)
+	else if (CurrentDistance < Radius)
 	{
-		EndThrustCycle(); // Yes, we fully retreated our spear 
+		EndCycle(); // Yes, we fully retreated our spear 
 	}
 	// else we continue the movement
 }
@@ -71,7 +84,13 @@ void ABaseSpear::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-void ABaseSpear::StartThrust()
+float ABaseSpear::MoveSpear(float DeltaTime)
+{
+	Mesh->AddRelativeLocation(FVector(0.f, (bIsThrusting) ? Speed * DeltaTime : -Speed * RetreatMultiplier * DeltaTime, 0.f));
+	return Mesh->GetRelativeLocation().Y;
+}
+
+void ABaseSpear::Thrust()
 {
 	bIsAiming = false;
 	bIsThrusting = true;
@@ -79,14 +98,14 @@ void ABaseSpear::StartThrust()
 	BoxCollision->SetGenerateOverlapEvents(true);
 }
 
-void ABaseSpear::StopThrust()
+void ABaseSpear::Retreat()
 {
 	bIsThrusting = false;
 	Mesh->SetRelativeLocation(FVector(0.f, Range, Height));
 	BoxCollision->SetGenerateOverlapEvents(false);
 }
 
-void ABaseSpear::EndThrustCycle()
+void ABaseSpear::EndCycle()
 {
 	HitActors.Empty();
 
@@ -94,8 +113,9 @@ void ABaseSpear::EndThrustCycle()
 	bIsThrusting = true;
 	Mesh->SetRelativeLocation(FVector(0.f, Radius, Height));
 
-	GetWorldTimerManager().SetTimer(TFireCooldown, this, &ABaseSpear::StartThrust, Cooldown);
+	GetWorldTimerManager().SetTimer(TThrustCooldown, this, &ABaseSpear::Thrust, Cooldown);
 }
+
 
 void ABaseSpear::ApplyDamageCollision(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -107,9 +127,17 @@ void ABaseSpear::ApplyDamageCollision(UPrimitiveComponent* OverlappedComponent, 
 	}
 }
 
+void ABaseSpear::StartWeapon()
+{
+	Super::StartWeapon();
+
+	Thrust();
+}
+
 void ABaseSpear::StopWeapon()
 {
 	HitActors.Empty();
+	GetWorldTimerManager().ClearTimer(TThrustCooldown);
 
 	Super::StopWeapon();
 }

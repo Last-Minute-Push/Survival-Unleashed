@@ -23,6 +23,7 @@ ABaseWeapon::ABaseWeapon()
 	SetRootComponent(Pivot);
 	Mesh->SetupAttachment(Pivot);
 
+	bIsActive = false;
 	bAbsoluteRotation = false;
 }
 
@@ -30,7 +31,6 @@ ABaseWeapon::ABaseWeapon()
 void ABaseWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 // Called every frame
@@ -70,8 +70,15 @@ float ABaseWeapon::GetHitDamage() const
 	return ComputeWeaponHit(Data, ParentStats);
 }
 
+void ABaseWeapon::StartWeapon()
+{
+	bIsActive = true;
+	SetActorTickEnabled(true);
+}
+
 void ABaseWeapon::StopWeapon()
 {
+	bIsActive = false;
 	SetActorTickEnabled(false);
 }
 

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "PermaUpgradeMenu.generated.h"
 
 /**
@@ -11,7 +11,7 @@
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUpgradeClosed);
 UCLASS()
-class SURVIVALUNLEASHED_API UPermaUpgradeMenu : public UUserWidget
+class SURVIVALUNLEASHED_API UPermaUpgradeMenu : public UHUDBase
 {
 	GENERATED_BODY()
 
@@ -26,7 +26,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* BackUpgradeButton;
 
 public:
-	
+	UPermaUpgradeMenu();
 
 	UPROPERTY(BlueprintAssignable, Category = "Upgrades")
 	FOnUpgradeClosed OnUpgradeClose;

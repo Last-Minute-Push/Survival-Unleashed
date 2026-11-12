@@ -9,23 +9,29 @@
 #include "Audio/Interfaces/AudioManagerInterface.h"
 #include "Core/RunResults.h"
 #include "Weapons/WeaponData.h" // Focus enum
-
+#include "UI/ControlsMenu.h"
 #include "UGI_SUGameInstance.generated.h"
 
 class UDebugOverlayDatabase;
 
 // Activates the audio test
-#define AUDIO_MANAGER_TEST 1
+#define AUDIO_MANAGER_TEST 0
 
 /**
  *
  */
+class UEnhancedInputUserSettings;
+class UInputMappingContext;
+class UInputAction;
+
 UCLASS()
 class SURVIVALUNLEASHED_API UUGI_SUGameInstance : public UGameInstance, public IAudioManagerInterface
 {
 	GENERATED_BODY()
 
 protected:
+
+	// - AudioManager -
 	FTimerHandle MusicFadeInTimer;
 	FTimerHandle DestackResumeTimer;
 
@@ -34,36 +40,49 @@ protected:
 	UPROPERTY(Transient) TArray<TObjectPtr<UAudioComponent>> FadingOutMusic; // old songs finishing their fade-out
 	UPROPERTY(Transient) TArray<TObjectPtr<UAudioComponent>> ActiveSounds;   // tracked sounds (can be paused/stopped)
 
+
+	UPROPERTY(EditDefaultsOnly, Category = Audio) TSubclassOf<UAudioLibrary> AudioLibraryClass; //! SET IN EDITOR (BP_AudioLibrary)
+	
 	UAudioComponent* CreateAudio(USoundBase* Sound, float VolumeMultiplier, float PitchMultiplier,
 		USoundConcurrency* ConcurrencySettings, bool bPersistAcrossLevels);
 
-	UPROPERTY(EditDefaultsOnly, Category = "Weapons") UWeaponDatabase* WeaponDatabase;
-	
+        // - Debug Overlay Database -
 	UPROPERTY(EditDefaultsOnly, Category = "Debug") TObjectPtr<UDebugOverlayDatabase> OverlayDatabase;
 
-	int32 CurrentLevel = 0;
+        // - Audio -
+	void ApplyMusicVolume();
+	void ApplySoundVolume();
 
+
+	// - Weapon Database -
+	UPROPERTY(EditDefaultsOnly, Category = "Weapons") UWeaponDatabase* Database;
+
+
+	// - Level Handling -
+	int32 CurrentLevel = 0;
 	UPROPERTY(EditDefaultsOnly, Category = Levels) int32 FirstLevelIndex = 1;
 	UPROPERTY(EditDefaultsOnly, Category = Levels) int32 MainMenuIndex = 0;
 	UPROPERTY(EditDefaultsOnly, Category = Levels) TArray<FName> GameLevels; //! SET IN EDITOR!
 
-	UPROPERTY(EditDefaultsOnly, Category = Audio) TSubclassOf<UAudioLibrary> AudioLibraryClass; //! SET IN EDITOR (BP_AudioLibrary)
 
 	// - Save / Run Results -
 	UPROPERTY(EditDefaultsOnly, Category = Save) FString SaveSlotName = TEXT("SU_Progress");
-	static constexpr int32 SaveUserIndex = 0;
 
+	static constexpr int32 SaveUserIndex = 0;
 	UPROPERTY() TObjectPtr<class USUSaveGame> SaveData;
 	UPROPERTY() FRunResults LastRunResults;
 
 	void LoadOrCreateSave();
-
+	
 public:
 
 	UUGI_SUGameInstance();
 
 	virtual void Init() override;
 
+	//----------------------------------------------------------------------//
+    // Level Handling
+    //----------------------------------------------------------------------//
 	void LoadLevel(const int32 LevelIndex);
 	void LoadLevelSafe(const int32 LevelIndex);
 	UFUNCTION() inline void LoadFirstLevel() { LoadLevelSafe(FirstLevelIndex); }
@@ -71,7 +90,14 @@ public:
 	UFUNCTION() void QuitToMenu();
 	UFUNCTION() void QuitTheGame();
 
-	UFUNCTION() inline UWeaponDatabase* GetWeaponDatabase() const { return WeaponDatabase; }
+	//----------------------------------------------------------------------//
+        // Weapon Database
+        //----------------------------------------------------------------------//
+	UFUNCTION() inline UWeaponDatabase* GetWeaponDatabase() const { return Database; }
+
+	//----------------------------------------------------------------------//
+        // Debug Overlay Database
+        //----------------------------------------------------------------------//
 	UFUNCTION() inline UDebugOverlayDatabase* GetOverlayDatabase() const { return OverlayDatabase; }
 
 	//----------------------------------------------------------------------//
@@ -102,28 +128,59 @@ public:
 	// Returns every spent point and clears all ranks and focus points. Saves.
 	UFUNCTION(BlueprintCallable, Category = "Permanent Upgrades") void RefundAllRanks();
 
+	// The player's controls. Owned here so gameplay never depends on the controls menu having been opened.
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputMappingContext> PlayerMappingContext;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> MoveAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> DashAction;
+
+	// Player Controls
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class  UControlsMenu* ControlsMenu;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class AUC_Player* PlayerItself;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UEnhancedInputUserSettings* PlayerControls;
+	void UpdatePlayerKeyBinds();
+	void SaveKeyBinds();
+	void LoadKeyBinds();
+
+#if AUDIO_MANAGER_TEST
+	void AudioManagerTest();
+#endif
 	//----------------------------------------------------------------------//
 	// IAudioManagerInterface
 	//----------------------------------------------------------------------//
 	// - General -
-	virtual void AudioManagerTest() override;
-
 	// The library is read-only data, so the Blueprint's class defaults are used directly
-	inline virtual UAudioLibrary* GetLibrary() const override
+	virtual UAudioLibrary* GetLibrary() const override
 	{
 		return AudioLibraryClass ? AudioLibraryClass->GetDefaultObject<UAudioLibrary>() : nullptr;
 	}
 
+	virtual float GetMasterVolume() const;
+	virtual float GetMusicVolume(bool bRaw = false) const;
+	virtual float GetSoundVolume(bool bRaw = false) const;
+
+	UFUNCTION() virtual void SetMasterVolume(float Volume);
+	UFUNCTION() virtual void SetMusicVolume(float Volume);
+	UFUNCTION() virtual void SetSoundVolume(float Volume);
+
+
+
 	// - Music -
 
 	// We play the new song
-	UFUNCTION() virtual uint64 PlayMusic(USoundBase* Music, const float NewFadeIn = 0, const float OldFadeOut = 0, const float VolumeMultiplier = 1, const float PitchMultiplier = 1, USoundConcurrency* ConcurrencySettings = nullptr) override;
+	UFUNCTION() virtual uint64 PlayMusic(USoundBase* Music, const float NewFadeIn = 0, const float OldFadeOut = 0, USoundConcurrency* ConcurrencySettings = nullptr) override;
 
 	// We pause the current song
 	UFUNCTION() virtual void SetMusicPause(const bool bPaused) override;
 	// We pause the current song, place it on top of the stack of CDs, and play the new song
-	UFUNCTION() virtual uint64 StackMusic(USoundBase* Music, const float FadeIn = 0, const float VolumeMultiplier = 1, const float PitchMultiplier = 1, USoundConcurrency* ConcurrencySettings = nullptr) override;
+	UFUNCTION() virtual uint64 StackMusic(USoundBase* Music, const float FadeIn = 0, USoundConcurrency* ConcurrencySettings = nullptr) override;
 	// We stop the current song and remove the top song from the music stack of CDs to play it
 	UFUNCTION() virtual void DestackMusic(const float FadeOut = 0.f, const bool bSkipResume = false) override;
 	// We clear the stack of CDs
@@ -134,12 +191,12 @@ public:
 	// - Sounds -
 
 	// Fire and forget: no component, no ID. Use for anything you'll never pause or stop.
-	UFUNCTION() virtual void PlaySoundOneShot(USoundBase* Sound, const float VolumeMultiplier = 1, const float PitchMultiplier = 1, USoundConcurrency* ConcurrencySettings = nullptr) override;
+	UFUNCTION() virtual void PlaySoundOneShot(USoundBase* Sound, USoundConcurrency* ConcurrencySettings = nullptr) override;
 
 	// We play a sound (regardless of audio spam)
-	UFUNCTION() virtual uint64 PlaySound(USoundBase* Sound, const float VolumeMultiplier = 1, const float PitchMultiplier = 1, USoundConcurrency* ConcurrencySettings = nullptr) override;
+	UFUNCTION() virtual uint64 PlaySound(USoundBase* Sound, USoundConcurrency* ConcurrencySettings = nullptr) override;
 	// We stop all instances of our sound to hear our sound play only once (handles audio spam)
-	UFUNCTION() virtual uint64 PlaySoundInterrupt(USoundBase* Sound, const float VolumeMultiplier = 1, const float PitchMultiplier = 1, USoundConcurrency* ConcurrencySettings = nullptr) override;
+	UFUNCTION() virtual uint64 PlaySoundInterrupt(USoundBase* Sound, USoundConcurrency* ConcurrencySettings = nullptr) override;
 	// We pause or resume all instances of our same sound
 	UFUNCTION() virtual void SetSoundPause(USoundBase const* Sound, const bool bPaused) override;
 	// We pause or resume only a specific sound linked to the AudioComponentID

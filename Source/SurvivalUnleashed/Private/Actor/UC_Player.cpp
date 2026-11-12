@@ -17,9 +17,17 @@
 #include "Weapons/WeaponSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Actor/Health_PickUp.h"
+#include "Actor/Magnet_PickUp.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
+<<<<<<< HEAD
 #include "Debug/DebugOverlaySubsystem.h"
+=======
+#include "Engine/LocalPlayer.h" 
+#include "UserSettings/EnhancedInputUserSettings.h"
+#include "InputMappingContext.h"
+
+>>>>>>> dev
 
 DEFINE_LOG_CATEGORY_STATIC(LogPlayer, Log, All);
 
@@ -58,7 +66,8 @@ AUC_Player::AUC_Player()
 	PickUpRadius->SetupAttachment(GetRootComponent());
 	PickUpRadius->SetCollisionProfileName(FName("PickupRadius"));
 	PickUpRadius->SetSphereRadius(PlayerStatsComponent->GetPickupRange());
-	PickUpRadius->OnComponentBeginOverlap.AddDynamic(this, &AUC_Player::HandleEXPOverlap);
+	PickUpRadius->OnComponentBeginOverlap.AddDynamic(this, &AUC_Player::HandlePickUpOverlap);
+	
 }
 
 // Called when the game starts or when spawned
@@ -74,7 +83,9 @@ void AUC_Player::BeginPlay()
 			PauseHUD = CreateWidget<UPauseMenuBase>(APC, PauseClass);
 			if (PlayerHUD) {
 				PlayerHUD->AddToViewport();
-				PlayerHUD->SetHealth(PlayerStatsComponent->GetCurrentHealth());
+				PlayerHUD->SetHealth(1);
+				PlayerHUD->SetTextHealth(PlayerStatsComponent->GetCurrentHealth(), PlayerStatsComponent->GetMaxHealth());
+				PlayerStatsComponent->OnHealthUIEffect.AddDynamic(PlayerHUD, &UPlayerHUDBase::SetTextHealth);
 				PlayerStatsComponent->OnHurt.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetHealth);
 				PlayerStatsComponent->OnHeal.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetHealth);
 				PlayerStatsComponent->OnHurtEffect.BindDynamic(PlayerHUD, &UPlayerHUDBase::PlayHurtFeedback);
@@ -82,10 +93,12 @@ void AUC_Player::BeginPlay()
 				PlayerStatsComponent->OnDeath.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetHealth);
 				PlayerStatsComponent->OnEXPPickUp.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetExperience);
 				PlayerStatsComponent->OnLevelUp.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetLevelAndExp);
+				PlayerStatsComponent->OnLevelUp.BindDynamic(PlayerHUD, &UPlayerHUDBase::SetLevelAndExp);
 				PlayerStatsComponent->OnRadUpdate.BindDynamic(this, &AUC_Player::UpdatePickUpRadius);
-
-				PlayerStatsComponent->OnWeaponUpgrade.AddDynamic(this, &AUC_Player::SetWeapon);
 				
+				PlayerStatsComponent->OnWeaponUpgrade.AddDynamic(this, &AUC_Player::SetWeapon);
+				PlayerStatsComponent->OnStatUI.AddDynamic(PlayerHUD, &UPlayerHUDBase::SetStatsText);
+
 
 				isPaused = false;
 
@@ -109,6 +122,7 @@ void AUC_Player::BeginPlay()
 	if (UWeaponSubsystem* SS = GetWorld()->GetSubsystem<UWeaponSubsystem>())
 	{
 		WeaponSubsystem = SS;
+		WeaponSubsystem->OnWeaponsUIUpdate.AddDynamic(PlayerHUD, &UPlayerHUDBase::SetWeaponSlots);
 	}
 	WeaponInventory.Reserve(InventoryMaxSlots);
 	if (!StartingWeapons.IsEmpty())
@@ -116,6 +130,7 @@ void AUC_Player::BeginPlay()
 		FWeaponCreateParams Params;
 		Params.Attachment = GetCapsuleComponent();
 		Params.Player = this;
+		Params.bStartWeapon = false;
 
 		for (auto It = StartingWeapons.begin(); It != StartingWeapons.end(); ++It)
 		{
@@ -144,6 +159,13 @@ void AUC_Player::BeginPlay()
 	else
 	{
 		UE_LOG(LogPlayer, Error, TEXT("No Audio Library Instance has been found!"));
+	}
+
+	UpdatePickUpRadius(GetPlayerStatsComp()->GetPickupRange());
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	if (GI) {
+		GI->PlayerItself = this;
+		GI->LoadKeyBinds();
 	}
 
 	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
@@ -219,6 +241,14 @@ void AUC_Player::Tick(float DeltaTime)
 			DashlengthTimer = 0;
 		}
 	}
+	if (Magnet == true) {
+		MagnetTimer += DeltaTime;
+		if (MagnetTimer >1.0f) {
+			UpdatePickUpRadius(GetPlayerStatsComp()->GetPickupRange());
+			MagnetTimer = 0;
+			Magnet = false;
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -242,11 +272,17 @@ void AUC_Player::SetOwnedWeapons(TArray<FOwnedWeapon>& OwnedWeapons)
 		{
 			FOwnedWeapon Owned;
 			Owned.Data = It->Key;
-			Owned.Level = W->GetWeaponUpgrade() + 1;
+			Owned.Level = W->GetWeaponUpgrade();
 			Owned.MaxLevel = WeaponSubsystem->GetCategoryUpgradeSize(It->Key);
 			OwnedWeapons.Add(Owned);
 		}
 	}
+}
+
+void AUC_Player::MagnetEnable()
+{
+	Magnet = true;
+	UpdatePickUpRadius(9999);
 }
 
 void AUC_Player::PlayerLost()
@@ -279,10 +315,18 @@ UPlayerStatsComponent* AUC_Player::GetPlayerStatsComp()
 	return PlayerStatsComponent;
 }
 
+void AUC_Player::StartWeapons()
+{
+	for (auto It = WeaponInventory.begin(); It != WeaponInventory.end(); ++It)
+		if (ABaseWeapon* W = Cast<ABaseWeapon>(It->Value->GetChildActor()))
+			W->StartWeapon();
+}
+
 void AUC_Player::SetWeapon(EWeaponCategory Type)
 {
 	FWeaponCreateParams P;
 	P.Attachment = GetCapsuleComponent();
+	P.bStartWeapon = true;
 	P.Player = this;
 	P.Type = Type;
 
@@ -431,16 +475,37 @@ void AUC_Player::UpdatePickUpRadius(float value)
 	PickUpRadius->SetSphereRadius(value);
 }
 
-void AUC_Player::HandleEXPOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult)
+void AUC_Player::HandlePickUpOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult)
 {
 	if (OtherActor) {
 		AEXP_PickUp* EXP_PickUp = Cast<AEXP_PickUp>(OtherActor);
-		AHealth_PickUp* Health_PickUp = Cast< AHealth_PickUp>(OtherActor);
-		if (EXP_PickUp || Health_PickUp) {
+		AHealth_PickUp* Health_PickUp = Cast<AHealth_PickUp>(OtherActor);
+		AMagnet_PickUp* Magnet_PickUp = Cast<AMagnet_PickUp>(OtherActor);
+		if (EXP_PickUp || Health_PickUp || Magnet_PickUp) {
 			AttractedActors.Add(OtherActor);
 		}
 		else {
 			return;
+		}
+	}
+}
+
+void AUC_Player::UpdateKeyBinds()
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	ULocalPlayer * LocalPlayer = PC ? PC->GetLocalPlayer() : nullptr;
+	if (!LocalPlayer) return;
+	UEnhancedInputLocalPlayerSubsystem* InputSubsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	if (InputSubsystem && GI && GI->PlayerMappingContext)
+	{
+		UEnhancedInputUserSettings* UserSettings = InputSubsystem->GetUserSettings();
+		InputSubsystem->ClearAllMappings();
+		InputSubsystem->AddMappingContext(GI->PlayerMappingContext, 0);
+		if (UserSettings)
+		{
+			UserSettings->ApplySettings();
+			UserSettings->AsyncSaveSettings();
 		}
 	}
 }

@@ -61,6 +61,7 @@ public:
 	void PauseGame();
 	void ResumeGame();
 	void PlayerLost();
+	void MagnetEnable();
 
 	UFUNCTION() inline FVector GetLocation() { return GetMesh()->GetRelativeLocation(); }
 
@@ -77,11 +78,17 @@ public:
 	inline int32 GetInventoryMaxSlots() const { return InventoryMaxSlots; }
 	UFUNCTION(BlueprintCallable, Category = "Weapons")
 	inline void SetInventoryMaxSlots(int32 Slots) { InventoryMaxSlots = Slots; }
+	
+	UFUNCTION(BlueprintCallable, Category = "Weapons")
+	void StartWeapons();
 	UFUNCTION(BlueprintCallable, Category = "Weapons")
 	void SetWeapon(EWeaponCategory Type);
 	bool isPaused;
 
-
+	UPROPERTY()
+	TArray<TWeakObjectPtr<AActor>> AttractedActors;
+	UFUNCTION()
+	void UpdateKeyBinds();
 protected:
 	UPROPERTY(Category = Character, VisibleAnywhere)
 	class USpringArmComponent* SpringArm;
@@ -108,8 +115,7 @@ protected:
 	uint8 InventoryMaxSlots;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	UPlayerStatsComponent* PlayerStatsComponent;
-	UPROPERTY()
-	TArray<TWeakObjectPtr<AActor>> AttractedActors;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -124,6 +130,9 @@ private:
 	float directionhold = 0.2f;
 	bool IsDashing = false;
 	bool CanDash = true;
+	bool Magnet = false;
+	float MagnetTimer = 0;
+
 
 	UFUNCTION() 
 	void SetOwnedWeapons(TArray<FOwnedWeapon>& OwnedWeapons);
@@ -136,5 +145,5 @@ private:
 	UFUNCTION()
 	void UpdatePickUpRadius(float value);
 	UFUNCTION()
-	void HandleEXPOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
+	void HandlePickUpOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
 };
