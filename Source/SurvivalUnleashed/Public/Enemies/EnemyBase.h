@@ -7,7 +7,7 @@
 #include "Framework/Poolable.h"
 #include "EnemyBase.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHit, AEnemyBase*, Enemy, float, Damage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEnemyHit, AEnemyBase*, Enemy, float, Damage, AActor*, DamageCauser);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyDied, AEnemyBase*, Enemy);
 
 // Custom Primitive Data slots used by enemy materials
@@ -17,6 +17,7 @@ namespace EnemyMaterialData
 	constexpr int32 MoveAmount = 1;
 	constexpr int32 HitFlash = 2;
 	constexpr int32 StatusTint = 3; // slots 3-6: tint RGB + strength (A = 0 means no tint)
+	constexpr int32 AttackPose = 7;
 }
 
 UENUM(BlueprintType)
@@ -33,7 +34,7 @@ class UEnemyData;
 class UHordeSubsystem;
 class AEXP_PickUp;
 class UCapsuleComponent;
-class USkeletalMeshComponent;
+class UStaticMeshComponent;
 
 UCLASS(Abstract)
 class SURVIVALUNLEASHED_API AEnemyBase : public AActor, public IPoolable
@@ -60,8 +61,17 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	float GetCurrentHealth() const { return CurrentHealth; }
 
+	// Damage per contact hit. Subclasses can change it with their state (the Boar's charge uses 0 and rams instead).
+	virtual float GetContactDamage() const;
+
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	bool IsDead() const { return bIsDead; }
+
+	// Whether weapons and horde queries should consider this enemy at all 
+	virtual bool IsTargetable() const { return !bIsDead; }
+
+	// Where drops should appear: near the ground under this enemy, however tall its capsule is
+	FVector GetLootLocation() const;
 
 	// Magnitude: damage per 0.5 s for Burn/Freeze, pull speed for Pull, unused for Stun.
 	// Reapplying refreshes the duration. It never stacks.
@@ -96,10 +106,12 @@ protected:
 	TObjectPtr<UCapsuleComponent> Capsule;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	TObjectPtr<USkeletalMeshComponent> Mesh;
+	TObjectPtr<UStaticMeshComponent> Mesh;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy")
 	TObjectPtr<UEnemyData> EnemyData;
+
+	float KnockbackResistance;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Movement", meta = (ClampMin = "0"))
 	float StopDistance = 50.f;
@@ -120,6 +132,10 @@ protected:
 
 	// For subclasses that need their own neighbor queries (flocking)
 	UHordeSubsystem* GetHorde() const { return Horde; }
+
+	// Death: broadcasts OnDied, drops loot unless told not to, and returns this enemy to the pool.
+	// Protected so subclasses can die on their own terms (the Puffball's self-burst drops no gem).
+	void Die(bool bDropLoot = true);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Steering", meta = (ClampMin = "0"))
 	float SeekWeight = 1.f;
@@ -148,6 +164,11 @@ protected:
 	// Dropped on death, carrying EnemyData->ExperienceValue
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Loot")
 	TSubclassOf<AEXP_PickUp> ExperiencePickupClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy|HurtAudioConcurrency")
+	USoundConcurrency* ConcurrencySetup;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy|DeathParticles")
+	class UNiagaraSystem* NiagaraDeathComponent;
 
 private:
 	struct FStatusState
@@ -211,9 +232,6 @@ private:
 
 	// Resets the enemy's state to its initial values
 	void ResetState();
-
-	// Handles the enemy's death logic
-	void Die();
 
 	// Deals contact damage to the player
 	void DealContactDamage();

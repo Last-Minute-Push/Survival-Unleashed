@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "DamageNumberLayer.generated.h"
 
 class UCanvasPanel;
@@ -21,7 +21,7 @@ struct FDamageNumberEntry
 
 // Full-screen layer that shows a floating number for every enemy hit. Reuses a fixed set of widgets.
 UCLASS()
-class SURVIVALUNLEASHED_API UDamageNumberLayer : public UUserWidget
+class SURVIVALUNLEASHED_API UDamageNumberLayer : public UHUDBase
 {
 	GENERATED_BODY()
 
@@ -63,7 +63,7 @@ private:
 	TWeakObjectPtr<ASpawnDirector> SpawnDirector;
 
 	UFUNCTION()
-	void HandleEnemyHit(AEnemyBase* Enemy, float Damage);
+	void HandleEnemyHit(AEnemyBase* Enemy, float Damage, AActor* DamageCauser);
 
 	void UpdateEntry(FDamageNumberEntry& Entry, APlayerController* PC);
 };

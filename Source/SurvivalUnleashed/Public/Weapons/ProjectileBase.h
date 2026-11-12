@@ -71,6 +71,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile", meta = (ClampMin = "0"))
 	int32 PrewarmCount = 50;
 
+	// What this projectile hits
+	virtual bool IsValidTarget(const AActor * Target) const;
+
 private:
 	UFUNCTION()
 	void OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,

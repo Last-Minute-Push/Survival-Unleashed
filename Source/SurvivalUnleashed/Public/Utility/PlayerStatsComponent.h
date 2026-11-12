@@ -7,6 +7,7 @@
 #include "Weapons/WeaponDatabase.h"
 #include "PlayerStatsComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthUI, float, Current, float, Max);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnHurt, float, Ratio);
 DECLARE_DYNAMIC_DELEGATE(FOnHurtEffect);
 DECLARE_DYNAMIC_DELEGATE(FOnHealEffect);
@@ -22,7 +23,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerFocusUp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerLevelUpEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerFocusUpEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponUpgrade, EWeaponCategory, Category);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStatUIUpdate, uint8, StatType, int32, Rank);
+
 
 UENUM(BlueprintType)
 enum class EPlayerStats : uint8
@@ -46,8 +47,7 @@ enum class EPlayerStats : uint8
 	EPS_Count UMETA(Hidden)
 };
 
-
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStatUIUpdate, EPlayerStats, PlayerStatsArray, int32, Stats);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SURVIVALUNLEASHED_API UPlayerStatsComponent : public UActorComponent
@@ -83,6 +83,8 @@ public:
 
 	FOnHealEffect OnHealEffect;
 	FOnHurtEffect OnHurtEffect;
+	FOnHealthUI OnHealthUIEffect;
+	FOnStatUIUpdate OnStatUI;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
 	class ULevelUpScreen* CurrentLvlScreen;
@@ -116,22 +118,22 @@ private:
 	//PlayerStats, 0 = not enabled!
 
 	//Flat values
-	UPROPERTY()
-	float MaxHealth = 10;
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
+	float MaxHealth = 100;
 	UPROPERTY()
 	float CurrentHealth = 0;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float DashCooldown = 2;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float DashLength = 0.25;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float Regen = 0; // this is in seconds
 	UPROPERTY()
 	float ProjectileAmount = 1;
 
-	UPROPERTY()
-	float PickupRange = 120;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
+	float PickupRange = 160;
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float MoveSpeed = 800;
 
 	//% Chance stats
@@ -146,7 +148,7 @@ private:
 	UPROPERTY()
 	float WeaponAttack = 1;
 	UPROPERTY()
-	float Defense = 2;
+	float Defense = 1;
 	UPROPERTY()
 	float AttackSpeed = 1;
 	UPROPERTY()

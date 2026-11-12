@@ -3,10 +3,14 @@
 
 #include "Enemies/EnemyBase.h"
 #include "Enemies/EnemyData.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponentPoolMethodEnum.h"
 #include "UI/DamageNumbersUI.h"
+#include "Sound/SoundConcurrency.h"
 #include "Framework/ObjectPoolSubsystem.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
@@ -31,9 +35,10 @@ AEnemyBase::AEnemyBase()
 	Capsule->SetGenerateOverlapEvents(true);
 	RootComponent = Capsule;
 
-	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
+	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(Capsule);
 	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 }
 
 // Called when the game starts or when spawned
@@ -46,6 +51,7 @@ void AEnemyBase::BeginPlay()
 		UE_LOG(LogEnemy, Warning, TEXT("%s has no EnemyData assigned"), *GetName());
 	}
 
+	KnockbackResistance = EnemyData->KnockbackResistance;
 	Capsule->OnComponentBeginOverlap.AddDynamic(this, &AEnemyBase::OnCapsuleBeginOverlap);
 	Capsule->OnComponentEndOverlap.AddDynamic(this, &AEnemyBase::OnCapsuleEndOverlap);
 
@@ -65,6 +71,8 @@ void AEnemyBase::BeginPlay()
 	LargestSeparationRadius = FMath::Max(LargestSeparationRadius, SeparationRadius);
 
 	ResetState();
+
+
 }
 
 void AEnemyBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -84,7 +92,10 @@ float AEnemyBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
 	{
 		if (I->GetLibrary()->SFX_EnemyHurt) {
-			I->PlaySound(I->GetLibrary()->SFX_EnemyHurt);
+
+			if (ConcurrencySetup) {
+				I->PlaySound(I->GetLibrary()->SFX_EnemyHurt, ConcurrencySetup);
+			}
 		}
 	}
 
@@ -101,10 +112,16 @@ float AEnemyBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 
 	EnemyFlash();
 	CurrentHealth -= Damage;
-	OnHit.Broadcast(this, Damage);
+	OnHit.Broadcast(this, Damage, DamageCauser);
 
 	if (CurrentHealth <= 0.f)
 	{
+		if (NiagaraDeathComponent)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, NiagaraDeathComponent, this->GetActorLocation(), this->GetActorRotation(),
+				this->GetActorScale(), true, true, ENCPoolMethod::AutoRelease, true);
+		}
+
 		Die();
 	}
 
@@ -141,14 +158,17 @@ void AEnemyBase::ResetState()
 	GetWorldTimerManager().ClearTimer(ContactDamageHandle);
 }
 
-void AEnemyBase::Die()
+void AEnemyBase::Die(bool bDropLoot)
 {
 	bIsDead = true;
 	GetWorldTimerManager().ClearTimer(ContactDamageHandle);
 
 	// Broadcast before releasing so listeners can still read location and data
 	OnDied.Broadcast(this);
-	DropLoot();
+	if (bDropLoot)
+	{
+		DropLoot();
+	}
 
 	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
 	{
@@ -164,7 +184,12 @@ void AEnemyBase::DealContactDamage()
 		return;
 	}
 
-	UGameplayStatics::ApplyDamage(Player, EnemyData->ContactDamage * DamageMultiplier, nullptr, this, nullptr);
+	UGameplayStatics::ApplyDamage(Player, GetContactDamage() * DamageMultiplier, nullptr, this, nullptr);
+}
+
+float AEnemyBase::GetContactDamage() const
+{
+	return EnemyData ? EnemyData->ContactDamage : 0.f;
 }
 
 void AEnemyBase::ApplyDifficulty(float InHealthMultiplier, float InDamageMultiplier)
@@ -180,7 +205,7 @@ void AEnemyBase::ApplyKnockback(const FVector& SourceLocation, float Distance)
 		return;
 	}
 
-	const float Effective = Distance * (1.f - EnemyData->KnockbackResistance);
+	const float Effective = Distance * (1.f - KnockbackResistance);
 	if (Effective <= KINDA_SMALL_NUMBER)
 	{
 		return; // immune
@@ -336,7 +361,7 @@ void AEnemyBase::DropLoot()
 	}
 
 	// The gem ignores pickups until it has a value, so setting it after Acquire is safe
-	const FTransform DropTransform(FRotator::ZeroRotator, GetActorLocation());
+	const FTransform DropTransform(FRotator::ZeroRotator, GetLootLocation());
 	if (AEXP_PickUp* Gem = Pool->AcquireAs<AEXP_PickUp>(ExperiencePickupClass, DropTransform))
 	{
 		Gem->SetExpValue(EnemyData->ExperienceValue);
@@ -568,4 +593,12 @@ void AEnemyBase::MoveWithSlide(const FVector& Delta)
 		Remaining.Z = 0.f;
 		AddActorWorldOffset(Remaining, true);
 	}
+}
+
+FVector AEnemyBase::GetLootLocation() const
+{
+	// Small enemies keep dropping at their center, as they always have. Tall ones drop at most MaxLootHeight above the ground, inside the player's pickup range.
+	constexpr float MaxLootHeight = 60.f;
+	const float HalfHeight = Capsule ? Capsule->GetScaledCapsuleHalfHeight() : 0.f;
+	return GetActorLocation() - FVector(0.f, 0.f, FMath::Max(0.f, HalfHeight - MaxLootHeight));
 }

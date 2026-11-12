@@ -3,21 +3,25 @@
 #define LOCTEXT_NAMESPACE "MyNamespace"
 
 #include "UI/PlayerHUDBase.h"
+#include "UI/WeaponSlotsUI.h"
 #include "Components/ProgressBar.h"
+#include "Components/VerticalBox.h"
 #include "Components/HorizontalBox.h"
 #include "CommonNumericTextBlock.h"
 #include "Components/Image.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogPlayerHUD, Log, All);
 
-void UPlayerHUDBase::Construct()
+
+void UPlayerHUDBase::NativeConstruct()
 {
-	Super::Construct();
+	Super::NativeConstruct();
 
 	Timer = 0;
 	UpdateTimer(Timer);
-	RankArray.Reserve(0);
-	RankIndex.Reserve(0);
+	RankIndex.Reserve(6);
+	BossHUDHolder->SetVisibility(ESlateVisibility::Hidden);
 
 	isPaused = false;
 }
@@ -40,72 +44,72 @@ void UPlayerHUDBase::UpdateTimer(float TimePassed)
 	
 }
 
-FText UPlayerHUDBase::GetRankName(uint8 Stats)
+FText UPlayerHUDBase::GetRankName(EPlayerStats Stats)
 {
 	FText Result;
 	switch (Stats)
 	{
-	case 0U:
+	case EPlayerStats::EPS_Attack:
 		Result = FText::FromString("Attack : ");
 		return Result ;
 		break;
-	case 1U:
+	case EPlayerStats::EPS_Health:
 		Result = FText::FromString("Health : ");
 		return Result;
 		break;
-	case 2U:
+	case EPlayerStats::EPS_Defense:
 		Result = FText::FromString("Defense : ");
 		return Result;
 		break;
-	case 3U:
+	case EPlayerStats::EPS_WeaponAttack:
 		Result = FText::FromString("Weapon Attack : ");
 		return Result;
 		break;
-	case 4U:
+	case EPlayerStats::EPS_AttackSpeed:
 		Result = FText::FromString("Attack Speed : ");
 		return Result;
 		break;
-	case 5U:
+	case EPlayerStats::EPS_Reflect:
 		Result = FText::FromString("Reflect : ");
 		return Result;
 		break;
-	case 6U:
+	case EPlayerStats::EPS_DashCooldown:
 		Result = FText::FromString("Dash Cooldown : ");
 		return Result;
 		break;
-	case 7U:
+	case EPlayerStats::EPS_DashLength:
 		Result = FText::FromString("Dash Length : ");
 		return Result;
 		break;
-	case 8U:
+	case EPlayerStats::EPS_Regen:
 		Result = FText::FromString("Regen : ");
 		return Result;
 		break;
-	case 9U:
+	case EPlayerStats::EPS_LifeSteal:
 		Result = FText::FromString("Life Steal : ");
 		return Result;
 		break;
-	case 10U:
+	case EPlayerStats::EPS_EXPGain:
 		Result = FText::FromString("EXP Gain : ");
 		return Result;
 		break;
-	case 11U:
+	case EPlayerStats::EPS_Evasion:
 		Result = FText::FromString("Envasion : ");
 		return Result;
 		break;
-	case 12U:
+	case EPlayerStats::EPS_PickupRange:
 		Result = FText::FromString("Pick Up Range : ");
 		return Result;
 		break;
-	case 13U:
+	case EPlayerStats::EPS_ProjectileAmount:
 		Result = FText::FromString("Projectile Amount : ");
 		return Result;
 		break;
-	case 14U:
+	case EPlayerStats::EPS_ProjectileSpeed:
 		Result = FText::FromString("Projectile Speed : ");
 		return Result;
 		break;
-	case 15U:
+	case EPlayerStats::EPS_HealAmount:
 		Result = FText::FromString("Heal Amount : ");
 		return Result;
 		break;
@@ -119,7 +123,12 @@ FText UPlayerHUDBase::GetRankName(uint8 Stats)
 void UPlayerHUDBase::SetHealth(float ratio)
 {
 	HealthBar->SetPercent(ratio);
-	
+}
+
+void UPlayerHUDBase::SetTextHealth(float current, float max)
+{
+	HealthCounter->SetText(FText::Format(FText::FromString(TEXT("{0} {1} {2} {3}")), FText::FromString("Health : "),
+		FText::AsNumber(FMath::CeilToInt(current)), FText::FromString("/"), FText::AsNumber(FMath::CeilToInt(max))));
 }
 
 void UPlayerHUDBase::SetExperience(float ratio, float Max)
@@ -164,34 +173,82 @@ void UPlayerHUDBase::PlayHealFeedback()
 	PlayAnimation(FadingHeal);
 }
 
-void UPlayerHUDBase::SetStatsText(uint8 ChosenStats, int32 Ranks)
+void UPlayerHUDBase::SpawnBossInfo(const FText& BossName, float MaxHealth)
 {
+	BossHUDHolder->SetVisibility(ESlateVisibility::Visible);
+	BossNameText->SetText(BossName);
+	BossHealthBar->SetPercent(1.f);
+	BossHealthCounter->SetText(FText::Format(FText::FromString(TEXT("{0} {1} {2} {3}")), FText::FromString("Health : "),
+		FText::AsNumber(FMath::CeilToInt(MaxHealth)), FText::FromString("/"), FText::AsNumber(FMath::CeilToInt(MaxHealth))));
+}
 
-		/*FText CurrentString = FText::Format(FText::FromString(TEXT("{0} {1}")), GetRankName(ChosenStats), Ranks);
-		
-		
+void UPlayerHUDBase::ChangeBossHealth(float CurrentHealth, float MaxHealth)
+{
+	BossHealthBar->SetPercent(CurrentHealth/MaxHealth);
+	BossHealthCounter->SetText(FText::Format(FText::FromString(TEXT("{0} {1} {2} {3}")), FText::FromString("Health : "),
+		FText::AsNumber(FMath::CeilToInt(CurrentHealth)), FText::FromString("/"), FText::AsNumber(FMath::CeilToInt(MaxHealth))));
+}
 
-			for (int i = 1; i < 5; i++)
+void UPlayerHUDBase::BossDeathInfo()
+{
+	BossHUDHolder->SetVisibility(ESlateVisibility::Hidden);
+}
+
+void UPlayerHUDBase::SetStatsText(EPlayerStats ChosenStats, int32 Ranks)
+{
+		FText CurrentString = FText::Format(FText::FromString(TEXT("{0} {1}")), GetRankName(ChosenStats), Ranks);
+
+		if (RankIndex.Num() != 5) {
+
+			if (RankIndex.IsEmpty()) 
 			{
-				if (RankArray.IsValidIndex(i))
+				RankIndex.Push(ChosenStats);
+				UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(0));
+				IndexPip->SetText(CurrentString);
+				UE_LOG(LogPlayerHUD, Log, TEXT("First Stat has been Pushed!"))
+			}
+			else {
+				for (int i = 0; i < RankIndex.Num(); i++)
 				{
-					if (RankIndex[i] == ChosenStats) {
-						RankArray[i] = CurrentString;
-						UTextBlock* IndexText = Cast<UTextBlock>(StatBox->GetChildAt(i));
-						IndexText->SetText(RankArray[i]);
-						break;
-					}
-					else
+					
+						if (RankIndex[i] == ChosenStats)
+						{
+							UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(i));
+							IndexPip->SetText(CurrentString);
+							UE_LOG(LogPlayerHUD, Log, TEXT("Existing Stat has been updated!"))
+								break;
+						}
+						else if (i == RankIndex.Num()-1)
+						{
+							RankIndex.Push(ChosenStats);
+							UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(i + 1));
+							IndexPip->SetText(CurrentString);
+							UE_LOG(LogPlayerHUD, Log, TEXT("New Stat has been pushed!"))
+						}
+						
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i < RankIndex.Num(); i++)
+			{
+				if (RankIndex.IsValidIndex(i))
+				{
+					if (RankIndex[i] == ChosenStats)
 					{
-						RankArray[i] = CurrentString;
-						RankIndex[i] = ChosenStats;
-						UTextBlock* IndexText = Cast<UTextBlock>(StatBox->GetChildAt(i));
-						IndexText->SetText(RankArray[i]);
-						break;
+						UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(i));
+						IndexPip->SetText(CurrentString);
 					}
 				}
 			}
-	*/
+		}
+			
+}
+
+void UPlayerHUDBase::SetWeaponSlots(EWeaponCategory category, int level)
+{
+	WeaponSlots->SetWeaponSlot(category, level);
 }
 
 FText UPlayerHUDBase::GetCurrentTimer()
