@@ -19,6 +19,7 @@
 #include "Debug/SUDebug.h"
 #include "DrawDebugHelpers.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
+#include "Framework/SUCollision.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogEnemy, Log, All);
 
@@ -71,8 +72,6 @@ void AEnemyBase::BeginPlay()
 	LargestSeparationRadius = FMath::Max(LargestSeparationRadius, SeparationRadius);
 
 	ResetState();
-
-
 }
 
 void AEnemyBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -156,6 +155,8 @@ void AEnemyBase::ResetState()
 	ClearStatuses();
 
 	GetWorldTimerManager().ClearTimer(ContactDamageHandle);
+	Detour = FObstacleDetour();
+	StuckTime = 0.f;
 }
 
 void AEnemyBase::Die(bool bDropLoot)
@@ -405,6 +406,7 @@ void AEnemyBase::Tick(float DeltaTime)
 	if (SUDebug::IsAIDebugEnabled())
 	{
 		DrawDebugSeparation(); // before the early returns below, so knocked-back and pulled enemies still draw
+		DrawDebugDetour();
 	}
 #endif
 
@@ -443,18 +445,30 @@ void AEnemyBase::Tick(float DeltaTime)
 
 
 	// Update movement
-	const FVector Direction = (bIsDead || !EnemyData) ? FVector::ZeroVector : GetDesiredDirection();
+	const FVector Desired = (bIsDead || !EnemyData) ? FVector::ZeroVector : GetDesiredDirection();
 
 	// If the direction is very small, stop moving to avoid jittering
-	if (Direction.SizeSquared2D() < FMath::Square(0.1f))
+	if (Desired.SizeSquared2D() < FMath::Square(0.1f))
 	{
 		CurrentVelocity = FVector::ZeroVector;
+		Detour.bActive = false; // stopped on purpose (a crouch, an attack): nothing to go around
+		StuckTime = 0.f;
 	}
 	else
 	{
+		// Going around a long obstacle: aim past its end instead, at the same strength
+		const FVector Direction = Detour.bActive ? GetDetourDirection(Desired, DeltaTime) : Desired;
+		const FVector Start = GetActorLocation();
+
 		// Move the enemy in the desired direction
 		CurrentVelocity = Direction * EnemyData->MoveSpeed;
-		MoveWithSlide(CurrentVelocity * DeltaTime);
+		FHitResult ObstacleHit;
+		MoveWithSlide(CurrentVelocity * DeltaTime, &ObstacleHit);
+
+		if (!Detour.bActive)
+		{
+			UpdateStuck(Desired, GetActorLocation() - Start, ObstacleHit, DeltaTime);
+		}
 
 		// Rotate the enemy to face the desired direction
 		const FRotator TargetRotation(0.f, Direction.Rotation().Yaw, 0.f);
@@ -583,12 +597,16 @@ void AEnemyBase::DrawDebugSeparation() const
 #endif
 }
 
-void AEnemyBase::MoveWithSlide(const FVector& Delta)
+void AEnemyBase::MoveWithSlide(const FVector& Delta, FHitResult* OutObstacleHit)
 {
 	FHitResult Hit;
 	AddActorWorldOffset(Delta, true, &Hit);
 	if (Hit.bBlockingHit && !Hit.bStartPenetrating)
 	{
+		if (OutObstacleHit && Hit.GetComponent() && Hit.GetComponent()->GetCollisionObjectType() == SUCollision::Obstacle)
+		{
+			*OutObstacleHit = Hit;
+		}
 		FVector Remaining = FVector::VectorPlaneProject(Delta * (1.f - Hit.Time), Hit.Normal);
 		Remaining.Z = 0.f;
 		AddActorWorldOffset(Remaining, true);
@@ -601,4 +619,115 @@ FVector AEnemyBase::GetLootLocation() const
 	constexpr float MaxLootHeight = 60.f;
 	const float HalfHeight = Capsule ? Capsule->GetScaledCapsuleHalfHeight() : 0.f;
 	return GetActorLocation() - FVector(0.f, 0.f, FMath::Max(0.f, HalfHeight - MaxLootHeight));
+}
+
+void AEnemyBase::UpdateStuck(const FVector& Desired, const FVector& Moved, const FHitResult& ObstacleHit, float DeltaTime)
+{
+	// Progress is measured along where we wanted to go: sliding sideways along a log doesn't count
+	const float Intended = EnemyData->MoveSpeed * Desired.Size2D() * DeltaTime;
+	const float Progress = FVector::DotProduct(Moved, Desired.GetSafeNormal2D());
+
+	if (ObstacleHit.bBlockingHit && Progress < Intended * 0.25f)
+	{
+		StuckTime += DeltaTime;
+		if (StuckTime >= StuckTimeBeforeDetour)
+		{
+			StartDetour(ObstacleHit);
+		}
+	}
+	else
+	{
+		StuckTime = 0.f;
+	}
+}
+
+void AEnemyBase::StartDetour(const FHitResult& ObstacleHit)
+{
+	UPrimitiveComponent* Obstacle = ObstacleHit.GetComponent();
+	FVector Normal = ObstacleHit.ImpactNormal;
+	Normal.Z = 0.f;
+	Normal = Normal.GetSafeNormal();
+	if (!Obstacle || Normal.IsNearlyZero())
+	{
+		return;
+	}
+
+	// Along the wall, and how far each end of the obstacle is from us in that direction.
+	// Uses the obstacle's own box turned into the world, so a log lying at an angle still measures right.
+	const FVector Along = FVector::CrossProduct(FVector::UpVector, Normal);
+	const FVector Me = GetActorLocation();
+	const FBox Local = Obstacle->CalcBounds(FTransform::Identity).GetBox();
+	const FTransform& ToWorld = Obstacle->GetComponentTransform();
+
+	float MinAlong = 0.f;
+	float MaxAlong = 0.f;
+	for (int32 i = 0; i < 8; ++i)
+	{
+		const FVector Corner((i & 1) ? Local.Max.X : Local.Min.X, (i & 2) ? Local.Max.Y : Local.Min.Y, (i & 4) ? Local.Max.Z : Local.Min.Z);
+		const float Distance = FVector::DotProduct(ToWorld.TransformPosition(Corner) - Me, Along);
+		MinAlong = FMath::Min(MinAlong, Distance);
+		MaxAlong = FMath::Max(MaxAlong, Distance);
+	}
+
+	// The nearer end. Close to a tie (we're near the middle), go the way the player is.
+	float Side = MaxAlong < -MinAlong ? 1.f : -1.f;
+	if (FMath::Abs(MaxAlong + MinAlong) < 50.f)
+	{
+		if (const APawn* Player = UGameplayStatics::GetPlayerPawn(this, 0))
+		{
+			Side = FVector::DotProduct(Player->GetActorLocation() - Me, Along) >= 0.f ? 1.f : -1.f;
+		}
+	}
+	const float EndDistance = Side > 0.f ? MaxAlong : -MinAlong;
+
+	// Just past that end, one capsule-width out from the wall so we clear the corner
+	const float Radius = Capsule->GetScaledCapsuleRadius();
+	Detour.Point = Me + Along * Side * (EndDistance + Radius * 2.f) + Normal * Radius;
+	Detour.Point.Z = Me.Z;
+	Detour.TimeRemaining = MaxDetourTime;
+	Detour.bActive = true;
+	StuckTime = 0.f;
+}
+
+FVector AEnemyBase::GetDetourDirection(const FVector& Desired, float DeltaTime)
+{
+	Detour.TimeRemaining -= DeltaTime;
+
+	const FVector Me = GetActorLocation();
+	FVector ToPoint = Detour.Point - Me;
+	ToPoint.Z = 0.f;
+	const float Radius = Capsule->GetScaledCapsuleRadius();
+	const bool bReached = ToPoint.SizeSquared() < FMath::Square(Radius * 1.5f);
+
+	// The one extra trace: low, near the ground, so a short log still blocks it.
+	// Once nothing is in the way to the player, normal steering takes over.
+	bool bClearToPlayer = false;
+	if (const APawn* Player = UGameplayStatics::GetPlayerPawn(this, 0))
+	{
+		const FVector Low(0.f, 0.f, Capsule->GetScaledCapsuleHalfHeight() - 20.f);
+		const FVector From = Me - Low;
+		const FVector To(Player->GetActorLocation().X, Player->GetActorLocation().Y, From.Z);
+		bClearToPlayer = !GetWorld()->LineTraceTestByObjectType(From, To, FCollisionObjectQueryParams(SUCollision::Obstacle));
+	}
+
+	if (bReached || bClearToPlayer || Detour.TimeRemaining <= 0.f)
+	{
+		Detour.bActive = false;
+		StuckTime = 0.f;
+		return Desired;
+	}
+
+	// Same strength as the normal steering (slow states stay slow), pointed at the detour point
+	return ToPoint.GetSafeNormal() * Desired.Size2D();
+}
+
+void AEnemyBase::DrawDebugDetour() const
+{
+#if ENABLE_DRAW_DEBUG
+	if (Detour.bActive)
+	{
+		DrawDebugLine(GetWorld(), GetActorLocation(), Detour.Point, FColor::Cyan, false, -1.f, 0, 3.f);
+		DrawDebugSphere(GetWorld(), Detour.Point, 25.f, 8, FColor::Cyan, false, -1.f, 0, 2.f);
+	}
+#endif
 }
