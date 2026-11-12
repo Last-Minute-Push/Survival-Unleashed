@@ -42,6 +42,7 @@ void UDebugOverlaySubsystem::OnWorldBeginPlay(UWorld& InWorld)
 		for (FDebugCategoryData& Category : Overlay.Categories)
 			for (auto Value = Category.DebugValues.begin(); Value != Category.DebugValues.end(); ++Value)
 				OverlayFrontend.Add({Overlay.Title, Category.Title, Value->Key}, &Value->Value);
+
 #endif
 }
 
@@ -50,13 +51,27 @@ void UDebugOverlaySubsystem::Tick(float DeltaTime)
 #if UE_WITH_CHEAT_MANAGER
 	checkf(IsInitialized(), TEXT("Ticking should have been disabled for an uninitialized subsystem!"));
 
+	PerSecondTimer += DeltaTime;
+	FPS = FMath::TruncToInt32<float>(1.f / DeltaTime);
+
 	for (FDebugCategoryData& Category : CurrentOverlay->Categories)
 		for (auto Value = Category.DebugValues.begin(); Value != Category.DebugValues.end(); ++Value)
-			SetValue(Value->Value);
+		{
+			if (!Value->Value.bUpdatePerSecond)
+			{
+				SetValue(Value->Value);
+			}
+			else if (PerSecondTimer >= 1.f)
+			{
+				PerSecondTimer = 0;
+				SetValue(Value->Value);
+			}
+
+		}
 #endif
 }
 
-EDebugOverlayInit UDebugOverlaySubsystem::InitializeDebugOverlay(const FString& OverlayName, const bool bUpdatePerFrame/*= true*/)
+EDebugOverlayInit UDebugOverlaySubsystem::InitializeDebugOverlay(const FString& OverlayName)
 {
 #if UE_WITH_CHEAT_MANAGER
 	if (!IsValid(OverlayData) || OverlayFrontend.IsEmpty() || !IsValid(PlayerController) ||
@@ -66,11 +81,13 @@ EDebugOverlayInit UDebugOverlaySubsystem::InitializeDebugOverlay(const FString& 
 		return EDebugOverlayInit::EFailed;
 	}
 
-	bPerFrame = bUpdatePerFrame;
 	bool bOverlayNameFound = false;
 
-	for (FDebugOverlayData& Overlay : OverlayData->Database)
+	AttachDefaultValues();
+
+	for (int32 I = 0; I < OverlayData->Database.Num(); ++I)
 	{
+		FDebugOverlayData& Overlay = OverlayData->Database[I];
 		Overlay.Widget = CreateWidget<UDebugOverlay>(PlayerController, OverlayData->OverlayClass);
 		if (!Overlay.Widget) continue;
 
@@ -101,6 +118,7 @@ EDebugOverlayInit UDebugOverlaySubsystem::InitializeDebugOverlay(const FString& 
 		{
 			bOverlayNameFound = true;
 			CurrentOverlay = &Overlay;
+			CurrentOverlayIdx = I;
 			CurrentOverlay->Widget->SetVisibility(ESlateVisibility::Visible);
 		}
 		else
@@ -121,81 +139,116 @@ EDebugOverlayInit UDebugOverlaySubsystem::InitializeDebugOverlay(const FString& 
 #endif
 }
 
-void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateBool GetBool)
+void UDebugOverlaySubsystem::AttachDefaultValues()
+{
+	AttachToOverlay("General", "Performance and Balance", "FPS", 
+		FOnOverlayUpdateInt32::CreateUFunction(this, "GetFPS"));
+}
+
+void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateBool GetValue, FOnOverlayResetValue ResetValue)
 {
 #if UE_WITH_CHEAT_MANAGER
-	if (FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName))
+	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
+	if (Value && GetValue.IsBound())
 	{
 		Value->Type = EBool;
-		Value->GetBool = MoveTemp(GetBool);
+		Value->GetBool = MoveTemp(GetValue);
+
+		if (ResetValue.IsBound()) Value->ResetValue = ResetValue;
 	}
 #endif
 }
 
-void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateInt32 GetInt32)
+void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateInt32 GetValue, FOnOverlayResetValue ResetValue)
 {
 #if UE_WITH_CHEAT_MANAGER
-	if (FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName))
+	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
+	if (Value && GetValue.IsBound())
 	{
 		Value->Type = EInt;
-		Value->GetInt32 = MoveTemp(GetInt32);
+		Value->GetInt32 = MoveTemp(GetValue);
+		
+		if (ResetValue.IsBound()) Value->ResetValue = ResetValue;
 	}
 #endif
 }
 
-void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateFloat GetFloat)
+void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateFloat GetValue, FOnOverlayResetValue ResetValue)
 {
 #if UE_WITH_CHEAT_MANAGER
-	if (FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName))
+	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
+	if (Value && GetValue.IsBound())
 	{
 		Value->Type = EFloat;
-		Value->GetFloat = MoveTemp(GetFloat);
+		Value->GetFloat = MoveTemp(GetValue);
+
+		if (ResetValue.IsBound()) Value->ResetValue = ResetValue;
 	}
 #endif
 }
 
-void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector2 GetVector2)
+void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector2 GetValue, FOnOverlayResetValue ResetValue)
 {
 #if UE_WITH_CHEAT_MANAGER
-	if (FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName))
+	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
+	if (Value && GetValue.IsBound())
 	{
 		Value->Type = EVector2;
-		Value->GetVector2 = MoveTemp(GetVector2);
+		Value->GetVector2 = MoveTemp(GetValue);
+
+		if (ResetValue.IsBound()) Value->ResetValue = ResetValue;
 	}
 #endif
 }
 
-void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector3 GetVector3)
+void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector3 GetValue, FOnOverlayResetValue ResetValue)
 {
 #if UE_WITH_CHEAT_MANAGER
-	if (FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName))
+	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
+	if (Value && GetValue.IsBound())
 	{
 		Value->Type = EVector3;
-		Value->GetVector3 = MoveTemp(GetVector3);
+		Value->GetVector3 = MoveTemp(GetValue);
+
+		if (ResetValue.IsBound()) Value->ResetValue = ResetValue;
 	}
 #endif
 }
 
-void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector4 GetVector4)
+void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector4 GetValue, FOnOverlayResetValue ResetValue)
 {
 #if UE_WITH_CHEAT_MANAGER
-	if (FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName))
+	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
+	if (Value && GetValue.IsBound())
 	{
 		Value->Type = EVector4;
-		Value->GetVector4 = MoveTemp(GetVector4);
+		Value->GetVector4 = MoveTemp(GetValue);
+
+		if (ResetValue.IsBound()) Value->ResetValue = ResetValue;
 	}
 #endif
 }
 
-void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateString GetString)
+void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateString GetValue, FOnOverlayResetValue ResetValue)
 {
 #if UE_WITH_CHEAT_MANAGER
-	if (FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName))
+	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
+	if (Value && GetValue.IsBound())
 	{
 		Value->Type = EString;
-		Value->GetString = MoveTemp(GetString);
+		Value->GetString = MoveTemp(GetValue);
+
+		if (ResetValue.IsBound()) Value->ResetValue = ResetValue;
 	}
 #endif
+}
+
+void UDebugOverlaySubsystem::ChangeOverlay(const int32 NewIdx)
+{
+	CurrentOverlay->Widget->SetVisibility(ESlateVisibility::Hidden);
+	CurrentOverlayIdx = (NewIdx % OverlayData->Database.Num() + OverlayData->Database.Num()) % OverlayData->Database.Num();
+	CurrentOverlay = &OverlayData->Database[CurrentOverlayIdx];
+	CurrentOverlay->Widget->SetVisibility(ESlateVisibility::Visible);
 }
 
 void UDebugOverlaySubsystem::GetOverlayNames(TArray<FString>& OverlayNames)
@@ -236,6 +289,8 @@ void UDebugOverlaySubsystem::SetValue(FDebugValueData& Value)
 	case EDebugValueType::EString:
 		Value.GetString.IsBound() ? Value.Widget->SetValue(Value.GetString.Execute()) : Value.Widget->SetNull();
 	}
+
+	Value.ResetValue.ExecuteIfBound();
 }
 
 FDebugValueData* UDebugOverlaySubsystem::FindKey(const FName& OverlayName, const FName& CategoryName, const FName& VariableName)

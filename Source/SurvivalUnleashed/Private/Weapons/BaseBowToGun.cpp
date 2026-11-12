@@ -141,7 +141,7 @@ void ABaseBowToGun::StopAim()
 	Params.Range = Range;
 
 	FOnProjectileHit Hit;
-	Hit.BindUFunction(this, TEXT("ApplyProjectileDamage"));
+	Hit.BindUFunction(this, TEXT("ApplyDamage"));
 
 	// Launch the projectile.
 	AProjectileBase::Fire(GetWorld(), Data->ProjectileType, this, Params, Hit);

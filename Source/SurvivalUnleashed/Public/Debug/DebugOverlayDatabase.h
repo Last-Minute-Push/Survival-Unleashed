@@ -17,6 +17,7 @@ DECLARE_DELEGATE_RetVal(FVector2D, FOnOverlayUpdateVector2)
 DECLARE_DELEGATE_RetVal(FVector, FOnOverlayUpdateVector3)
 DECLARE_DELEGATE_RetVal(FVector4, FOnOverlayUpdateVector4)
 DECLARE_DELEGATE_RetVal(FString, FOnOverlayUpdateString)
+DECLARE_DELEGATE(FOnOverlayResetValue);
 
 UENUM(BlueprintType)
 enum EDebugValueType : uint8
@@ -37,6 +38,7 @@ struct FDebugValueData
 
 	UPROPERTY(VisibleAnywhere) TObjectPtr<UDebugValue> Widget;
 	UPROPERTY(EditAnywhere)    TEnumAsByte<EDebugValueType> Type;
+	UPROPERTY(EditAnywhere)    bool bUpdatePerSecond;
 
 	FOnOverlayUpdateBool GetBool;
 	FOnOverlayUpdateInt32 GetInt32;
@@ -45,6 +47,7 @@ struct FDebugValueData
 	FOnOverlayUpdateVector3 GetVector3;
 	FOnOverlayUpdateVector4 GetVector4;
 	FOnOverlayUpdateString GetString;
+	FOnOverlayResetValue ResetValue;
 
 	FDebugValueData() {};
 };

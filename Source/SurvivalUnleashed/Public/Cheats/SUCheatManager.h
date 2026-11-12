@@ -38,7 +38,7 @@ public:
 	void LevelUp(int32 Count);
 
 	UFUNCTION(Exec)
-	void DebugOverlay(const FString& Type, const bool bUpdatePerFrame);
+	void DebugOverlay(const FString& Type);
 
 	UFUNCTION(Exec)
 	void ListOverlays();

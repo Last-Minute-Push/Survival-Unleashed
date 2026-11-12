@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "DebugOverlay.generated.h"
@@ -12,7 +12,7 @@
  * 
  */
 UCLASS()
-class SURVIVALUNLEASHED_API UDebugOverlay : public UUserWidget
+class SURVIVALUNLEASHED_API UDebugOverlay : public UHUDBase
 {
 	GENERATED_BODY()
 

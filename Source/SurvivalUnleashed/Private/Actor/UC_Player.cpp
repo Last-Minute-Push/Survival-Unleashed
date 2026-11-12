@@ -20,14 +20,10 @@
 #include "Actor/Magnet_PickUp.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
-<<<<<<< HEAD
 #include "Debug/DebugOverlaySubsystem.h"
-=======
 #include "Engine/LocalPlayer.h" 
 #include "UserSettings/EnhancedInputUserSettings.h"
 #include "InputMappingContext.h"
-
->>>>>>> dev
 
 DEFINE_LOG_CATEGORY_STATIC(LogPlayer, Log, All);
 
@@ -167,14 +163,6 @@ void AUC_Player::BeginPlay()
 		GI->PlayerItself = this;
 		GI->LoadKeyBinds();
 	}
-
-	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
-	{
-		FOnOverlayUpdateBool GetVector3;
-		//GetVector3.BindUFunction(this, TEXT("GetLocation"));
-		GetVector3.BindLambda([this]() { return isPaused; });
-		Ovl->AttachToOverlay("Test Overlay", "Test Category", "Paused", GetVector3);
-	}
 }
 // Called every frame
 void AUC_Player::Tick(float DeltaTime)
@@ -260,6 +248,12 @@ void AUC_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 		EnhancedInputComponent->BindAction(Moves, ETriggerEvent::Triggered, this, &AUC_Player::Move);
 		EnhancedInputComponent->BindAction(Dashes, ETriggerEvent::Started, this, &AUC_Player::Dash);
 		EnhancedInputComponent->BindAction(Paused, ETriggerEvent::Started, this, &AUC_Player::PlayerPause);
+		
+		// - Debug Overlay -
+#if UE_WITH_CHEAT_MANAGER
+		EnhancedInputComponent->BindAction(OverlayNext, ETriggerEvent::Started, this, &AUC_Player::NextOverlay);
+		EnhancedInputComponent->BindAction(OverlayPrev, ETriggerEvent::Started, this, &AUC_Player::PreviousOverlay);
+#endif
 	}
 }
 
@@ -354,6 +348,21 @@ void AUC_Player::Dash(const FInputActionValue& Value)
 	}
 
 }
+
+// - Debug Overlay -
+#if UE_WITH_CHEAT_MANAGER
+void AUC_Player::NextOverlay(const FInputActionValue& Value)
+{
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+		Ovl->ChangeOverlay(Ovl->GetOverlayIndex() + 1);
+}
+
+void AUC_Player::PreviousOverlay(const FInputActionValue& Value)
+{
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+		Ovl->ChangeOverlay(Ovl->GetOverlayIndex() - 1);
+}
+#endif
 
 void AUC_Player::PlayerPause(const FInputActionValue& Value)
 {

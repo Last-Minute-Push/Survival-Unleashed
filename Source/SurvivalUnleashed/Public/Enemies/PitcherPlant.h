@@ -146,7 +146,7 @@ private:
 	bool IsSpotClear(const FVector& Point, FVector& OutGround) const;
 
 	void SpitAcid(const APawn* Player);
-	void HandleAcidHit(AProjectileBase* Projectile, AActor* Target);
+	void HandleAcidHit(AActor* Projectile, AActor* Target);
 
 	// Material pose for the spit: wind-up as the cooldown runs out, lunge after firing
 	void UpdateSpitPose(bool bInRange, float DeltaTime);

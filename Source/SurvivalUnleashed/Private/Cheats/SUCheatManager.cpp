@@ -101,12 +101,12 @@ void USUCheatManager::LevelUp(int32 Count)
 #endif
 }
 
-void USUCheatManager::DebugOverlay(const FString& Type, const bool bUpdatePerFrame)
+void USUCheatManager::DebugOverlay(const FString& Type)
 {
 #if UE_WITH_CHEAT_MANAGER
 	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
 	{
-		EDebugOverlayInit R = Ovl->InitializeDebugOverlay(Type, bUpdatePerFrame);
+		EDebugOverlayInit R = Ovl->InitializeDebugOverlay(Type);
 
 		switch (R)
 		{

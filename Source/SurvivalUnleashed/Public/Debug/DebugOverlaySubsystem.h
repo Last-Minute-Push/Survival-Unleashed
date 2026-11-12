@@ -26,11 +26,15 @@ class SURVIVALUNLEASHED_API UDebugOverlaySubsystem : public UTickableWorldSubsys
 	GENERATED_BODY()
 	
 	bool bPerFrame, bTick = false;
+	float PerSecondTimer = 0.f;
+	int32 FPS, CurrentOverlayIdx = 0;
 	FDebugOverlayData* CurrentOverlay;
 	TObjectPtr<UDebugOverlayDatabase> OverlayData;
 	TMap<TTuple<FName, FName, FName>, FDebugValueData*> OverlayFrontend;
 	TObjectPtr<APlayerController> PlayerController;
 
+	UFUNCTION() inline int32 GetFPS() const { return FPS; }
+	void AttachDefaultValues();
 	void SetValue(FDebugValueData& Value);
 	FDebugValueData* FindKey(const FName& OverlayName, const FName& CategoryName, const FName& VariableName);
 
@@ -41,15 +45,18 @@ protected:
 	virtual TStatId GetStatId() const { RETURN_QUICK_DECLARE_CYCLE_STAT(UDebugOverlaySubsystem, STATGROUP_Tickables); }
 
 public:
-	EDebugOverlayInit InitializeDebugOverlay(const FString& Overlay = "", const bool bUpdatePerFrame = true);
+	EDebugOverlayInit InitializeDebugOverlay(const FString& Overlay = "");
 
-	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateBool GetBool);
-	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateInt32 GetInt32);
-	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateFloat GetFloat);
-	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector2 GetVector2);
-	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector3 GetVector3);
-	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector4 GetVector4);
-	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateString GetString);
+	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateBool GetValue, FOnOverlayResetValue ResetValue = nullptr);
+	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateInt32 GetValue, FOnOverlayResetValue ResetValue = nullptr);
+	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateFloat GetValue, FOnOverlayResetValue ResetValue = nullptr);
+	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector2 GetValue, FOnOverlayResetValue ResetValue = nullptr);
+	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector3 GetValue, FOnOverlayResetValue ResetValue = nullptr);
+	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector4 GetValue, FOnOverlayResetValue ResetValue = nullptr);
+	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateString GetValue, FOnOverlayResetValue ResetValue = nullptr);
 
+	void ChangeOverlay(const int32 NewIdx);
 	void GetOverlayNames(TArray<FString>& OverlayNames);
+
+	inline int32 GetOverlayIndex() const { return CurrentOverlayIdx; }
 };

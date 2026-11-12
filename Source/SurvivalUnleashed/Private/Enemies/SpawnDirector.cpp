@@ -15,6 +15,7 @@
 #include "Enemies/EnemyData.h"
 #include "HAL/IConsoleManager.h"
 #include "Framework/SUCollision.h"
+#include "Debug/DebugOverlaySubsystem.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogSpawnDirector, Log, All);
 
@@ -67,6 +68,12 @@ void ASpawnDirector::BeginPlay()
 	if (bStartOnBeginPlay)
 	{
 		StartSpawning();
+	}
+
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+	{
+		Ovl->AttachToOverlay("General", "Performance and Balance", "Active Enemies",
+			FOnOverlayUpdateInt32::CreateUFunction(this, "GetActiveEnemyCount"));
 	}
 }
 
