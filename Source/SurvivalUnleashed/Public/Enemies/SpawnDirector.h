@@ -159,7 +159,7 @@ private:
 	static float GetExitDistance(const FVector2D& Origin, const FVector2D& Dir, const FVector2D(&Corners)[4]);
 
 	UFUNCTION()
-	void HandleEnemyHit(AEnemyBase* Enemy, float Damage);
+	void HandleEnemyHit(AEnemyBase* Enemy, float Damage, AActor* DamageCauser);
 
 	UFUNCTION()
 	void HandleEnemyDied(AEnemyBase* Enemy);

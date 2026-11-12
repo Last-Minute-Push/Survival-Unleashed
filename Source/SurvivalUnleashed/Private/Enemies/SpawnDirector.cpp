@@ -368,9 +368,9 @@ float ASpawnDirector::GetExitDistance(const FVector2D& Origin, const FVector2D& 
 	return Best;
 }
 
-void ASpawnDirector::HandleEnemyHit(AEnemyBase* Enemy, float Damage)
+void ASpawnDirector::HandleEnemyHit(AEnemyBase* Enemy, float Damage, AActor* DamageCauser)
 {
-	OnAnyEnemyHit.Broadcast(Enemy, Damage);
+	OnAnyEnemyHit.Broadcast(Enemy, Damage, DamageCauser);
 }
 
 void ASpawnDirector::HandleEnemyDied(AEnemyBase* Enemy)
