@@ -15,6 +15,7 @@
 #include "Enemies/EnemyData.h"
 #include "HAL/IConsoleManager.h"
 #include "Framework/SUCollision.h"
+#include "Framework/UGM_SUPlayAreaGameMode.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogSpawnDirector, Log, All);
 
@@ -227,6 +228,10 @@ void ASpawnDirector::ProcessEvents(float RunTime, const FVector& PlayerLocation)
 
 float ASpawnDirector::GetRunTime() const
 {
+	if (const AUGM_SUPlayAreaGameMode* GameMode = GetWorld()->GetAuthGameMode<AUGM_SUPlayAreaGameMode>())
+	{
+		return GameMode->GetRunTime();
+	}
 	return bRunStarted ? GetWorld()->GetTimeSeconds() - RunStartTime : 0.f;
 }
 
@@ -511,6 +516,10 @@ void ASpawnDirector::SkipTime(float Seconds)
 	}
 
 	RunStartTime -= Seconds;
+	if (AUGM_SUPlayAreaGameMode* GameMode = GetWorld()->GetAuthGameMode<AUGM_SUPlayAreaGameMode>())
+	{
+		GameMode->SkipRunTime(Seconds);
+	}
 	const float Now = GetRunTime();
 
 	// Repeating events jump to their next future time instead of firing once per tick to catch up.
