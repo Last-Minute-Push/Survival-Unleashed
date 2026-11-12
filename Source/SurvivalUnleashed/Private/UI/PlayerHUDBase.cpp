@@ -6,6 +6,7 @@
 #include "UI/WeaponSlotsUI.h"
 #include "Components/ProgressBar.h"
 #include "Components/VerticalBox.h"
+#include "Components/HorizontalBox.h"
 #include "CommonNumericTextBlock.h"
 #include "Components/Image.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
@@ -13,13 +14,14 @@
 DEFINE_LOG_CATEGORY_STATIC(LogPlayerHUD, Log, All);
 
 
-void UPlayerHUDBase::Construct()
+void UPlayerHUDBase::NativeConstruct()
 {
-	Super::Construct();
+	Super::NativeConstruct();
 
 	Timer = 0;
 	UpdateTimer(Timer);
 	RankIndex.Reserve(6);
+	BossHUDHolder->SetVisibility(ESlateVisibility::Hidden);
 
 	isPaused = false;
 }
@@ -169,6 +171,27 @@ void UPlayerHUDBase::PlayHealFeedback()
 {
 	if (FadingHeal)
 	PlayAnimation(FadingHeal);
+}
+
+void UPlayerHUDBase::SpawnBossInfo(const FText& BossName, float MaxHealth)
+{
+	BossHUDHolder->SetVisibility(ESlateVisibility::Visible);
+	BossNameText->SetText(BossName);
+	BossHealthBar->SetPercent(1.f);
+	BossHealthCounter->SetText(FText::Format(FText::FromString(TEXT("{0} {1} {2} {3}")), FText::FromString("Health : "),
+		FText::AsNumber(FMath::CeilToInt(MaxHealth)), FText::FromString("/"), FText::AsNumber(FMath::CeilToInt(MaxHealth))));
+}
+
+void UPlayerHUDBase::ChangeBossHealth(float CurrentHealth, float MaxHealth)
+{
+	BossHealthBar->SetPercent(CurrentHealth/MaxHealth);
+	BossHealthCounter->SetText(FText::Format(FText::FromString(TEXT("{0} {1} {2} {3}")), FText::FromString("Health : "),
+		FText::AsNumber(FMath::CeilToInt(CurrentHealth)), FText::FromString("/"), FText::AsNumber(FMath::CeilToInt(MaxHealth))));
+}
+
+void UPlayerHUDBase::BossDeathInfo()
+{
+	BossHUDHolder->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UPlayerHUDBase::SetStatsText(EPlayerStats ChosenStats, int32 Ranks)

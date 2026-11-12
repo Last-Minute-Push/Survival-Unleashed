@@ -7,6 +7,7 @@
 #include "InputAction.h"
 #include "UI/PlayerHUDBase.h"
 #include "UI/PauseMenuBase.h"
+#include "Enemies/BossEventSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Utility/PlayerStatsComponent.h"
 #include "Utility/UpgradeOffers.h"
@@ -121,6 +122,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	UPlayerStatsComponent* PlayerStatsComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient, Category = "Boss")
+	UBossEventSubsystem* BossEventSubsystem;
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
