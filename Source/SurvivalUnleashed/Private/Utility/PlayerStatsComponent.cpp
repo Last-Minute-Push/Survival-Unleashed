@@ -241,8 +241,9 @@ void UPlayerStatsComponent::SetMaxHealth(float health)
 }
 void UPlayerStatsComponent::LevelUpMaxHealth()
 {
+	float healthpercent = CurrentHealth / GetMaxHealth();
 	SetMaxHealth(MaxHealth + 10.0f);
-	SetCurrentHealth(CurrentHealth + 10.0f);
+	SetCurrentHealth(GetMaxHealth() * healthpercent);
 	if (OnHeal.IsBound() && OnHeal.GetUObject() != nullptr) {
 		OnHeal.Execute(CurrentHealth / MaxHealth);
 		OnHealthUIEffect.Broadcast(CurrentHealth, MaxHealth);
@@ -252,8 +253,9 @@ void UPlayerStatsComponent::LevelUpMaxHealth()
 }
 void UPlayerStatsComponent::LevelUpMaxHealthMinor()
 {
+	float healthpercent = CurrentHealth / GetMaxHealth();
 	SetMaxHealth(MaxHealth + 5.0f);
-	SetCurrentHealth(CurrentHealth + 5.0f);
+	SetCurrentHealth(GetMaxHealth() * healthpercent);
 	if (OnHeal.IsBound() && OnHeal.GetUObject() != nullptr) {
 		OnHeal.Execute(CurrentHealth / MaxHealth);
 		OnHealthUIEffect.Broadcast(CurrentHealth, MaxHealth);

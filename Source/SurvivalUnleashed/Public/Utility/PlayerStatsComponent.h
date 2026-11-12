@@ -137,47 +137,47 @@ private:
 	float MoveSpeed = 800;
 
 	//% Chance stats
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	float LifeSteal = 0;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	float Evasion = 0;
 
 	//% Amount stats
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	float Attack = 1;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	float WeaponAttack = 1;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	float Defense = 1;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	float AttackSpeed = 1;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	float ProjectileSpeed = 1;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	float HealAmount = 0;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	float EXPGain = 0;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	float Reflect = 0;
 
 	//Focus Stats part of % amount stats but is a flat value for simple upgrade purposes
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	float Intelligence = 0;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	float Barbaric = 0;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	float Modern = 0;
 
 	//Levels
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	int Level = 1;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	int ExpReuirement = 100;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	int ExpReuirementScaler = 50; //what to scale the exp requirement by
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	int CurrentExpCount = 0;
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	int OldExpRequirement = 0;
 	
 
