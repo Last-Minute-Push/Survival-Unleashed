@@ -7,6 +7,7 @@
 #include "Utility/PlayerStatsComponent.h"
 #include "NiagaraComponent.h"
 #include "Debug/DebugOverlaySubsystem.h"
+#include "GameFramework/CheatManagerDefines.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogBaseSword, Log, All);
 

@@ -33,6 +33,11 @@ void ABaseWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (Data)
+	{
+		Type = Data->WeaponType;
+	}
+
 #if UE_WITH_CHEAT_MANAGER
 	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
 	{
@@ -71,7 +76,7 @@ void ABaseWeapon::BeginPlay()
 		Ovl->AttachToOverlay("General", "Performance and Balance", FName(WeaponName + " DPS"),
 			FOnOverlayUpdateFloat::CreateUFunction(this, "GetDamagePerSecond"), FOnOverlayResetValue::CreateUFunction(this, "ResetDamagePerSecond"));
 #endif
-	}
+}
 }
 
 // Called every frame

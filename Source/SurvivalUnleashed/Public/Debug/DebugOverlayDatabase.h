@@ -36,10 +36,11 @@ struct FDebugValueData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(VisibleAnywhere) TObjectPtr<UDebugValue> Widget;
+	TObjectPtr<UDebugValue> Widget;
+	
 	UPROPERTY(EditAnywhere)    TEnumAsByte<EDebugValueType> Type;
 	UPROPERTY(EditAnywhere)    bool bUpdatePerSecond;
-
+	
 	FOnOverlayUpdateBool GetBool;
 	FOnOverlayUpdateInt32 GetInt32;
 	FOnOverlayUpdateFloat GetFloat;

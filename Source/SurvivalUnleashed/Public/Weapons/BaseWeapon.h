@@ -52,7 +52,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Stats") void SetParent(AUC_Player* P);
 	UFUNCTION(BlueprintCallable, Category = "Stats") inline UWeaponData* GetWeaponData() const { return Data; }
 
-	UFUNCTION(BlueprintCallable, Category = "Damage") inline int32 GetDamagePerSecond() const { return DamagePerSecond; }
+	UFUNCTION(BlueprintCallable, Category = "Damage") inline float GetDamagePerSecond() const { return DamagePerSecond; }
 	UFUNCTION(BlueprintCallable, Category = "Damage") inline void AddToDamagePerSecond(float Damage) { DamagePerSecond += Damage; }
 	UFUNCTION(BlueprintCallable, Category = "Damage") inline void ResetDamagePerSecond() { DamagePerSecond = 0.f; }
 	UFUNCTION(BlueprintCallable, Category = "Damage") virtual void ApplyDamage(AActor * Source, AActor * Target);

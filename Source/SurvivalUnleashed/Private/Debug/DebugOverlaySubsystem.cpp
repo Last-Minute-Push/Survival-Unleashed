@@ -57,6 +57,7 @@ void UDebugOverlaySubsystem::Tick(float DeltaTime)
 	PerSecondTimer += DeltaTime;
 	FPS = FMath::TruncToInt32<float>(1.f / DeltaTime);
 
+	bool TimerPassed = false;
 	for (FDebugCategoryData& Category : CurrentOverlay->Categories)
 		for (auto Value = Category.DebugValues.begin(); Value != Category.DebugValues.end(); ++Value)
 		{
@@ -66,11 +67,13 @@ void UDebugOverlaySubsystem::Tick(float DeltaTime)
 			}
 			else if (PerSecondTimer >= 1.f)
 			{
-				PerSecondTimer = 0;
+				TimerPassed = true;
 				SetValue(Value->Value);
 			}
 
 		}
+
+	if (TimerPassed) PerSecondTimer = 0.f;
 #endif
 }
 
