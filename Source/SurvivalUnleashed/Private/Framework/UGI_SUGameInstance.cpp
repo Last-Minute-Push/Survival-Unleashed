@@ -139,6 +139,33 @@ void UUGI_SUGameInstance::AddEXPtoNearestOne(FVector EnemyLocation, int32 EXPval
 	}
 }
 
+void UUGI_SUGameInstance::EnableMerge()
+{
+	if (calledMerge == false) {
+		bool check = false;
+		for (int i = 0; i < EXPActors.Num(); i++) {
+			AEXP_PickUp* EXP = Cast<AEXP_PickUp>(EXPActors[i]);
+			if (EXP) {
+				if (EXP->MergeMode) {
+					check = true;
+				}
+			}
+		}
+		if (check == false) {
+			if (EXPActors.Num() > 1) {
+				if (EXPActors[0].Get()) {
+					AEXP_PickUp* EXP = Cast<AEXP_PickUp>(EXPActors[0]);
+					if (EXP) {
+						EXP->MergetoSelf();
+						EXP->ForceMergeTime();
+						calledMerge = true;
+					}
+				}
+			}
+		}
+	}
+}
+
 //----------------------------------------------------------------------//
 // Save / Run Results
 //----------------------------------------------------------------------//

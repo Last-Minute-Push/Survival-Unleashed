@@ -46,18 +46,25 @@ public:
 	UPROPERTY()
 	TArray<TWeakObjectPtr<AActor>> AttractedActors;
 	void SetExpValue(int Amount); //for enemies to set the expvalue
-
-
+	int GetEXPValue();
+	class UUGI_SUGameInstance* GI;
+	void MergeTime();
+	void ForceMergeTime();
+	void MergetoSelf();
 	void Merge(AEXP_PickUp* Mergeinto, AEXP_PickUp* Mergewith);
+	void ForceMerge();
 	UFUNCTION()
 	void EnableEXPTick();
 	UFUNCTION()
 	void DisableEXPTick();
 	UPROPERTY(EditDefaultsOnly)
-	float MergeTimer = 10.0f; //how long to wait until merge
-
+	float MergeTimer = 1000.0f; //how long to wait until merge
+	UPROPERTY(EditDefaultsOnly)
+	float FlyFor = 1.0f; //how long exp can fly for before just being forcefully merged into a exp drop
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FTimerHandle TimerHandle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FTimerHandle ForceMergeTimerHandle;
 
 	// IPoolable
 	virtual void OnPoolAcquire_Implementation() override;
@@ -74,9 +81,9 @@ protected:
 	void HandlePickUp();
 	UFUNCTION()
 	void HandleOverLap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
-	int GetEXPValue();
-	void MergeTime();
-	void MergetoSelf();
+
+
+
 	void FlySpeedSet();
 
 	UBoxComponent* GetBoxComponent();

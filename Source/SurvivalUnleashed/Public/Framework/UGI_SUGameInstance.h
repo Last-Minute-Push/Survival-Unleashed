@@ -95,6 +95,9 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	float EXPLimit = 300;
 	void AddEXPtoNearestOne(FVector EnemyLocation, int32 EXPvalue);
+	void EnableMerge();
+
+	bool calledMerge = false;
 
 	//----------------------------------------------------------------------//
     // Weapon Database

@@ -28,6 +28,7 @@ AEXP_PickUp::AEXP_PickUp()
 	Sprite->SetVisibility(true);
 	Sprite2->SetVisibility(false);
 	Sprite3->SetVisibility(false);
+
 }
 
 void AEXP_PickUp::SetExpValue(int Amount)
@@ -70,7 +71,7 @@ void AEXP_PickUp::SetExpValue(int Amount)
 	}
 
 	EXPValue = Amount;
-	MergeTime();
+
 }
 
 void AEXP_PickUp::OnPoolAcquire_Implementation()
@@ -78,10 +79,11 @@ void AEXP_PickUp::OnPoolAcquire_Implementation()
 	// Fresh gem: no value until the enemy sets one, no remembered player
 	EXPValue = 0;
 	SavedPlayer = nullptr;
-	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
 	if (GI) {
 		if (this) {
 			GI->EXPActors.Add(this);
+			MergeTime();
 		}
 	}
 }
@@ -90,7 +92,7 @@ void AEXP_PickUp::OnPoolRelease_Implementation()
 {
 
 	SavedPlayer = nullptr;
-
+	GI = nullptr;
 }
 
 // Called when the game starts or when spawned
@@ -98,7 +100,9 @@ void AEXP_PickUp::BeginPlay()
 {
 	Super::BeginPlay();
 	//for testin
-	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	RootComponent->SetMobility(EComponentMobility::Movable);
+
 	if (GI) {
 		if (this) {
 			GI->EXPActors.Add(this);
@@ -131,11 +135,17 @@ void AEXP_PickUp::PostPickUp()
 	Sprite->SetVisibility(true);
 	Sprite2->SetVisibility(false);
 	Sprite3->SetVisibility(false); //reset tier look for next one as well!
-	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
 	if (GI) {
 		GI->EXPActors.Remove(this);
 	}
+	if (MergeMode == true) {
+		GI->calledMerge = false;
+	}
+	MergeMode = false;
+	DisableEXPTick();
+	AttractedActors.Empty();
 	GetWorldTimerManager().ClearTimer(TimerHandle);
+	RootComponent->SetMobility(EComponentMobility::Movable);
 	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
 	{
 		Pool->Release(this);
@@ -167,7 +177,8 @@ void AEXP_PickUp::HandleOverLap(UPrimitiveComponent* OverlapComponent, AActor* O
 			MergeMode = false;
 			DisableEXPTick();
 		}
-	}else if (CanPickUpCompCheck(OtherActor, OtherComp)) {
+	}
+	if (CanPickUpCompCheck(OtherActor, OtherComp)) {
 		HandlePickUp();
 		PostPickUp();
 	}
@@ -181,7 +192,14 @@ int AEXP_PickUp::GetEXPValue()
 void AEXP_PickUp::MergeTime()
 {
 	if (GetWorld()) {
-		GetWorldTimerManager().SetTimer(TimerHandle, this, &AEXP_PickUp::MergetoSelf, MergeTimer, false);
+		GetWorldTimerManager().SetTimer(TimerHandle, GI, &UUGI_SUGameInstance::EnableMerge, MergeTimer, false);
+	}
+}
+
+void AEXP_PickUp::ForceMergeTime()
+{
+	if (GetWorld()) {
+		GetWorldTimerManager().SetTimer(ForceMergeTimerHandle, this, &AEXP_PickUp::ForceMerge, FlyFor, false);
 	}
 }
 
@@ -189,10 +207,11 @@ void AEXP_PickUp::MergeTime()
 
 void AEXP_PickUp::MergetoSelf()
 {
-	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
 	if (GI) {
 		for (int i = 0; i < GI->EXPActors.Num();i++) {
-			AttractedActors.Add(GI->EXPActors[i]);
+			if (GI->EXPActors[i] != this && !GI->PlayerItself->AttractedActors.Contains(GI->EXPActors[i])) {
+				AttractedActors.Add(GI->EXPActors[i]);
+			}
 		}
 		EnableEXPTick();
 	}
@@ -210,15 +229,31 @@ UBoxComponent* AEXP_PickUp::GetBoxComponent()
 
 void AEXP_PickUp::EnableEXPTick()
 {
-	SetActorTickEnabled(true);
-	MergeMode = true;
+
+	if (GI) {
+		bool check = false;
+		for (int i = 0; i < GI->EXPActors.Num();i++) {
+			AEXP_PickUp* EXP = Cast<AEXP_PickUp>(GI->EXPActors[i]);
+			if (EXP->MergeMode) {
+				check = true;
+			}
+		}
+		if (check== false) {
+			SetActorTickEnabled(true);
+			MergeMode = true;
+		}
+	}
+
 }
 
 void AEXP_PickUp::DisableEXPTick()
 {
 	SetActorTickEnabled(false);
 	FlySpeedSet();
-	MergeTime();
+	if (GI) {
+		GI->calledMerge = false;
+	}
+
 }
 
 
@@ -241,6 +276,21 @@ void  AEXP_PickUp::Merge(AEXP_PickUp* Mergeinto, AEXP_PickUp* Mergewith) {
 		if (Mergewith->GetEXPValue() > 0) {
 			Mergeinto->SetExpValue(Mergeinto->GetEXPValue() + Mergewith->GetEXPValue());
 			Mergewith->PostPickUp();
+		}
+	}
+}
+
+void AEXP_PickUp::ForceMerge()
+{
+	for (int32 i = 0; i < AttractedActors.Num(); i++) {
+		AEXP_PickUp* EXP = Cast<AEXP_PickUp>(AttractedActors[i].Get());
+		if (EXP) {
+			AttractedActors.Remove(AttractedActors[i].Get());
+			Merge(this, EXP);
+		}
+		if (AttractedActors.IsEmpty()) {
+			MergeMode = false;
+			DisableEXPTick();
 		}
 	}
 }
