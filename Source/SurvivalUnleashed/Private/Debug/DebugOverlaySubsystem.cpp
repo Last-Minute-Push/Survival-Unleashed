@@ -6,7 +6,10 @@
 #include "UI/DebugOverlay.h"
 #include "UI/DebugValue.h"
 #include "Actor/UC_Player.h"
+#include "Enemies/SpawnDirector.h"
 #include "GameFramework/CheatManagerDefines.h"
+#include "Weapons/BaseWeapon.h"
+#include "EngineUtils.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogDebugOverlaySubsystem, Log, All);
 
@@ -141,6 +144,12 @@ EDebugOverlayInit UDebugOverlaySubsystem::InitializeDebugOverlay(const FString& 
 
 void UDebugOverlaySubsystem::AttachDefaultValues()
 {
+	for (TActorIterator<ASpawnDirector> It(GetWorld()); It; ++It)
+	{
+		It->OnAnyEnemyHit.AddDynamic(this, &UDebugOverlaySubsystem::HandleDamagePerSecond);
+		break;
+	}
+
 	AttachToOverlay("General", "Performance and Balance", "FPS", 
 		FOnOverlayUpdateInt32::CreateUFunction(this, "GetFPS"));
 }
@@ -149,7 +158,7 @@ void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FNa
 {
 #if UE_WITH_CHEAT_MANAGER
 	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
-	if (Value && GetValue.IsBound())
+	if (Value && !Value->GetBool.IsBound() && GetValue.IsBound())
 	{
 		Value->Type = EBool;
 		Value->GetBool = MoveTemp(GetValue);
@@ -163,7 +172,7 @@ void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FNa
 {
 #if UE_WITH_CHEAT_MANAGER
 	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
-	if (Value && GetValue.IsBound())
+	if (Value && !Value->GetInt32.IsBound() && GetValue.IsBound())
 	{
 		Value->Type = EInt;
 		Value->GetInt32 = MoveTemp(GetValue);
@@ -177,7 +186,7 @@ void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FNa
 {
 #if UE_WITH_CHEAT_MANAGER
 	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
-	if (Value && GetValue.IsBound())
+	if (Value && !Value->GetFloat.IsBound() && GetValue.IsBound())
 	{
 		Value->Type = EFloat;
 		Value->GetFloat = MoveTemp(GetValue);
@@ -191,7 +200,7 @@ void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FNa
 {
 #if UE_WITH_CHEAT_MANAGER
 	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
-	if (Value && GetValue.IsBound())
+	if (Value && !Value->GetVector2.IsBound() && GetValue.IsBound())
 	{
 		Value->Type = EVector2;
 		Value->GetVector2 = MoveTemp(GetValue);
@@ -205,7 +214,7 @@ void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FNa
 {
 #if UE_WITH_CHEAT_MANAGER
 	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
-	if (Value && GetValue.IsBound())
+	if (Value && !Value->GetVector3.IsBound() && GetValue.IsBound())
 	{
 		Value->Type = EVector3;
 		Value->GetVector3 = MoveTemp(GetValue);
@@ -219,7 +228,7 @@ void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FNa
 {
 #if UE_WITH_CHEAT_MANAGER
 	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
-	if (Value && GetValue.IsBound())
+	if (Value && !Value->GetVector4.IsBound() && GetValue.IsBound())
 	{
 		Value->Type = EVector4;
 		Value->GetVector4 = MoveTemp(GetValue);
@@ -233,7 +242,7 @@ void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FNa
 {
 #if UE_WITH_CHEAT_MANAGER
 	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
-	if (Value && GetValue.IsBound())
+	if (Value && !Value->GetString.IsBound() && GetValue.IsBound())
 	{
 		Value->Type = EString;
 		Value->GetString = MoveTemp(GetValue);
@@ -303,3 +312,12 @@ FDebugValueData* UDebugOverlaySubsystem::FindKey(const FName& OverlayName, const
 	}
 	return *Value;
 }
+
+void UDebugOverlaySubsystem::HandleDamagePerSecond(AEnemyBase* Enemy, float Damage, AActor* DamageCauser)
+{
+	if (ABaseWeapon* W = Cast<ABaseWeapon>(DamageCauser))
+	{
+		W->AddToDamagePerSecond(FMath::Min(Damage, Enemy->GetCurrentHealth() + Damage));
+	}
+}
+

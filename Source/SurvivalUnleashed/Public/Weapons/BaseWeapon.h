@@ -22,7 +22,9 @@ class SURVIVALUNLEASHED_API ABaseWeapon : public AActor
 	GENERATED_BODY()
 	
 	bool bIsActive;
+	float DamagePerSecond = 0.f;
 	FTimerHandle TStartTimerTest, TStartTimerTest2;
+
 
 public:
 
@@ -50,6 +52,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Stats") void SetParent(AUC_Player* P);
 	UFUNCTION(BlueprintCallable, Category = "Stats") inline UWeaponData* GetWeaponData() const { return Data; }
 
+	UFUNCTION(BlueprintCallable, Category = "Damage") inline int32 GetDamagePerSecond() const { return DamagePerSecond; }
+	UFUNCTION(BlueprintCallable, Category = "Damage") inline void AddToDamagePerSecond(float Damage) { DamagePerSecond += Damage; }
+	UFUNCTION(BlueprintCallable, Category = "Damage") inline void ResetDamagePerSecond() { DamagePerSecond = 0.f; }
+	UFUNCTION(BlueprintCallable, Category = "Damage") virtual void ApplyDamage(AActor * Source, AActor * Target);
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Properties") bool bAbsoluteRotation;                  // Rotates on its own regard
 	UPROPERTY(VisibleAnywhere, Category = "Properties|WeaponType") EWeaponCategory Type;          // Identifies the category of this weapon
@@ -60,7 +67,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Properties|Stats") TObjectPtr<UPlayerStatsComponent> ParentStats; // Reference to the player parent's stats component
 	UPROPERTY(VisibleAnywhere, Category = "Properties|Components") TObjectPtr<USceneComponent> Pivot;        // Pivot used for the swinging motion; rotates only the sword and collision box
 
-	virtual void ApplyDamage(AActor* Source, AActor* Target);
 
 	// Damage for one hit before the target. Override when damage doesn't come straight from Data->Damage.
 	virtual float GetHitDamage() const;

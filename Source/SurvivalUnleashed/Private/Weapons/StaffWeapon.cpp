@@ -8,6 +8,7 @@
 #include "Actor/UC_Player.h"
 #include "Utility/PlayerStatsComponent.h"
 #include "Framework/ObjectPoolSubsystem.h"
+#include "Debug/DebugOverlaySubsystem.h"
 #include "NiagaraFunctionLibrary.h"
 #include "DrawDebugHelpers.h"
 #include "TimerManager.h"

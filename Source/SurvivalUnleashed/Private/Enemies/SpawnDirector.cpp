@@ -74,6 +74,8 @@ void ASpawnDirector::BeginPlay()
 	{
 		Ovl->AttachToOverlay("General", "Performance and Balance", "Active Enemies",
 			FOnOverlayUpdateInt32::CreateUFunction(this, "GetActiveEnemyCount"));
+
+
 	}
 }
 

@@ -6,6 +6,7 @@
 #include "Weapons/WeaponData.h"
 #include "Utility/PlayerStatsComponent.h"
 #include "NiagaraComponent.h"
+#include "Debug/DebugOverlaySubsystem.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogBaseSword, Log, All);
 

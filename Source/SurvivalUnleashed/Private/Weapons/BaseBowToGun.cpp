@@ -6,6 +6,7 @@
 #include "Weapons/WeaponData.h"
 #include "Enemies/EnemyBase.h"
 #include "Actor/UC_Player.h"
+#include "Debug/DebugOverlaySubsystem.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogBowToGun, Log, All);
 
@@ -141,7 +142,7 @@ void ABaseBowToGun::StopAim()
 	Params.Range = Range;
 
 	FOnProjectileHit Hit;
-	Hit.BindUFunction(this, TEXT("ApplyDamage"));
+	Hit.BindUFunction(this, "ApplyDamage");
 
 	// Launch the projectile.
 	AProjectileBase::Fire(GetWorld(), Data->ProjectileType, this, Params, Hit);

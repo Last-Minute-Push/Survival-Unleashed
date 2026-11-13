@@ -33,10 +33,11 @@ class SURVIVALUNLEASHED_API UDebugOverlaySubsystem : public UTickableWorldSubsys
 	TMap<TTuple<FName, FName, FName>, FDebugValueData*> OverlayFrontend;
 	TObjectPtr<APlayerController> PlayerController;
 
-	UFUNCTION() inline int32 GetFPS() const { return FPS; }
 	void AttachDefaultValues();
 	void SetValue(FDebugValueData& Value);
 	FDebugValueData* FindKey(const FName& OverlayName, const FName& CategoryName, const FName& VariableName);
+	UFUNCTION() inline int32 GetFPS() const { return FPS; }
+	UFUNCTION() void HandleDamagePerSecond(AEnemyBase* Enemy, float Damage, AActor* DamageCauser);
 
 protected:
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
