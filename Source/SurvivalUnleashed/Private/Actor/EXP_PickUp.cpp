@@ -28,10 +28,6 @@ AEXP_PickUp::AEXP_PickUp()
 	Sprite->SetVisibility(true);
 	Sprite2->SetVisibility(false);
 	Sprite3->SetVisibility(false);
-	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
-	if (GI) {
-		GI->LastestEXPActor = this;
-	}
 }
 
 void AEXP_PickUp::SetExpValue(int Amount)
@@ -74,12 +70,7 @@ void AEXP_PickUp::SetExpValue(int Amount)
 	}
 
 	EXPValue = Amount;
-	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
-	if (GI) {
-		GI->LastestEXPActor = this;
-	}
-	GI->EXPCountCheck();
-
+	MergeTime();
 }
 
 void AEXP_PickUp::OnPoolAcquire_Implementation()
@@ -89,9 +80,10 @@ void AEXP_PickUp::OnPoolAcquire_Implementation()
 	SavedPlayer = nullptr;
 	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
 	if (GI) {
-		GI->LastestEXPActor = this;
+		if (this) {
+			GI->EXPActors.Add(this);
+		}
 	}
-	GI->EXPCountCheck();
 }
 
 void AEXP_PickUp::OnPoolRelease_Implementation()
@@ -105,15 +97,12 @@ void AEXP_PickUp::OnPoolRelease_Implementation()
 void AEXP_PickUp::BeginPlay()
 {
 	Super::BeginPlay();
+	//for testin
 	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
 	if (GI) {
 		if (this) {
 			GI->EXPActors.Add(this);
-			if (GI->EXPActors.Num() <= 300) {
-
-			}
-			GI->LastestEXPActor = this;
-			GI->EXPCountCheck();
+			MergeTime();
 		}
 	}
 
@@ -146,6 +135,7 @@ void AEXP_PickUp::PostPickUp()
 	if (GI) {
 		GI->EXPActors.Remove(this);
 	}
+	GetWorldTimerManager().ClearTimer(TimerHandle);
 	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
 	{
 		Pool->Release(this);
@@ -188,7 +178,25 @@ int AEXP_PickUp::GetEXPValue()
 	return EXPValue;
 }
 
+void AEXP_PickUp::MergeTime()
+{
+	if (GetWorld()) {
+		GetWorldTimerManager().SetTimer(TimerHandle, this, &AEXP_PickUp::MergetoSelf, MergeTimer, false);
+	}
+}
 
+
+
+void AEXP_PickUp::MergetoSelf()
+{
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	if (GI) {
+		for (int i = 0; i < GI->EXPActors.Num();i++) {
+			AttractedActors.Add(GI->EXPActors[i]);
+		}
+		EnableEXPTick();
+	}
+}
 
 void AEXP_PickUp::FlySpeedSet()
 {
@@ -210,6 +218,7 @@ void AEXP_PickUp::DisableEXPTick()
 {
 	SetActorTickEnabled(false);
 	FlySpeedSet();
+	MergeTime();
 }
 
 

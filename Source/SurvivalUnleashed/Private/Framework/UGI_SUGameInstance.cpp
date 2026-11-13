@@ -111,41 +111,7 @@ void UUGI_SUGameInstance::QuitTheGame()
 	}
 }
 
-void UUGI_SUGameInstance::EXPCountCheck()
-{
-	if (EXPActors.Num() > 300) {
-		int in = 0;
-		while (!EXPActors[in].Get()) {
-			in++;
-		}
-		float closestDistance = LastestEXPActor.Get()->GetDistanceTo(EXPActors[in].Get());
-		ClosestEXPActor = EXPActors[in].Get();
-		for (int i = 1; i < EXPActors.Num(); i++) {
-			if (PlayerItself) {
-				if (!PlayerItself->AttractedActors.Contains(EXPActors[i])) {
-					if (closestDistance > LastestEXPActor.Get()->GetDistanceTo(EXPActors[i].Get())) {
-						ClosestEXPActor = EXPActors[i].Get();
-						closestDistance = LastestEXPActor.Get()->GetDistanceTo(EXPActors[i].Get());
-					}
-				}
-			}
-			else {
-				if (closestDistance > LastestEXPActor.Get()->GetDistanceTo(EXPActors[i].Get())) {
-					ClosestEXPActor = EXPActors[i].Get();
-					closestDistance = LastestEXPActor.Get()->GetDistanceTo(EXPActors[i].Get());
-				}
-			}
-		}
 
-		AEXP_PickUp* EXP = Cast<AEXP_PickUp>(ClosestEXPActor);
-		if (EXP) {
-			EXP->Merge();
-			EXP->EnableEXPTick();
-			ClosestEXPActor = nullptr;
-			LastestEXPActor = nullptr;
-		}
-	}
-}
 
 void UUGI_SUGameInstance::AddEXPtoNearestOne(FVector EnemyLocation, int32 EXPvalue)
 {

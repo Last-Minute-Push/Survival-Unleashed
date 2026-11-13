@@ -91,10 +91,9 @@ public:
 	UPROPERTY()
 	TArray<TWeakObjectPtr<AActor>> EXPActors;
 	UPROPERTY()
-	TWeakObjectPtr<AActor> LastestEXPActor;
-	UPROPERTY()
 	TWeakObjectPtr<AActor> ClosestEXPActor;
-	void EXPCountCheck();
+	UPROPERTY(EditDefaultsOnly)
+	float EXPLimit = 300;
 	void AddEXPtoNearestOne(FVector EnemyLocation, int32 EXPvalue);
 
 	//----------------------------------------------------------------------//

@@ -361,12 +361,15 @@ void AEnemyBase::DropLoot()
 		return;
 	}
 
-	// The gem ignores pickups until it has a value, so setting it after Acquire is safe
+	
 	const FTransform DropTransform(FRotator::ZeroRotator, GetLootLocation());
+	//if reached EXP amount limit add exp value directly to nearest gem, no spawnin!
 	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
-	if (GI->EXPActors.Num() >= 300) {
+	if (GI->EXPActors.Num() >= GI->EXPLimit) {
 		GI->AddEXPtoNearestOne(this->GetActorLocation(), EnemyData->ExperienceValue);
-	}else if (AEXP_PickUp* Gem = Pool->AcquireAs<AEXP_PickUp>(ExperiencePickupClass, DropTransform))
+
+	}// The gem ignores pickups until it has a value, so setting it after Acquire is safe
+	else if (AEXP_PickUp* Gem = Pool->AcquireAs<AEXP_PickUp>(ExperiencePickupClass, DropTransform))
 	{
 		Gem->SetExpValue(EnemyData->ExperienceValue);
 	}

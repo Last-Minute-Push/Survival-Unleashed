@@ -53,6 +53,11 @@ public:
 	void EnableEXPTick();
 	UFUNCTION()
 	void DisableEXPTick();
+	UPROPERTY(EditDefaultsOnly)
+	float MergeTimer = 10.0f; //how long to wait until merge
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FTimerHandle TimerHandle;
 
 	// IPoolable
 	virtual void OnPoolAcquire_Implementation() override;
@@ -70,8 +75,8 @@ protected:
 	UFUNCTION()
 	void HandleOverLap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
 	int GetEXPValue();
-
-
+	void MergeTime();
+	void MergetoSelf();
 	void FlySpeedSet();
 
 	UBoxComponent* GetBoxComponent();
