@@ -58,7 +58,7 @@ public:
 	UFUNCTION()
 	void DisableEXPTick();
 	UPROPERTY(EditDefaultsOnly)
-	float MergeTimer = 1000.0f; //how long to wait until merge
+	float MergeTimer = 15.0f; //how long to wait until merge
 	UPROPERTY(EditDefaultsOnly)
 	float FlyFor = 1.0f; //how long exp can fly for before just being forcefully merged into a exp drop
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
