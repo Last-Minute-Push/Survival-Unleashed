@@ -175,12 +175,6 @@ void AUC_Player::BeginPlay()
 		BossEventSubsystem->OnBossHealthChanged.AddUObject(PlayerHUD, &UPlayerHUDBase::ChangeBossHealth);
 		BossEventSubsystem->OnBossDied.AddUObject(PlayerHUD, &UPlayerHUDBase::BossDeathInfo);
 	}
-
-	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
-	{
-		Ovl->AttachToOverlay("Player", "Movement", "Position", 
-			FOnOverlayUpdateVector3::CreateUFunction(this, "GetLocation"));
-	}
 }
 // Called every frame
 void AUC_Player::Tick(float DeltaTime)

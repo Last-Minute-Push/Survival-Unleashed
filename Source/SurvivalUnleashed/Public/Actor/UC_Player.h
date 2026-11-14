@@ -65,8 +65,6 @@ public:
 	void PlayerLost();
 	void MagnetEnable();
 
-	UFUNCTION() inline FVector GetLocation() { return GetActorLocation(); }
-
 	UCapsuleComponent* GetCapsuleComponent();
 	USphereComponent* GetRadiusComponent();
 
