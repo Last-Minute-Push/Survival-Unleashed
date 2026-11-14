@@ -12,6 +12,8 @@
 #include "UI/ControlsMenu.h"
 #include "UGI_SUGameInstance.generated.h"
 
+class UDebugOverlayDatabase;
+
 // Activates the audio test
 #define AUDIO_MANAGER_TEST 0
 
@@ -44,6 +46,10 @@ protected:
 	UAudioComponent* CreateAudio(USoundBase* Sound, float VolumeMultiplier, float PitchMultiplier,
 		USoundConcurrency* ConcurrencySettings, bool bPersistAcrossLevels);
 
+        // - Debug Overlay Database -
+	UPROPERTY(EditDefaultsOnly, Category = "Debug") TObjectPtr<UDebugOverlayDatabase> OverlayDatabase;
+
+        // - Audio -
 	void ApplyMusicVolume();
 	void ApplySoundVolume();
 
@@ -85,9 +91,14 @@ public:
 	UFUNCTION() void QuitTheGame();
 
 	//----------------------------------------------------------------------//
-    // Weapon Database
-    //----------------------------------------------------------------------//
+        // Weapon Database
+        //----------------------------------------------------------------------//
 	UFUNCTION() inline UWeaponDatabase* GetWeaponDatabase() const { return Database; }
+
+	//----------------------------------------------------------------------//
+        // Debug Overlay Database
+        //----------------------------------------------------------------------//
+	UFUNCTION() inline UDebugOverlayDatabase* GetOverlayDatabase() const { return OverlayDatabase; }
 
 	//----------------------------------------------------------------------//
 	// Save / Run Results

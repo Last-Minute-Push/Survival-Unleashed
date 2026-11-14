@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Weapons/WeaponDatabase.h"
 #include "WeaponData.generated.h"
 
 class UNiagaraSystem;
@@ -26,6 +27,7 @@ class SURVIVALUNLEASHED_API UWeaponData : public UPrimaryDataAsset
 	GENERATED_BODY()
 	
 public:
+	UPROPERTY(EditDefaultsOnly, Category = "Defaults")                                           EWeaponCategory WeaponType;
 	UPROPERTY(EditDefaultsOnly, Category = "Stats", meta = (ClampMin = "0"))                     float Damage;
 	UPROPERTY(EditDefaultsOnly, Category = "Stats", Meta = (ClampMin = "0.1"))                   float Cooldown;
 	UPROPERTY(EditDefaultsOnly, Category = "Stats", meta = (ClampMin = "0.1"))                   float Range;

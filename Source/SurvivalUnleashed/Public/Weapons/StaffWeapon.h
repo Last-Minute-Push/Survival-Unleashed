@@ -47,7 +47,7 @@ protected:
 private:
 	void OnAttackTimer();
 	void ScheduleNextAttack();
-	void OnProjectileHit(AProjectileBase* Projectile, AActor* Target);
+	void OnProjectileHit(AActor* Projectile, AActor* Target);
 
 	FTimerHandle AttackTimer;
 };
