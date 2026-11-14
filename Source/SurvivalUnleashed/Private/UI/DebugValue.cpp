@@ -2,6 +2,9 @@
 
 
 #include "UI/DebugValue.h"
+#include "Components/Border.h"
+#include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogDebugValue, Log, All)
 
@@ -57,4 +60,9 @@ void UDebugValue::SetValue(const FVector4& Value)
 void UDebugValue::SetValue(const FString& Value)
 {
 	Val1->SetText(FText::FromString(Value));
+}
+
+void UDebugValue::SetBackgroundColor(FLinearColor Color)
+{
+	Background->SetBrushColor(Color);
 }

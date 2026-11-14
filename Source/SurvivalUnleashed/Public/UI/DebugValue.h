@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "UI/HUDBase.h"
-#include "Components/TextBlock.h"
 #include "DebugValue.generated.h"
+
+class UBorder;
+class UTextBlock;
 
 /**
  * 
@@ -16,6 +18,7 @@ class SURVIVALUNLEASHED_API UDebugValue : public UHUDBase
 	GENERATED_BODY()
 	
 protected:
+	UPROPERTY(EditDefaultsOnly, meta = (BindWidget)) TObjectPtr<UBorder>    Background;
 	UPROPERTY(EditDefaultsOnly, meta = (BindWidget)) TObjectPtr<UTextBlock> VarName;
 
 	UPROPERTY(EditDefaultsOnly, meta = (BindWidget)) TObjectPtr<UTextBlock> Val1;
@@ -40,4 +43,6 @@ public:
 	void SetValue(const FVector4& Value);
 
 	void SetValue(const FString& Value);
+
+	void SetBackgroundColor(FLinearColor Color);
 };

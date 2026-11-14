@@ -104,9 +104,9 @@ void USUCheatManager::LevelUp(int32 Count)
 void USUCheatManager::DebugOverlay(const FString& Type)
 {
 #if UE_WITH_CHEAT_MANAGER
-	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+	if (UDebugOverlaySubsystem* Ovl = FindDebugOverlaySubsystem())
 	{
-		EDebugOverlayInit R = Ovl->InitializeDebugOverlay(Type);
+		EDebugOverlayStatus R = Ovl->InitializeDebugOverlay(Type);
 
 		switch (R)
 		{
@@ -123,7 +123,7 @@ void USUCheatManager::DebugOverlay(const FString& Type)
 void USUCheatManager::ListOverlays()
 {
 #if UE_WITH_CHEAT_MANAGER
-	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+	if (UDebugOverlaySubsystem* Ovl = FindDebugOverlaySubsystem())
 	{
 		TArray<FString> OverlayNames;
 		Ovl->GetOverlayNames(OverlayNames);
@@ -141,6 +141,26 @@ void USUCheatManager::ListOverlays()
 #endif
 }
 
+void USUCheatManager::SetOverlayZOrder(int32 ZOrder)
+{
+#if UE_WITH_CHEAT_MANAGER
+	if (UDebugOverlaySubsystem* Ovl = FindDebugOverlaySubsystem())
+	{
+		Ovl->SetOverlayZOrder(ZOrder);
+	}
+#endif
+}
+
+void USUCheatManager::DisableOverlay()
+{
+#if UE_WITH_CHEAT_MANAGER
+	if (UDebugOverlaySubsystem* Ovl = FindDebugOverlaySubsystem())
+	{
+		Ovl->DisableOverlay();
+	}
+#endif
+}
+
 ASpawnDirector* USUCheatManager::FindSpawnDirector() const
 {
 	for (TActorIterator<ASpawnDirector> It(GetWorld()); It; ++It)
@@ -148,6 +168,16 @@ ASpawnDirector* USUCheatManager::FindSpawnDirector() const
 		return *It;
 	}
 	Say(TEXT("No Spawn Director in this level"));
+	return nullptr;
+}
+
+UDebugOverlaySubsystem* USUCheatManager::FindDebugOverlaySubsystem() const
+{
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+	{
+		return Ovl;
+	}
+	Say(TEXT("No Debug Overlay Subsystem was initialized"));
 	return nullptr;
 }
 

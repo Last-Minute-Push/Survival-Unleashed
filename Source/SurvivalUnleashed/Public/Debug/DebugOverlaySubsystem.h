@@ -10,7 +10,7 @@
 class AUC_Player;
 class UDebugOverlayDatabase;
 
-enum EDebugOverlayInit
+enum EDebugOverlayStatus
 {
 	ESuccess = 0,
 	ENoneExist,
@@ -25,12 +25,12 @@ class SURVIVALUNLEASHED_API UDebugOverlaySubsystem : public UTickableWorldSubsys
 {
 	GENERATED_BODY()
 	
-	bool bPerFrame, bTick = false;
-	float PerSecondTimer = 0.f;
+	bool bPerFrame, bInitialized = false, bTick = false;
+	float PerSecondTimer = 1.f; // 1.f is set to update the per second overlay values on initialization
 	int32 FPS, CurrentOverlayIdx = 0;
-	FDebugOverlayData* CurrentOverlay;
-	TObjectPtr<UDebugOverlayDatabase> OverlayData;
-	TMap<TTuple<FName, FName, FName>, FDebugValueData*> OverlayFrontend;
+	FDebugOverlayData *CurrentOverlay, *LastUsed;
+	TObjectPtr<UDebugOverlayDatabase> Database; // Raw data from the database
+	TMap<TTuple<FName, FName, FName>, FDebugValueData*> OverlayFrontend; // Faster lookup for the AttachToOverlay functions
 	TObjectPtr<APlayerController> PlayerController;
 
 	void AttachDefaultValues();
@@ -43,10 +43,11 @@ protected:
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 	virtual bool IsTickable() const override { return bTick; }
 	virtual void Tick(float DeltaTime) override;
+	virtual void Deinitialize() override;
 	virtual TStatId GetStatId() const { RETURN_QUICK_DECLARE_CYCLE_STAT(UDebugOverlaySubsystem, STATGROUP_Tickables); }
 
 public:
-	EDebugOverlayInit InitializeDebugOverlay(const FString& Overlay = "");
+	EDebugOverlayStatus InitializeDebugOverlay(const FString& InOverlay = "");
 
 	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateBool GetValue, FOnOverlayResetValue ResetValue = nullptr);
 	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateInt32 GetValue, FOnOverlayResetValue ResetValue = nullptr);
@@ -56,8 +57,12 @@ public:
 	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector4 GetValue, FOnOverlayResetValue ResetValue = nullptr);
 	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateString GetValue, FOnOverlayResetValue ResetValue = nullptr);
 
-	void ChangeOverlay(const int32 NewIdx);
+	void TriggerOverlay();
+	void DisableOverlay();
+	void TakeOutTheTrash();
+	void SwitchOverlay(int32 NewIdx);
 	void GetOverlayNames(TArray<FString>& OverlayNames);
+	void SetOverlayZOrder(int32 ZOrder);
 
 	inline int32 GetOverlayIndex() const { return CurrentOverlayIdx; }
 };

@@ -36,9 +36,9 @@ struct FDebugValueData
 {
 	GENERATED_BODY()
 
-	TObjectPtr<UDebugValue> Widget;
-	
+	UPROPERTY() TWeakObjectPtr<UDebugValue> Widget;
 	UPROPERTY(EditAnywhere)    TEnumAsByte<EDebugValueType> Type;
+	UPROPERTY(EditAnywhere)    FLinearColor BackgroundColor = FLinearColor(0.f, 0.f, 0.f, 0.4f);
 	UPROPERTY(EditAnywhere)    bool bUpdatePerSecond;
 	
 	FOnOverlayUpdateBool GetBool;
@@ -58,8 +58,9 @@ struct FDebugCategoryData
 {
 	GENERATED_BODY()
 
+	UPROPERTY() TWeakObjectPtr<UDebugOverlay> Widget;
 	UPROPERTY(EditAnywhere)	   FName Title;
-	UPROPERTY(VisibleAnywhere) TObjectPtr<UDebugOverlay> Widget;
+	UPROPERTY(EditAnywhere)    FLinearColor BackgroundColor = FLinearColor(0.f, 0.f, 0.5f, 0.4f);
 	UPROPERTY(EditAnywhere)    TMap<FName, FDebugValueData> DebugValues;
 };
 
@@ -68,8 +69,9 @@ struct FDebugOverlayData
 {
 	GENERATED_BODY()
 
+	UPROPERTY() TWeakObjectPtr<UDebugOverlay> Widget;
 	UPROPERTY(EditAnywhere)    FName Title;
-	UPROPERTY(VisibleAnywhere) TObjectPtr<UDebugOverlay> Widget;
+	UPROPERTY(EditAnywhere)    FLinearColor BackgroundColor = FLinearColor(0.f, 0.f, 0.08f, 0.4f);
 	UPROPERTY(EditAnywhere)    TArray<FDebugCategoryData> Categories;
 };
 
@@ -85,5 +87,5 @@ public:
 	UPROPERTY(EditDefaultsOnly) TSubclassOf<UUserWidget> OverlayClass;  //! SET IN EDITOR!
 	UPROPERTY(EditDefaultsOnly) TSubclassOf<UUserWidget> CategoryClass; //! SET IN EDITOR!
 	UPROPERTY(EditDefaultsOnly) TSubclassOf<UUserWidget> ValueClass;    //! SET IN EDITOR!
-	UPROPERTY(EditDefaultsOnly) TArray<FDebugOverlayData> Database;     //! SET IN EDITOR!
+	UPROPERTY(EditDefaultsOnly) TArray<FDebugOverlayData> Overlays;     //! SET IN EDITOR!
 };

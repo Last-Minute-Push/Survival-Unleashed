@@ -39,25 +39,32 @@ void UDebugOverlaySubsystem::OnWorldBeginPlay(UWorld& InWorld)
 		UE_LOG(LogDebugOverlaySubsystem, Error, TEXT("No debug overlay is set in the game instance!"));
 		return;
 	}
-	OverlayData = DB;
+	Database = DB;
 
-	for (FDebugOverlayData& Overlay : OverlayData->Database)
+	// We pre-fill the frontend for value linkage in AttachToOverlay()
+	for (FDebugOverlayData& Overlay : Database->Overlays)
 		for (FDebugCategoryData& Category : Overlay.Categories)
 			for (auto Value = Category.DebugValues.begin(); Value != Category.DebugValues.end(); ++Value)
 				OverlayFrontend.Add({Overlay.Title, Category.Title, Value->Key}, &Value->Value);
-
 #endif
 }
 
 void UDebugOverlaySubsystem::Tick(float DeltaTime)
 {
 #if UE_WITH_CHEAT_MANAGER
-	checkf(IsInitialized(), TEXT("Ticking should have been disabled for an uninitialized subsystem!"));
-
-	PerSecondTimer += DeltaTime;
+	// FPS is the reciprocal of DeltaTime
 	FPS = FMath::TruncToInt32<float>(1.f / DeltaTime);
 
-	bool TimerPassed = false;
+	PerSecondTimer += DeltaTime;
+	bool SecondElapsed = PerSecondTimer >= 1.f;
+	if (SecondElapsed) PerSecondTimer = 0.f;
+	
+	if (!CurrentOverlay) return;
+
+    /** 
+     * Updates the overlay with the current values;
+	 * should only update the values from the current overlay on display.
+	 */
 	for (FDebugCategoryData& Category : CurrentOverlay->Categories)
 		for (auto Value = Category.DebugValues.begin(); Value != Category.DebugValues.end(); ++Value)
 		{
@@ -65,85 +72,104 @@ void UDebugOverlaySubsystem::Tick(float DeltaTime)
 			{
 				SetValue(Value->Value);
 			}
-			else if (PerSecondTimer >= 1.f)
+			else if (SecondElapsed)
 			{
-				TimerPassed = true;
 				SetValue(Value->Value);
 			}
-
 		}
-
-	if (TimerPassed) PerSecondTimer = 0.f;
 #endif
 }
 
-EDebugOverlayInit UDebugOverlaySubsystem::InitializeDebugOverlay(const FString& OverlayName)
+void UDebugOverlaySubsystem::Deinitialize()
+{
+	Super::Deinitialize();
+
+	TakeOutTheTrash();
+}
+
+EDebugOverlayStatus UDebugOverlaySubsystem::InitializeDebugOverlay(const FString& InOverlay)
 {
 #if UE_WITH_CHEAT_MANAGER
-	if (!IsValid(OverlayData) || OverlayFrontend.IsEmpty() || !IsValid(PlayerController) ||
-		!IsValid(OverlayData->OverlayClass) || !IsValid(OverlayData->CategoryClass) || !IsValid(OverlayData->ValueClass))
+	if (!IsValid(Database) || OverlayFrontend.IsEmpty() || !IsValid(PlayerController) ||
+		!IsValid(Database->OverlayClass) || !IsValid(Database->CategoryClass) || !IsValid(Database->ValueClass))
 	{
 		UE_LOG(LogDebugOverlaySubsystem, Error, TEXT("There is no debug overlay database or invalid initialization; debug ovelay will not display!"));
-		return EDebugOverlayInit::EFailed;
+		return EDebugOverlayStatus::EFailed;
 	}
 
-	bool bOverlayNameFound = false;
+	bool bMatchFound = false;
 
-	AttachDefaultValues();
+	if (!bInitialized) AttachDefaultValues();
 
-	for (int32 I = 0; I < OverlayData->Database.Num(); ++I)
+    /**
+	 * Overlay initialization per world; runs only once when reqested.
+	 * Can run again after initialization.
+	 * 
+	 * Initialization:
+	 * Database -> its categories -> its values ->
+	 * values contained to their category -> categories contained to their overlay ->
+	 * overlay added to the viewport
+	 */
+	for (int32 I = 0; I < Database->Overlays.Num(); ++I)
 	{
-		FDebugOverlayData& Overlay = OverlayData->Database[I];
-		Overlay.Widget = CreateWidget<UDebugOverlay>(PlayerController, OverlayData->OverlayClass);
-		if (!Overlay.Widget) continue;
-
-		Overlay.Widget->SetTitle(Overlay.Title);
-
-		for (FDebugCategoryData& Category : Overlay.Categories)
+		FDebugOverlayData& Overlay = Database->Overlays[I];
+		if (!Overlay.Widget.IsValid()) // Only create a widget if there isn't one
 		{
-			Category.Widget = CreateWidget<UDebugOverlay>(PlayerController, OverlayData->CategoryClass);
-			if (!Category.Widget) continue;
+			Overlay.Widget = CreateWidget<UDebugOverlay>(PlayerController, Database->OverlayClass);
+			if (!Overlay.Widget.IsValid()) continue;
 
-			Category.Widget->SetTitle(Category.Title);
-
-			for (auto Value = Category.DebugValues.begin(); Value != Category.DebugValues.end(); ++Value)
-			{
-				Value->Value.Widget = CreateWidget<UDebugValue>(PlayerController, OverlayData->ValueClass);
-				if (!Value->Value.Widget) continue;
-
-				Value->Value.Widget->SetName(Value->Key);
-				Category.Widget->AddToContainer(Value->Value.Widget);
-			}
-
-			Overlay.Widget->AddToContainer(Category.Widget);
+			Overlay.Widget->SetTitle(Overlay.Title);
+			Overlay.Widget->SetBackgroundColor(Overlay.BackgroundColor);
 		}
 
-		Overlay.Widget->AddToViewport();
-
-		if (Overlay.Title == OverlayName)
+		if (Overlay.Title == InOverlay)
 		{
-			bOverlayNameFound = true;
-			CurrentOverlay = &Overlay;
+			bMatchFound = true;
+			LastUsed = CurrentOverlay = &Overlay;
 			CurrentOverlayIdx = I;
-			CurrentOverlay->Widget->SetVisibility(ESlateVisibility::Visible);
 		}
 		else
 		{
 			Overlay.Widget->SetVisibility(ESlateVisibility::Hidden);
 		}
-	}
 
-	bTick = true;
-	if (!bOverlayNameFound)
+		if (bInitialized) continue; // Skips the rest if it's already initialized
+
+		for (FDebugCategoryData& Category : Overlay.Categories)
+		{
+			Category.Widget = CreateWidget<UDebugOverlay>(PlayerController, Database->CategoryClass);
+			if (!Category.Widget.IsValid()) continue;
+
+			Category.Widget->SetTitle(Category.Title);
+			Category.Widget->SetBackgroundColor(Category.BackgroundColor);
+
+			for (auto It = Category.DebugValues.begin(); It != Category.DebugValues.end(); ++It)
+			{
+				It->Value.Widget = CreateWidget<UDebugValue>(PlayerController, Database->ValueClass);
+				if (!It->Value.Widget.IsValid()) continue;
+
+				It->Value.Widget->SetName(It->Key);
+				It->Value.Widget->SetBackgroundColor(It->Value.BackgroundColor);
+
+				Category.Widget->AddToContainer(It->Value.Widget);
+			}
+			Overlay.Widget->AddToContainer(Category.Widget);
+		}
+		Overlay.Widget->AddToViewport();
+	}
+	bInitialized = bTick = true;
+
+	if (!bMatchFound) // Dispalys last used overlay or the first overlay in the array if no match was found
 	{
-		CurrentOverlay = &OverlayData->Database[0];
-		OverlayData->Database[0].Widget->SetVisibility(ESlateVisibility::Visible);
-		return EDebugOverlayInit::ENoneExist;
+		LastUsed = CurrentOverlay = (LastUsed) ? LastUsed : &Database->Overlays[0];
+		CurrentOverlay->Widget->SetVisibility(ESlateVisibility::Visible);
+		return  InOverlay != "" ? EDebugOverlayStatus::ENoneExist : EDebugOverlayStatus::ESuccess;
 	}
 
-	return EDebugOverlayInit::ESuccess;
+	return EDebugOverlayStatus::ESuccess;
 #endif
 }
+
 
 void UDebugOverlaySubsystem::AttachDefaultValues()
 {
@@ -153,153 +179,165 @@ void UDebugOverlaySubsystem::AttachDefaultValues()
 		break;
 	}
 
+	// Any other values that don't belong anywhere else can be placed here.
 	AttachToOverlay("General", "Performance and Balance", "FPS", 
 		FOnOverlayUpdateInt32::CreateUFunction(this, "GetFPS"));
 }
 
-void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateBool GetValue, FOnOverlayResetValue ResetValue)
-{
-#if UE_WITH_CHEAT_MANAGER
-	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
-	if (Value && !Value->GetBool.IsBound() && GetValue.IsBound())
-	{
-		Value->Type = EBool;
-		Value->GetBool = MoveTemp(GetValue);
-
-		if (ResetValue.IsBound()) Value->ResetValue = ResetValue;
-	}
-#endif
+// Repeated function body with different data types; this shortens the length of this file
+#define ATTACH_TO_OVERLAY_BODY(FOnOverlayUpdateX, GetData, DataType) \
+void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateX GetValue, FOnOverlayResetValue ResetValue) \
+{ \
+	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName); \
+	if (Value && !Value->GetData.IsBound() && GetValue.IsBound()) \
+	{ \
+		Value->Type = DataType; \
+		Value->GetData = MoveTemp(GetValue); \
+\
+		if (ResetValue.IsBound()) Value->ResetValue = ResetValue; \
+	} \
 }
-
-void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateInt32 GetValue, FOnOverlayResetValue ResetValue)
-{
-#if UE_WITH_CHEAT_MANAGER
-	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
-	if (Value && !Value->GetInt32.IsBound() && GetValue.IsBound())
-	{
-		Value->Type = EInt;
-		Value->GetInt32 = MoveTemp(GetValue);
-		
-		if (ResetValue.IsBound()) Value->ResetValue = ResetValue;
-	}
-#endif
-}
-
-void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateFloat GetValue, FOnOverlayResetValue ResetValue)
-{
-#if UE_WITH_CHEAT_MANAGER
-	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
-	if (Value && !Value->GetFloat.IsBound() && GetValue.IsBound())
-	{
-		Value->Type = EFloat;
-		Value->GetFloat = MoveTemp(GetValue);
-
-		if (ResetValue.IsBound()) Value->ResetValue = ResetValue;
-	}
-#endif
-}
-
-void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector2 GetValue, FOnOverlayResetValue ResetValue)
-{
-#if UE_WITH_CHEAT_MANAGER
-	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
-	if (Value && !Value->GetVector2.IsBound() && GetValue.IsBound())
-	{
-		Value->Type = EVector2;
-		Value->GetVector2 = MoveTemp(GetValue);
-
-		if (ResetValue.IsBound()) Value->ResetValue = ResetValue;
-	}
-#endif
-}
-
-void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector3 GetValue, FOnOverlayResetValue ResetValue)
-{
-#if UE_WITH_CHEAT_MANAGER
-	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
-	if (Value && !Value->GetVector3.IsBound() && GetValue.IsBound())
-	{
-		Value->Type = EVector3;
-		Value->GetVector3 = MoveTemp(GetValue);
-
-		if (ResetValue.IsBound()) Value->ResetValue = ResetValue;
-	}
-#endif
-}
-
-void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector4 GetValue, FOnOverlayResetValue ResetValue)
-{
-#if UE_WITH_CHEAT_MANAGER
-	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
-	if (Value && !Value->GetVector4.IsBound() && GetValue.IsBound())
-	{
-		Value->Type = EVector4;
-		Value->GetVector4 = MoveTemp(GetValue);
-
-		if (ResetValue.IsBound()) Value->ResetValue = ResetValue;
-	}
-#endif
-}
-
-void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateString GetValue, FOnOverlayResetValue ResetValue)
-{
-#if UE_WITH_CHEAT_MANAGER
-	FDebugValueData* Value = FindKey(OverlayName, CategoryName, VariableName);
-	if (Value && !Value->GetString.IsBound() && GetValue.IsBound())
-	{
-		Value->Type = EString;
-		Value->GetString = MoveTemp(GetValue);
-
-		if (ResetValue.IsBound()) Value->ResetValue = ResetValue;
-	}
-#endif
-}
-
-void UDebugOverlaySubsystem::ChangeOverlay(const int32 NewIdx)
-{
-	CurrentOverlay->Widget->SetVisibility(ESlateVisibility::Hidden);
-	CurrentOverlayIdx = (NewIdx % OverlayData->Database.Num() + OverlayData->Database.Num()) % OverlayData->Database.Num();
-	CurrentOverlay = &OverlayData->Database[CurrentOverlayIdx];
-	CurrentOverlay->Widget->SetVisibility(ESlateVisibility::Visible);
-}
+ATTACH_TO_OVERLAY_BODY(FOnOverlayUpdateBool, GetBool, EBool)
+ATTACH_TO_OVERLAY_BODY(FOnOverlayUpdateInt32, GetInt32, EInt)
+ATTACH_TO_OVERLAY_BODY(FOnOverlayUpdateFloat, GetFloat, EFloat)
+ATTACH_TO_OVERLAY_BODY(FOnOverlayUpdateVector2, GetVector2, EVector2)
+ATTACH_TO_OVERLAY_BODY(FOnOverlayUpdateVector3, GetVector3, EVector3)
+ATTACH_TO_OVERLAY_BODY(FOnOverlayUpdateVector4, GetVector4, EVector4)
+ATTACH_TO_OVERLAY_BODY(FOnOverlayUpdateString, GetString, EString)
 
 void UDebugOverlaySubsystem::GetOverlayNames(TArray<FString>& OverlayNames)
 {
 #if UE_WITH_CHEAT_MANAGER
-	if (!OverlayData) return;
+	if (!Database) return;
 
 	OverlayNames.Reset();
-	for (const FDebugOverlayData& Overlay : OverlayData->Database)
+	for (const FDebugOverlayData& Overlay : Database->Overlays)
 		OverlayNames.Add(Overlay.Title.ToString());
 #endif
 }
 
+void UDebugOverlaySubsystem::TriggerOverlay()
+{
+
+	if (bTick) DisableOverlay();
+	else InitializeDebugOverlay();
+}
+
+void UDebugOverlaySubsystem::DisableOverlay()
+{
+	if (CurrentOverlay && CurrentOverlay->Widget.IsValid())
+	{
+		CurrentOverlay->Widget->SetVisibility(ESlateVisibility::Hidden);
+	}
+
+	bTick = false;
+	CurrentOverlay = nullptr;
+}
+
+void UDebugOverlaySubsystem::TakeOutTheTrash()
+{
+	DisableOverlay();
+
+	LastUsed = nullptr;
+	bInitialized = false;
+
+	if (!Database) return;
+
+	for (FDebugOverlayData& Overlay : Database->Overlays)
+	{
+		for (FDebugCategoryData& Category : Overlay.Categories)
+		{
+			for (auto It = Category.DebugValues.begin(); It != Category.DebugValues.end(); ++It)
+			{
+				if (It->Value.Widget.IsValid())
+				{
+					It->Value.Widget->RemoveFromParent();
+					It->Value.Widget->MarkAsGarbage();
+					It->Value.Widget = nullptr;
+				}
+			}
+			if (Category.Widget.IsValid())
+			{
+				Category.Widget->RemoveFromParent();
+				Category.Widget->MarkAsGarbage();
+				Category.Widget = nullptr;
+			}
+		}
+		if (Overlay.Widget.IsValid())
+		{
+			Overlay.Widget->RemoveFromParent();
+			Overlay.Widget->MarkAsGarbage();
+			Overlay.Widget = nullptr;
+		}
+	}
+}
+
+void UDebugOverlaySubsystem::SwitchOverlay(int32 NewIdx)
+{
+#if UE_WITH_CHEAT_MANAGER
+	if (!IsValid(Database) || !CurrentOverlay || !CurrentOverlay->Widget.IsValid())
+	{
+		return;
+	}
+
+	/**
+	 * C languages prefer rounding toward zero via truncated division for early CPU efficiency.
+	 * This is fine for cycling forwards only, but cycling in reverse is dangerous because in
+	 * -1 % 8, euclidean division would return 7 when truncated division would return -1 instead.
+	 *
+	 * To compensate, we'd have to handle negative numbers by adding the result to the size of
+	 * the array. For any negative number, this will always give us a number within the size
+	 * of the array, but for positive numbers, it might overflow the max size.
+	 * One extra modulo operation will fix this issue.
+	 */
+	NewIdx = (NewIdx % Database->Overlays.Num() + Database->Overlays.Num()) % Database->Overlays.Num();
+	if (NewIdx == CurrentOverlayIdx) return;
+
+	CurrentOverlayIdx = NewIdx;
+	CurrentOverlay->Widget->SetVisibility(ESlateVisibility::Hidden);
+	LastUsed = CurrentOverlay = &Database->Overlays[CurrentOverlayIdx];
+	CurrentOverlay->Widget->SetVisibility(ESlateVisibility::Visible);
+#endif
+}
+
+void UDebugOverlaySubsystem::SetOverlayZOrder(int32 ZOrder)
+{
+	if (!CurrentOverlay || !CurrentOverlay->Widget.IsValid())
+	{
+		return;
+	}
+
+	CurrentOverlay->Widget->SetZOrder(ZOrder);
+}
+
+#define SET_VALUE(GetData) Value.GetData.IsBound() ? Value.Widget->SetValue(Value.GetData.Execute()) : Value.Widget->SetNull();
 void UDebugOverlaySubsystem::SetValue(FDebugValueData& Value)
 {
-	if (!IsValid(Value.Widget)) return;
+	if (!Value.Widget.IsValid()) return;
 
+	// Updates the widget to display the current value; displays null if the variable is not available
 	switch (Value.Type)
 	{
 	case EDebugValueType::EBool:
-		Value.GetBool.IsBound() ? Value.Widget->SetValue(Value.GetBool.Execute()) : Value.Widget->SetNull();
+		SET_VALUE(GetBool)
 		break;
 	case EDebugValueType::EInt:
-		Value.GetInt32.IsBound() ? Value.Widget->SetValue(Value.GetInt32.Execute()) : Value.Widget->SetNull();
+		SET_VALUE(GetInt32)
 		break;
 	case EDebugValueType::EFloat:
-		Value.GetFloat.IsBound() ? Value.Widget->SetValue(Value.GetFloat.Execute()) : Value.Widget->SetNull();
+		SET_VALUE(GetFloat)
 		break;
 	case EDebugValueType::EVector2:
-		Value.GetVector2.IsBound() ? Value.Widget->SetValue(Value.GetVector2.Execute()) : Value.Widget->SetNull();
+		SET_VALUE(GetVector2)
 		break;
 	case EDebugValueType::EVector3:
-		Value.GetVector3.IsBound() ? Value.Widget->SetValue(Value.GetVector3.Execute()) : Value.Widget->SetNull();
+		SET_VALUE(GetVector3)
 		break;
 	case EDebugValueType::EVector4:
-		Value.GetVector4.IsBound() ? Value.Widget->SetValue(Value.GetVector4.Execute()) : Value.Widget->SetNull();
+		SET_VALUE(GetVector4)
 		break;
 	case EDebugValueType::EString:
-		Value.GetString.IsBound() ? Value.Widget->SetValue(Value.GetString.Execute()) : Value.Widget->SetNull();
+		SET_VALUE(GetString)
 	}
 
 	Value.ResetValue.ExecuteIfBound();
@@ -307,6 +345,7 @@ void UDebugOverlaySubsystem::SetValue(FDebugValueData& Value)
 
 FDebugValueData* UDebugOverlaySubsystem::FindKey(const FName& OverlayName, const FName& CategoryName, const FName& VariableName)
 {
+#if UE_WITH_CHEAT_MANAGER
 	FDebugValueData** Value = OverlayFrontend.Find(TTuple<FName, FName, FName>(OverlayName, CategoryName, VariableName));
 	if (!Value)
 	{
@@ -314,13 +353,30 @@ FDebugValueData* UDebugOverlaySubsystem::FindKey(const FName& OverlayName, const
 		return nullptr;
 	}
 	return *Value;
+#else
+	return nullptr;
+#endif
 }
 
 void UDebugOverlaySubsystem::HandleDamagePerSecond(AEnemyBase* Enemy, float Damage, AActor* DamageCauser)
 {
+#if UE_WITH_CHEAT_MANAGER
 	if (ABaseWeapon* W = Cast<ABaseWeapon>(DamageCauser))
 	{
+		/**
+		 * We only want to return the actual damage we've dealt to an enemy.
+		 * If the HP is less than the damage value (ex. 15 HP and 20 Dmg),
+		 * we only add the remaining HP value, not the damage.
+		 * 
+		 * Since GetCurrentHealth is not clamped and the damage was already applied
+		 * to the current health, we add the amount of damage to the current health 
+		 * to get the correct HP value before the damage was applied.
+		 * 
+		 * ex. 15 HP - 20 Dmg = -5 HP <- Not what we want
+		 *     -5 HP + 20 Dmg = 15 HP <- Return this instead!
+		 */
 		W->AddToDamagePerSecond(FMath::Min(Damage, Enemy->GetCurrentHealth() + Damage));
 	}
+#endif
 }
 

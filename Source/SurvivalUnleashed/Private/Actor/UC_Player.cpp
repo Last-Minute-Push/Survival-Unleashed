@@ -266,6 +266,7 @@ void AUC_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 #if UE_WITH_CHEAT_MANAGER
 		EnhancedInputComponent->BindAction(OverlayNext, ETriggerEvent::Started, this, &AUC_Player::NextOverlay);
 		EnhancedInputComponent->BindAction(OverlayPrev, ETriggerEvent::Started, this, &AUC_Player::PreviousOverlay);
+		EnhancedInputComponent->BindAction(OverlayTrigger, ETriggerEvent::Started, this, &AUC_Player::TriggerOverlay);
 #endif
 	}
 }
@@ -367,13 +368,19 @@ void AUC_Player::Dash(const FInputActionValue& Value)
 void AUC_Player::NextOverlay(const FInputActionValue& Value)
 {
 	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
-		Ovl->ChangeOverlay(Ovl->GetOverlayIndex() + 1);
+		Ovl->SwitchOverlay(Ovl->GetOverlayIndex() + 1);
 }
 
 void AUC_Player::PreviousOverlay(const FInputActionValue& Value)
 {
 	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
-		Ovl->ChangeOverlay(Ovl->GetOverlayIndex() - 1);
+		Ovl->SwitchOverlay(Ovl->GetOverlayIndex() - 1);
+}
+
+void AUC_Player::TriggerOverlay(const FInputActionValue& Value)
+{
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+		Ovl->TriggerOverlay();
 }
 #endif
 

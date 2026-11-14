@@ -108,6 +108,8 @@ protected:
 	UInputAction* OverlayNext;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UInputAction* OverlayPrev;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UInputAction* OverlayTrigger;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	float LifeStealHeal = -2;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient, Category = "Weapons")
@@ -146,6 +148,7 @@ private:
 #if UE_WITH_CHEAT_MANAGER
 	void NextOverlay(const FInputActionValue& Value);
 	void PreviousOverlay(const FInputActionValue& Value);
+	void TriggerOverlay(const FInputActionValue& Value);
 #endif
 
 	UFUNCTION() 
