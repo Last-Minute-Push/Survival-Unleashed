@@ -36,10 +36,11 @@ struct FDebugValueData
 {
 	GENERATED_BODY()
 
-	UPROPERTY() TWeakObjectPtr<UDebugValue> Widget;
-	UPROPERTY(EditAnywhere)    TEnumAsByte<EDebugValueType> Type;
-	UPROPERTY(EditAnywhere)    FLinearColor BackgroundColor = FLinearColor(0.f, 0.f, 0.f, 0.4f);
-	UPROPERTY(EditAnywhere)    bool bUpdatePerSecond;
+	UPROPERTY()             TWeakObjectPtr<UDebugValue> Widget;
+	UPROPERTY(EditAnywhere) FName Name;
+	UPROPERTY(EditAnywhere) TEnumAsByte<EDebugValueType> Type;
+	UPROPERTY(EditAnywhere) FLinearColor BackgroundColor = FLinearColor(0.f, 0.f, 0.f, 0.4f);
+	UPROPERTY(EditAnywhere) bool bUpdatePerSecond;
 	
 	FOnOverlayUpdateBool GetBool;
 	FOnOverlayUpdateInt32 GetInt32;
@@ -58,10 +59,10 @@ struct FDebugCategoryData
 {
 	GENERATED_BODY()
 
-	UPROPERTY() TWeakObjectPtr<UDebugOverlay> Widget;
-	UPROPERTY(EditAnywhere)	   FName Title;
-	UPROPERTY(EditAnywhere)    FLinearColor BackgroundColor = FLinearColor(0.f, 0.f, 0.5f, 0.4f);
-	UPROPERTY(EditAnywhere)    TMap<FName, FDebugValueData> DebugValues;
+	UPROPERTY()             TWeakObjectPtr<UDebugOverlay> Widget;
+	UPROPERTY(EditAnywhere)	FName Title;
+	UPROPERTY(EditAnywhere) FLinearColor BackgroundColor = FLinearColor(0.f, 0.f, 0.5f, 0.4f);
+	UPROPERTY(EditAnywhere) TArray<FDebugValueData> Values;
 };
 
 USTRUCT(BlueprintType)
@@ -69,10 +70,10 @@ struct FDebugOverlayData
 {
 	GENERATED_BODY()
 
-	UPROPERTY() TWeakObjectPtr<UDebugOverlay> Widget;
-	UPROPERTY(EditAnywhere)    FName Title;
-	UPROPERTY(EditAnywhere)    FLinearColor BackgroundColor = FLinearColor(0.f, 0.f, 0.08f, 0.4f);
-	UPROPERTY(EditAnywhere)    TArray<FDebugCategoryData> Categories;
+	UPROPERTY()             TWeakObjectPtr<UDebugOverlay> Widget;
+	UPROPERTY(EditAnywhere) FName Title;
+	UPROPERTY(EditAnywhere) FLinearColor BackgroundColor = FLinearColor(0.f, 0.f, 0.08f, 0.4f);
+	UPROPERTY(EditAnywhere) TArray<FDebugCategoryData> Categories;
 };
 
 /**

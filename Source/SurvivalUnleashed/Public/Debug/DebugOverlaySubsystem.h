@@ -33,7 +33,7 @@ class SURVIVALUNLEASHED_API UDebugOverlaySubsystem : public UTickableWorldSubsys
 	TMap<TTuple<FName, FName, FName>, FDebugValueData*> OverlayFrontend; // Faster lookup for the AttachToOverlay functions
 	TObjectPtr<APlayerController> PlayerController;
 
-	void AttachDefaultValues();
+	void AttachGeneralValues();
 	void SetValue(FDebugValueData& Value);
 	FDebugValueData* FindKey(const FName& OverlayName, const FName& CategoryName, const FName& VariableName);
 	UFUNCTION() inline int32 GetFPS() const { return FPS; }
@@ -47,7 +47,7 @@ protected:
 	virtual TStatId GetStatId() const { RETURN_QUICK_DECLARE_CYCLE_STAT(UDebugOverlaySubsystem, STATGROUP_Tickables); }
 
 public:
-	EDebugOverlayStatus InitializeDebugOverlay(const FString& InOverlay = "");
+	EDebugOverlayStatus InitializeOverlay(const FString& InOverlay = "");
 
 	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateBool GetValue, FOnOverlayResetValue ResetValue = nullptr);
 	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateInt32 GetValue, FOnOverlayResetValue ResetValue = nullptr);
@@ -57,12 +57,12 @@ public:
 	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateVector4 GetValue, FOnOverlayResetValue ResetValue = nullptr);
 	void AttachToOverlay(const FName& OverlayName, const FName& CategoryName, const FName& VariableName, FOnOverlayUpdateString GetValue, FOnOverlayResetValue ResetValue = nullptr);
 
-	void TriggerOverlay();
 	void DisableOverlay();
-	void TakeOutTheTrash();
+	void TriggerOverlay();
 	void SwitchOverlay(int32 NewIdx);
 	void GetOverlayNames(TArray<FString>& OverlayNames);
 	void SetOverlayZOrder(int32 ZOrder);
+	void TakeOutTheTrash();
 
 	inline int32 GetOverlayIndex() const { return CurrentOverlayIdx; }
 };

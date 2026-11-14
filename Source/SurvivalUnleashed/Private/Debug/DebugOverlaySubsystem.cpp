@@ -44,8 +44,8 @@ void UDebugOverlaySubsystem::OnWorldBeginPlay(UWorld& InWorld)
 	// We pre-fill the frontend for value linkage in AttachToOverlay()
 	for (FDebugOverlayData& Overlay : Database->Overlays)
 		for (FDebugCategoryData& Category : Overlay.Categories)
-			for (auto Value = Category.DebugValues.begin(); Value != Category.DebugValues.end(); ++Value)
-				OverlayFrontend.Add({Overlay.Title, Category.Title, Value->Key}, &Value->Value);
+			for (FDebugValueData& Value : Category.Values)
+				OverlayFrontend.Add({Overlay.Title, Category.Title, Value.Name}, &Value);
 #endif
 }
 
@@ -66,15 +66,15 @@ void UDebugOverlaySubsystem::Tick(float DeltaTime)
 	 * should only update the values from the current overlay on display.
 	 */
 	for (FDebugCategoryData& Category : CurrentOverlay->Categories)
-		for (auto Value = Category.DebugValues.begin(); Value != Category.DebugValues.end(); ++Value)
+		for (FDebugValueData& Value : Category.Values)
 		{
-			if (!Value->Value.bUpdatePerSecond)
+			if (!Value.bUpdatePerSecond)
 			{
-				SetValue(Value->Value);
+				SetValue(Value);
 			}
 			else if (SecondElapsed)
 			{
-				SetValue(Value->Value);
+				SetValue(Value);
 			}
 		}
 #endif
@@ -87,7 +87,7 @@ void UDebugOverlaySubsystem::Deinitialize()
 	TakeOutTheTrash();
 }
 
-EDebugOverlayStatus UDebugOverlaySubsystem::InitializeDebugOverlay(const FString& InOverlay)
+EDebugOverlayStatus UDebugOverlaySubsystem::InitializeOverlay(const FString& InOverlay)
 {
 #if UE_WITH_CHEAT_MANAGER
 	if (!IsValid(Database) || OverlayFrontend.IsEmpty() || !IsValid(PlayerController) ||
@@ -99,7 +99,7 @@ EDebugOverlayStatus UDebugOverlaySubsystem::InitializeDebugOverlay(const FString
 
 	bool bMatchFound = false;
 
-	if (!bInitialized) AttachDefaultValues();
+	if (!bInitialized) AttachGeneralValues();
 
     /**
 	 * Overlay initialization per world; runs only once when reqested.
@@ -143,15 +143,15 @@ EDebugOverlayStatus UDebugOverlaySubsystem::InitializeDebugOverlay(const FString
 			Category.Widget->SetTitle(Category.Title);
 			Category.Widget->SetBackgroundColor(Category.BackgroundColor);
 
-			for (auto It = Category.DebugValues.begin(); It != Category.DebugValues.end(); ++It)
+			for (FDebugValueData& Value : Category.Values)
 			{
-				It->Value.Widget = CreateWidget<UDebugValue>(PlayerController, Database->ValueClass);
-				if (!It->Value.Widget.IsValid()) continue;
+				Value.Widget = CreateWidget<UDebugValue>(PlayerController, Database->ValueClass);
+				if (!Value.Widget.IsValid()) continue;
 
-				It->Value.Widget->SetName(It->Key);
-				It->Value.Widget->SetBackgroundColor(It->Value.BackgroundColor);
+				Value.Widget->SetName(Value.Name);
+				Value.Widget->SetBackgroundColor(Value.BackgroundColor);
 
-				Category.Widget->AddToContainer(It->Value.Widget);
+				Category.Widget->AddToContainer(Value.Widget);
 			}
 			Overlay.Widget->AddToContainer(Category.Widget);
 		}
@@ -171,15 +171,15 @@ EDebugOverlayStatus UDebugOverlaySubsystem::InitializeDebugOverlay(const FString
 }
 
 
-void UDebugOverlaySubsystem::AttachDefaultValues()
+void UDebugOverlaySubsystem::AttachGeneralValues()
 {
+	// Any other value attachents or bindings that don't belong anywhere else can be placed here.
 	for (TActorIterator<ASpawnDirector> It(GetWorld()); It; ++It)
 	{
 		It->OnAnyEnemyHit.AddDynamic(this, &UDebugOverlaySubsystem::HandleDamagePerSecond);
 		break;
 	}
 
-	// Any other values that don't belong anywhere else can be placed here.
 	AttachToOverlay("General", "Performance and Balance", "FPS", 
 		FOnOverlayUpdateInt32::CreateUFunction(this, "GetFPS"));
 }
@@ -220,7 +220,7 @@ void UDebugOverlaySubsystem::TriggerOverlay()
 {
 
 	if (bTick) DisableOverlay();
-	else InitializeDebugOverlay();
+	else InitializeOverlay();
 }
 
 void UDebugOverlaySubsystem::DisableOverlay()
@@ -247,13 +247,13 @@ void UDebugOverlaySubsystem::TakeOutTheTrash()
 	{
 		for (FDebugCategoryData& Category : Overlay.Categories)
 		{
-			for (auto It = Category.DebugValues.begin(); It != Category.DebugValues.end(); ++It)
+			for (FDebugValueData& Value : Category.Values)
 			{
-				if (It->Value.Widget.IsValid())
+				if (Value.Widget.IsValid())
 				{
-					It->Value.Widget->RemoveFromParent();
-					It->Value.Widget->MarkAsGarbage();
-					It->Value.Widget = nullptr;
+					Value.Widget->RemoveFromParent();
+					Value.Widget->MarkAsGarbage();
+					Value.Widget = nullptr;
 				}
 			}
 			if (Category.Widget.IsValid())

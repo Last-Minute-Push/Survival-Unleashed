@@ -106,7 +106,7 @@ void USUCheatManager::DebugOverlay(const FString& Type)
 #if UE_WITH_CHEAT_MANAGER
 	if (UDebugOverlaySubsystem* Ovl = FindDebugOverlaySubsystem())
 	{
-		EDebugOverlayStatus R = Ovl->InitializeDebugOverlay(Type);
+		EDebugOverlayStatus R = Ovl->InitializeOverlay(Type);
 
 		switch (R)
 		{
