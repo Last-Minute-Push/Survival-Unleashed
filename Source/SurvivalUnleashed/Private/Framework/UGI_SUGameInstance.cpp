@@ -601,11 +601,11 @@ void UUGI_SUGameInstance::SetSoundVolume(float Volume)
 
 // - Music -
 
-uint64 UUGI_SUGameInstance::PlayMusic(USoundBase* Music, const float NewFadeIn, const float OldFadeOut, USoundConcurrency* ConcurrencySettings)
+uint64 UUGI_SUGameInstance::PlayMusic(USoundBase* Music, const float NewFadeIn, const float OldFadeOut, const float PitchMultiplier, USoundConcurrency* ConcurrencySettings)
 {
 	StopMusic(OldFadeOut); // the old song fades and stops itself; it no longer affects the new one
 
-	CurrentMusic = CreateAudio(Music, GetMusicVolume(), 1.f, ConcurrencySettings, /*bPersistAcrossLevels*/ true);
+	CurrentMusic = CreateAudio(Music, GetMusicVolume(), PitchMultiplier, ConcurrencySettings, /*bPersistAcrossLevels*/ true);
 	if (!CurrentMusic)
 	{
 		return UINT64_MAX;
@@ -634,7 +634,7 @@ void UUGI_SUGameInstance::SetMusicPause(const bool bPaused)
 	else UE_LOG(LogGameInstance, Warning, TEXT("There is no music present that can be paused now!"));
 }
 
-uint64 UUGI_SUGameInstance::StackMusic(USoundBase* Music, const float FadeIn, USoundConcurrency* ConcurrencySettings)
+uint64 UUGI_SUGameInstance::StackMusic(USoundBase* Music, const float FadeIn, const float PitchMultiplier, USoundConcurrency* ConcurrencySettings)
 {
 	if (IsValid(CurrentMusic))
 	{
@@ -645,7 +645,7 @@ uint64 UUGI_SUGameInstance::StackMusic(USoundBase* Music, const float FadeIn, US
 	}
 	else UE_LOG(LogGameInstance, Warning, TEXT("No music to stack; playing the new song only."));
 
-	return PlayMusic(Music, FadeIn, 0.f, ConcurrencySettings);
+	return PlayMusic(Music, FadeIn, 0.f, PitchMultiplier, ConcurrencySettings);
 }
 
 void UUGI_SUGameInstance::DestackMusic(const float FadeOut, const bool bSkipResume)
@@ -715,19 +715,19 @@ void UUGI_SUGameInstance::StopMusic(const float FadeOut)
 
 // - Sounds -
 
-void UUGI_SUGameInstance::PlaySoundOneShot(USoundBase* Sound, USoundConcurrency* ConcurrencySettings)
+void UUGI_SUGameInstance::PlaySoundOneShot(USoundBase* Sound, const float PitchMultiplier, USoundConcurrency* ConcurrencySettings)
 {
 	if (Sound)
 	{
-		UGameplayStatics::PlaySound2D(this, Sound, GetSoundVolume(), 1.f, 0.f, ConcurrencySettings);
+		UGameplayStatics::PlaySound2D(this, Sound, GetSoundVolume(), PitchMultiplier, 0.f, ConcurrencySettings);
 	}
 }
 
-uint64 UUGI_SUGameInstance::PlaySound(USoundBase* Sound, USoundConcurrency* ConcurrencySettings)
+uint64 UUGI_SUGameInstance::PlaySound(USoundBase* Sound, const float PitchMultiplier, USoundConcurrency* ConcurrencySettings)
 {
 	PruneFinished(ActiveSounds);
 
-	UAudioComponent* Audio = CreateAudio(Sound, GetSoundVolume(), 1.f, ConcurrencySettings, /*bPersistAcrossLevels*/ false);
+	UAudioComponent* Audio = CreateAudio(Sound, GetSoundVolume(), PitchMultiplier, ConcurrencySettings, /*bPersistAcrossLevels*/ false);
 	if (!Audio)
 	{
 		return UINT64_MAX;
@@ -738,10 +738,10 @@ uint64 UUGI_SUGameInstance::PlaySound(USoundBase* Sound, USoundConcurrency* Conc
 	return Audio->GetAudioComponentID();
 }
 
-uint64 UUGI_SUGameInstance::PlaySoundInterrupt(USoundBase* Sound, USoundConcurrency* ConcurrencySettings)
+uint64 UUGI_SUGameInstance::PlaySoundInterrupt(USoundBase* Sound, const float PitchMultiplier, USoundConcurrency* ConcurrencySettings)
 {
 	StopSound(Sound);
-	return PlaySound(Sound, ConcurrencySettings);
+	return PlaySound(Sound, PitchMultiplier, ConcurrencySettings);
 }
 
 void UUGI_SUGameInstance::SetSoundPause(USoundBase const* Sound, const bool bPaused)
