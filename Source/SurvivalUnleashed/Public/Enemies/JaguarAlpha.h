@@ -90,6 +90,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Jaguar|Pounce", meta = (ClampMin = "0.01"))
 	float PounceRecoverTime = 0.3f;
 
+	// The leap clears anything shorter than this (logs, boulders). Anything taller (pillars, trees, the jungle wall)
+	// stops it: it lands in front instead. Set just above the tallest obstacle it should jump.
+	UPROPERTY(EditDefaultsOnly, Category = "Jaguar|Pounce", meta = (ClampMin = "0"))
+	float LeapClearHeight = 90.f;
+
 	// ---- Call the Pack
 
 	UPROPERTY(EditDefaultsOnly, Category = "Jaguar|Pack")
@@ -152,6 +157,9 @@ private:
 
 	// The landing point nearest Target, along the line back to Start, with room for the capsule
 	bool FindLandingSpot(const FVector& Start, const FVector& Target, FVector& OutCenter) const;
+
+	// Shortens a leap that would pass through something taller than LeapClearHeight. True if it was shortened.
+	bool ClipLeapToObstacles(const FVector & Start, FVector & InOutTarget) const;
 
 	void SetPounceTelegraph(bool bVisible, float Progress = 0.f);
 	void TurnTowards(const FVector& Point, float DeltaTime);

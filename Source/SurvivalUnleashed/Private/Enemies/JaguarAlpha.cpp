@@ -9,6 +9,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
+#include "Framework/SUCollision.h"
 
 namespace
 {
@@ -206,7 +207,19 @@ bool AJaguarAlpha::TryStartPounce()
 	}
 
 	// Locked now: the ring shows exactly where it will land, and the player has the crouch to get out
-	if (!FindLandingSpot(Start, FVector(Target.X, Target.Y, Start.Z), LeapEnd))
+	FVector LeapTarget(Target.X, Target.Y, Start.Z);
+	ClipLeapToObstacles(Start, LeapTarget);
+
+	// Blocked so close that there's no real leap left (the player is behind cover): wait, and circle the other way
+	if (FVector::Dist2D(Start, LeapTarget) < PounceMinRange * 0.5f)
+	{
+		PounceCooldown = 1.f;
+		OrbitSign = -OrbitSign;
+		ResetFlipTimer();
+		return false;
+	}
+
+	if (!FindLandingSpot(Start, LeapTarget, LeapEnd))
 	{
 		PounceCooldown = 1.f; // nowhere clear to land; look again shortly
 		return false;
@@ -296,6 +309,26 @@ bool AJaguarAlpha::FindLandingSpot(const FVector& Start, const FVector& Target, 
 		}
 	}
 	return false;
+}
+
+bool AJaguarAlpha::ClipLeapToObstacles(const FVector& Start, FVector& InOutTarget) const
+{
+	const float Radius = Capsule->GetScaledCapsuleRadius();
+
+	// Swept at LeapClearHeight above the ground: short obstacles pass under the probe, tall ones stop it
+	const FVector Probe(0.f, 0.f, LeapClearHeight - Capsule->GetScaledCapsuleHalfHeight());
+	FHitResult Hit;
+	if (!GetWorld()->SweepSingleByObjectType(Hit, Start + Probe, InOutTarget + Probe, FQuat::Identity,
+		FCollisionObjectQueryParams(SUCollision::Obstacle), FCollisionShape::MakeSphere(Radius * 0.75f)))
+	{
+		return false;
+	}
+
+	// Land a body-width short of it. FindLandingSpot then makes sure there's room there.
+	const FVector Direction = (InOutTarget - Start).GetSafeNormal2D();
+	const float Clear = FMath::Max(0.f, FVector::Dist2D(Start, Hit.Location) - Radius);
+	InOutTarget = Start + Direction * Clear;
+	return true;
 }
 
 void AJaguarAlpha::SetPounceTelegraph(bool bVisible, float Progress)
