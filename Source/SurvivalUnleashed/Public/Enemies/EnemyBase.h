@@ -35,6 +35,7 @@ class UHordeSubsystem;
 class AEXP_PickUp;
 class UCapsuleComponent;
 class UStaticMeshComponent;
+class AFlowField;
 
 UCLASS(Abstract)
 class SURVIVALUNLEASHED_API AEnemyBase : public AActor, public IPoolable
@@ -151,6 +152,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Steering", meta = (ClampMin = "0.1"))
 	float Mass = 1.f;
 
+	// How long an enemy pushes into an obstacle without getting anywhere before it picks a side to go around
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Steering", meta = (ClampMin = "0"))
+	float StuckTimeBeforeDetour = 0.3f;
+
+	// A detour gives up after this long, and the enemy steers normally again
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Steering", meta = (ClampMin = "0.1"))
+	float MaxDetourTime = 3.f;
+
 	// Status tints: RGB is the color, A is how much it replaces the base color
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Status")
 	FLinearColor BurnTint = FLinearColor(1.f, 0.35f, 0.f, 0.6f);
@@ -180,6 +189,24 @@ private:
 		TWeakObjectPtr<AActor> Causer;
 		TWeakObjectPtr<AController> Instigator;
 	};
+
+	// Going around a long obstacle: heads for a point just past its nearer end, and never switches sides on the way
+	struct FObstacleDetour
+	{
+		bool bActive = false;
+		FVector Point = FVector::ZeroVector;
+		float TimeRemaining = 0.f;
+	};
+	FObstacleDetour Detour;
+	float StuckTime = 0.f;
+
+	void UpdateStuck(const FVector& Desired, const FVector& Moved, const FHitResult& ObstacleHit, float DeltaTime);
+	void StartDetour(const FHitResult& ObstacleHit);
+
+	// The direction to move while detouring. Ends the detour (and returns Desired) once it's no longer needed.
+	FVector GetDetourDirection(const FVector& Desired, float DeltaTime);
+
+	void DrawDebugDetour() const;
 
 	static constexpr float StatusTickInterval = 0.5f;
 	FStatusState Statuses[static_cast<int32>(EEnemyStatus::Count)];
@@ -212,6 +239,9 @@ private:
 
 	UPROPERTY(Transient)
 	UHordeSubsystem* Horde;
+
+	// Found once at BeginPlay. Without one in the level, enemies seek in a straight line as before.
+	TWeakObjectPtr<AFlowField> FlowField;
 
 	// Reused every frame to avoid allocating a new array per enemy per frame
 	mutable TArray<AEnemyBase*> NeighborScratch;
@@ -249,6 +279,7 @@ private:
 	void OnCapsuleEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	// Swept move that slides the leftover distance along whatever it hits (pillars, walls), staying flat
-	void MoveWithSlide(const FVector & Delta);
+	// Swept move that slides the leftover distance along whatever it hits (pillars, walls), staying flat.
+	// If the first thing it hits is an Obstacle, that hit goes in OutObstacleHit.
+	void MoveWithSlide(const FVector& Delta, FHitResult* OutObstacleHit = nullptr);
 };
