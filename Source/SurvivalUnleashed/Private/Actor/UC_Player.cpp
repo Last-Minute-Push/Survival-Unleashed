@@ -184,9 +184,6 @@ void AUC_Player::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	
-
-
 	for (int32 i = 0; i < AttractedActors.Num(); i++) {
 		AActor* Actor = AttractedActors[i].Get();
 		if (Actor) {
@@ -487,7 +484,21 @@ void AUC_Player::HandlePickUpOverlap(UPrimitiveComponent* OverlapComponent, AAct
 
 		if (EXP_PickUp)
 		{
-			
+			if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
+			{
+
+				if (I->GetLibrary()->SFX_EXPPickUp) {
+					I->PlaySound(I->GetLibrary()->SFX_EXPPickUp, 1.f);
+				}
+			}
+			AttractedActors.Add(OtherActor);
+		}
+		else if (Health_PickUp)
+		{
+			AttractedActors.Add(OtherActor);
+		}
+		else if (Magnet_PickUp)
+		{
 			AttractedActors.Add(OtherActor);
 		}
 		/*if (EXP_PickUp || Health_PickUp || Magnet_PickUp) {
