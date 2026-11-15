@@ -4,6 +4,7 @@
 #include "Weapons/BaseSpear.h"
 #include "Weapons/WeaponData.h"
 #include "Components/BoxComponent.h"
+#include "Debug/DebugOverlaySubsystem.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogSpear, Log, All);
 

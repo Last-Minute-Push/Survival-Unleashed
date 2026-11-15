@@ -17,8 +17,6 @@ class SURVIVALUNLEASHED_API ABaseBowToGun : public ABaseWeapon
 
 	void StartAim(); // Begins aiming
 	void StopAim();  // Stops aiming and fires the projectile
-
-	UFUNCTION() inline void ApplyProjectileDamage(AProjectileBase* Projectile, AActor* Target) { ApplyDamage((AActor*)Projectile, Target); }
 	inline void HideProjectile(bool bHide) { DisplayProjectile->AddLocalOffset(FVector(0.f, 0.f, bHide ? ProjectileDisappearingHeight : -ProjectileDisappearingHeight)); }
 
 public:

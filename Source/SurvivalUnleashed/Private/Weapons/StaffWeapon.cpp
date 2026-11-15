@@ -8,6 +8,7 @@
 #include "Actor/UC_Player.h"
 #include "Utility/PlayerStatsComponent.h"
 #include "Framework/ObjectPoolSubsystem.h"
+#include "Debug/DebugOverlaySubsystem.h"
 #include "NiagaraFunctionLibrary.h"
 #include "DrawDebugHelpers.h"
 #include "TimerManager.h"
@@ -155,7 +156,7 @@ void AStaffWeapon::Attack()
 	}
 }
 
-void AStaffWeapon::OnProjectileHit(AProjectileBase* Projectile, AActor* Target)
+void AStaffWeapon::OnProjectileHit(AActor* Projectile, AActor* Target)
 {
 	AEnemyBase* Enemy = Cast<AEnemyBase>(Target);
 	const UStaffData* SD = GetStaffData();
