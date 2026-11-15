@@ -7,7 +7,7 @@
 #include "Framework/Poolable.h"
 #include "EnemyBase.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHit, AEnemyBase*, Enemy, float, Damage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEnemyHit, AEnemyBase*, Enemy, float, Damage, AActor*, DamageCauser);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyDied, AEnemyBase*, Enemy);
 
 // Custom Primitive Data slots used by enemy materials
@@ -34,7 +34,8 @@ class UEnemyData;
 class UHordeSubsystem;
 class AEXP_PickUp;
 class UCapsuleComponent;
-class USkeletalMeshComponent;
+class UStaticMeshComponent;
+class AFlowField;
 
 UCLASS(Abstract)
 class SURVIVALUNLEASHED_API AEnemyBase : public AActor, public IPoolable
@@ -61,8 +62,14 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	float GetCurrentHealth() const { return CurrentHealth; }
 
+	// Damage per contact hit. Subclasses can change it with their state (the Boar's charge uses 0 and rams instead).
+	virtual float GetContactDamage() const;
+
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	bool IsDead() const { return bIsDead; }
+
+	// Whether weapons and horde queries should consider this enemy at all 
+	virtual bool IsTargetable() const { return !bIsDead; }
 
 	// Where drops should appear: near the ground under this enemy, however tall its capsule is
 	FVector GetLootLocation() const;
@@ -100,10 +107,12 @@ protected:
 	TObjectPtr<UCapsuleComponent> Capsule;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	TObjectPtr<USkeletalMeshComponent> Mesh;
+	TObjectPtr<UStaticMeshComponent> Mesh;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy")
 	TObjectPtr<UEnemyData> EnemyData;
+
+	float KnockbackResistance;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Movement", meta = (ClampMin = "0"))
 	float StopDistance = 50.f;
@@ -125,6 +134,10 @@ protected:
 	// For subclasses that need their own neighbor queries (flocking)
 	UHordeSubsystem* GetHorde() const { return Horde; }
 
+	// Death: broadcasts OnDied, drops loot unless told not to, and returns this enemy to the pool.
+	// Protected so subclasses can die on their own terms (the Puffball's self-burst drops no gem).
+	void Die(bool bDropLoot = true);
+
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Steering", meta = (ClampMin = "0"))
 	float SeekWeight = 1.f;
 
@@ -138,6 +151,14 @@ protected:
 	// Push priority: lighter enemies get out of the way of heavier ones
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Steering", meta = (ClampMin = "0.1"))
 	float Mass = 1.f;
+
+	// How long an enemy pushes into an obstacle without getting anywhere before it picks a side to go around
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Steering", meta = (ClampMin = "0"))
+	float StuckTimeBeforeDetour = 0.3f;
+
+	// A detour gives up after this long, and the enemy steers normally again
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Steering", meta = (ClampMin = "0.1"))
+	float MaxDetourTime = 3.f;
 
 	// Status tints: RGB is the color, A is how much it replaces the base color
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Status")
@@ -168,6 +189,24 @@ private:
 		TWeakObjectPtr<AActor> Causer;
 		TWeakObjectPtr<AController> Instigator;
 	};
+
+	// Going around a long obstacle: heads for a point just past its nearer end, and never switches sides on the way
+	struct FObstacleDetour
+	{
+		bool bActive = false;
+		FVector Point = FVector::ZeroVector;
+		float TimeRemaining = 0.f;
+	};
+	FObstacleDetour Detour;
+	float StuckTime = 0.f;
+
+	void UpdateStuck(const FVector& Desired, const FVector& Moved, const FHitResult& ObstacleHit, float DeltaTime);
+	void StartDetour(const FHitResult& ObstacleHit);
+
+	// The direction to move while detouring. Ends the detour (and returns Desired) once it's no longer needed.
+	FVector GetDetourDirection(const FVector& Desired, float DeltaTime);
+
+	void DrawDebugDetour() const;
 
 	static constexpr float StatusTickInterval = 0.5f;
 	FStatusState Statuses[static_cast<int32>(EEnemyStatus::Count)];
@@ -201,6 +240,9 @@ private:
 	UPROPERTY(Transient)
 	UHordeSubsystem* Horde;
 
+	// Found once at BeginPlay. Without one in the level, enemies seek in a straight line as before.
+	TWeakObjectPtr<AFlowField> FlowField;
+
 	// Reused every frame to avoid allocating a new array per enemy per frame
 	mutable TArray<AEnemyBase*> NeighborScratch;
 
@@ -221,9 +263,6 @@ private:
 	// Resets the enemy's state to its initial values
 	void ResetState();
 
-	// Handles the enemy's death logic
-	void Die();
-
 	// Deals contact damage to the player
 	void DealContactDamage();
 
@@ -240,6 +279,7 @@ private:
 	void OnCapsuleEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	// Swept move that slides the leftover distance along whatever it hits (pillars, walls), staying flat
-	void MoveWithSlide(const FVector & Delta);
+	// Swept move that slides the leftover distance along whatever it hits (pillars, walls), staying flat.
+	// If the first thing it hits is an Obstacle, that hit goes in OutObstacleHit.
+	void MoveWithSlide(const FVector& Delta, FHitResult* OutObstacleHit = nullptr);
 };

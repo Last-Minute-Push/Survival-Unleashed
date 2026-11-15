@@ -24,7 +24,7 @@ public:
 	// Active enemies within Radius of Location (2D). May include the caller.
 	void GetNeighbors(const FVector& Location, float Radius, TArray<AEnemyBase*>& OutNeighbors) const;
 
-	// ---- Weapon targeting: only living, active enemies
+	// ---- Weapon targeting: only living, active enemies that say they can be targeted
 
 	// Closest enemy within MaxRange (2D), or nullptr
 	AEnemyBase* FindNearestEnemy(const FVector& Location, float MaxRange) const;

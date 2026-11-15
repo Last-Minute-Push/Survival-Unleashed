@@ -116,6 +116,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Spawning|Recycling", meta = (ClampMin = "1"))
 	int32 MaxRecyclesPerCheck = 20;
 
+	// While a boss is alive, the active enemy target is multiplied by this
+	UPROPERTY(EditAnywhere, Category = "Spawning|Boss", meta = (ClampMin = "0", ClampMax = "1"))
+	float BossFightTargetScale = 0.5f;
+
 private:
 	FTimerHandle SpawnTimer;
 	FTimerHandle RecycleTimer;
@@ -159,10 +163,15 @@ private:
 	static float GetExitDistance(const FVector2D& Origin, const FVector2D& Dir, const FVector2D(&Corners)[4]);
 
 	UFUNCTION()
-	void HandleEnemyHit(AEnemyBase* Enemy, float Damage);
+	void HandleEnemyHit(AEnemyBase* Enemy, float Damage, AActor* DamageCauser);
 
 	UFUNCTION()
 	void HandleEnemyDied(AEnemyBase* Enemy);
 
 	void TryDropHealthPickup(const AEnemyBase* Enemy);
+
+	// Bound to UBossEventSubsystem's native delegates (AddUObject, no UFUNCTION needed)
+	void HandleBossSpawned(const FText & BossName, float MaxHealth);
+	void HandleBossDied();
+	bool bBossFightActive = false;
 };

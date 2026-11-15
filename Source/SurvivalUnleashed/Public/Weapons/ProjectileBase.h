@@ -13,7 +13,7 @@ class AProjectileBase;
 
 // Called once per enemy hit. Single-cast and reassigned on every launch, so a reused
 // projectile never keeps a binding from the weapon that fired it last time.
-DECLARE_DELEGATE_TwoParams(FOnProjectileHit, AProjectileBase* /*Projectile*/, AActor* /*Target*/);
+DECLARE_DELEGATE_TwoParams(FOnProjectileHit, AActor* /*Projectile*/, AActor* /*Target*/);
 
 USTRUCT(BlueprintType)
 struct FProjectileLaunchParams
@@ -70,6 +70,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile", meta = (ClampMin = "0"))
 	int32 PrewarmCount = 50;
+
+	// What this projectile hits
+	virtual bool IsValidTarget(const AActor * Target) const;
 
 private:
 	UFUNCTION()

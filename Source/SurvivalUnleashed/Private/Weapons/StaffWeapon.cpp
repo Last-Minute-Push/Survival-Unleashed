@@ -8,6 +8,7 @@
 #include "Actor/UC_Player.h"
 #include "Utility/PlayerStatsComponent.h"
 #include "Framework/ObjectPoolSubsystem.h"
+#include "Debug/DebugOverlaySubsystem.h"
 #include "NiagaraFunctionLibrary.h"
 #include "DrawDebugHelpers.h"
 #include "TimerManager.h"
@@ -35,16 +36,19 @@ void AStaffWeapon::BeginPlay()
 			AProjectileBase::Prewarm(GetWorld(), SD->ProjectileType);
 		}
 	}
-
-	// The weapon subsystem sets Parent and the upgrade level right after BeginPlay, so the first attack
-	// waits one cooldown and everything reads them at attack time instead of here.
-	ScheduleNextAttack();
 }
 
 void AStaffWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	GetWorldTimerManager().ClearTimer(AttackTimer);
 	Super::EndPlay(EndPlayReason);
+}
+
+void AStaffWeapon::StartWeapon()
+{
+	// The weapon subsystem sets Parent and the upgrade level right after BeginPlay, so the first attack
+    // waits one cooldown and everything reads them at attack time instead of here.
+	ScheduleNextAttack();
 }
 
 void AStaffWeapon::StopWeapon()
@@ -152,7 +156,7 @@ void AStaffWeapon::Attack()
 	}
 }
 
-void AStaffWeapon::OnProjectileHit(AProjectileBase* Projectile, AActor* Target)
+void AStaffWeapon::OnProjectileHit(AActor* Projectile, AActor* Target)
 {
 	AEnemyBase* Enemy = Cast<AEnemyBase>(Target);
 	const UStaffData* SD = GetStaffData();

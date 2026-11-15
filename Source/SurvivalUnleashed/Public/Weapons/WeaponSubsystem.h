@@ -27,11 +27,13 @@ struct FWeaponCreateParams
 	UPROPERTY(EditAnywhere) TWeakObjectPtr<AUC_Player> Player;
 	UPROPERTY(EditAnywhere) EWeaponCategory Type;
 	UPROPERTY(EditAnywhere) int32 DebugUpgrade = -1; // Left at negative one if not debugging a weapon
+	UPROPERTY(EditAnywhere) bool bStartWeapon;
 };
 
 /**
  *
  */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponsUI, EWeaponCategory, Category, int, Level);
 UCLASS()
 class SURVIVALUNLEASHED_API UWeaponSubsystem : public UWorldSubsystem
 {
@@ -43,6 +45,9 @@ class SURVIVALUNLEASHED_API UWeaponSubsystem : public UWorldSubsystem
 	EWeaponUpgradeStatus UpgradeWeapon(FWeaponCreateParams& Params, TMap<EWeaponCategory, UChildActorComponent*>& Inventory, TWeakObjectPtr<UChildActorComponent> WeaponComponent, TArray<TSubclassOf<ABaseWeapon>>& Upgrades);
 
 public:
+
+	UPROPERTY()
+	FOnWeaponsUI OnWeaponsUIUpdate;
 
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 

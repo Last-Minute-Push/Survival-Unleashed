@@ -44,8 +44,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintAssignable)
 	FOnSetOwnedWeapons OnSetOwnedWeapons;
 
-	// Every weapon a level-up can offer. Leave empty until the weapon inventory (514) is hooked up: offers are stats only until then.
-	UPROPERTY(EditDefaultsOnly, Category = "Level Up")
+	// Every weapon a level-up can offer.
+	UPROPERTY(BlueprintReadOnly, Category = "Level Up")
 	TArray<EWeaponCategory> WeaponPool;
 	
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
