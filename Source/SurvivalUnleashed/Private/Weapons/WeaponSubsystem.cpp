@@ -28,6 +28,7 @@ void UWeaponSubsystem::WeaponSubsystemTest(FWeaponCreateParams& Params, TMap<EWe
 	UE_LOG(LogWeaponSubsystem, Warning, TEXT("- START OF WEAPON SUBSYSTEM TEST -"));
 	if (SetWeapon(Params, Inventory) == EWeaponUpgradeStatus::E_Success)
 	{
+
 		UE_LOG(LogWeaponSubsystem, Warning, TEXT("Tree branch has been added."));
 	}
 
@@ -227,6 +228,8 @@ EWeaponUpgradeStatus UWeaponSubsystem::UpgradeWeapon(FWeaponCreateParams& Params
 		Params.DebugUpgrade = (Params.DebugUpgrade == -1) ? W->GetWeaponUpgrade() + 1 : Params.DebugUpgrade;
 
 		Params.Player->OPL.Remove(W, TEXT("StopWeapon"));
+
+		OnWeaponsUIUpdate.Broadcast(W->GetEWeaponCategory(), W->GetWeaponUpgrade());
 	}
 
 	WeaponComponent->DestroyChildActor();
@@ -288,6 +291,7 @@ EWeaponUpgradeStatus UWeaponSubsystem::CreateWeapon(FWeaponCreateParams& Params,
 		WeaponComponent->SetAbsolute(false, true, false);
 	}
 
+	OnWeaponsUIUpdate.Broadcast(Weapon->GetEWeaponCategory(), Weapon->GetWeaponUpgrade());
 	if (Params.bStartWeapon)
 	{
 		Weapon->StartWeapon();

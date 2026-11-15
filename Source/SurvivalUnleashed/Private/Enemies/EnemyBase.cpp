@@ -112,7 +112,7 @@ float AEnemyBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 
 	EnemyFlash();
 	CurrentHealth -= Damage;
-	OnHit.Broadcast(this, Damage);
+	OnHit.Broadcast(this, Damage, DamageCauser);
 
 	if (CurrentHealth <= 0.f)
 	{

@@ -7,7 +7,7 @@
 #include "Framework/Poolable.h"
 #include "EnemyBase.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHit, AEnemyBase*, Enemy, float, Damage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEnemyHit, AEnemyBase*, Enemy, float, Damage, AActor*, DamageCauser);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyDied, AEnemyBase*, Enemy);
 
 // Custom Primitive Data slots used by enemy materials

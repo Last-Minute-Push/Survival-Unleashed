@@ -120,6 +120,7 @@ void AUC_Player::BeginPlay()
 	if (UWeaponSubsystem* SS = GetWorld()->GetSubsystem<UWeaponSubsystem>())
 	{
 		WeaponSubsystem = SS;
+		WeaponSubsystem->OnWeaponsUIUpdate.AddDynamic(PlayerHUD, &UPlayerHUDBase::SetWeaponSlots);
 	}
 	WeaponInventory.Reserve(InventoryMaxSlots);
 	if (!StartingWeapons.IsEmpty())
@@ -163,6 +164,19 @@ void AUC_Player::BeginPlay()
 		GI->PlayerItself = this;
 		GI->LoadKeyBinds();
 	}
+
+	if (UBossEventSubsystem* BS = GetWorld()->GetSubsystem<UBossEventSubsystem>())
+	{
+		BossEventSubsystem = BS;
+	}
+
+	if (BossEventSubsystem)
+	{
+		BossEventSubsystem->OnBossSpawned.AddUObject(PlayerHUD, &UPlayerHUDBase::SpawnBossInfo);
+		BossEventSubsystem->OnBossHealthChanged.AddUObject(PlayerHUD, &UPlayerHUDBase::ChangeBossHealth);
+		BossEventSubsystem->OnBossDied.AddUObject(PlayerHUD, &UPlayerHUDBase::BossDeathInfo);
+	}
+
 }
 
 // Called every frame
