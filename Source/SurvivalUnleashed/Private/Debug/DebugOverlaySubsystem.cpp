@@ -53,7 +53,8 @@ void UDebugOverlaySubsystem::Tick(float DeltaTime)
 {
 #if UE_WITH_CHEAT_MANAGER
 	// FPS is the reciprocal of DeltaTime
-	FPS = FMath::TruncToInt32<float>(1.f / DeltaTime);
+	FPS = FMath::CeilToInt32<float>(1.f / DeltaTime);
+	FTime = (1.f / FPS) * 1000;
 
 	PerSecondTimer += DeltaTime;
 	bool SecondElapsed = PerSecondTimer >= 1.f;
@@ -182,6 +183,9 @@ void UDebugOverlaySubsystem::AttachGeneralValues()
 
 	AttachToOverlay("General", "Performance and Balance", "FPS", 
 		FOnOverlayUpdateInt32::CreateUFunction(this, "GetFPS"));
+
+	AttachToOverlay("General", "Performance and Balance", "Frame Time",
+		FOnOverlayUpdateFloat::CreateUFunction(this, "GetFTime"));
 }
 
 // Repeated function body with different data types; this shortens the length of this file

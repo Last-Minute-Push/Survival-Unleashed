@@ -26,7 +26,7 @@ class SURVIVALUNLEASHED_API UDebugOverlaySubsystem : public UTickableWorldSubsys
 	GENERATED_BODY()
 	
 	bool bPerFrame, bInitialized = false, bTick = false;
-	float PerSecondTimer = 1.f; // 1.f is set to update the per second overlay values on initialization
+	float FTime, PerSecondTimer = 1.f; // 1.f is set to update the per second overlay values on initialization
 	int32 FPS, CurrentOverlayIdx = 0;
 	FDebugOverlayData *CurrentOverlay, *LastUsed;
 	TObjectPtr<UDebugOverlayDatabase> Database; // Raw data from the database
@@ -37,6 +37,7 @@ class SURVIVALUNLEASHED_API UDebugOverlaySubsystem : public UTickableWorldSubsys
 	void SetValue(FDebugValueData& Value);
 	FDebugValueData* FindKey(const FName& OverlayName, const FName& CategoryName, const FName& VariableName);
 	UFUNCTION() inline int32 GetFPS() const { return FPS; }
+	UFUNCTION() inline float GetFTime() const { return FTime; }
 	UFUNCTION() void HandleDamagePerSecond(AEnemyBase* Enemy, float Damage, AActor* DamageCauser);
 
 protected:
