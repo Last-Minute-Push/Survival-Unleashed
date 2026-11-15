@@ -36,8 +36,6 @@ FReply USplashScreen::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEve
 	return  OnKeyDown(InGeometry, InKeyEvent).NativeReply;
 }
 
-
-
 void USplashScreen::SkippedIntro()
 {
 	if (UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance()))
