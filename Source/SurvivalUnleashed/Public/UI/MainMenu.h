@@ -20,9 +20,11 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* PlayButton;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* UpgradeButton;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* SettingsButton;
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* CreditsButton;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* QuitButton;
 	UPROPERTY() TObjectPtr<class UOptionsMenuBase> OptionHud;
 	UPROPERTY() TObjectPtr<class UPermaUpgradeMenu> UpgradeHud;
+	UPROPERTY() TObjectPtr<class UCredits> CreditsHud;
 
 	virtual void NativeOnInitialized() override;
 
@@ -35,11 +37,17 @@ protected:
 	UFUNCTION()
 	void EndMainMenuMusic();
 
+	UFUNCTION()
+	void CreditsButtonPressed();
+
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UUserWidget> OptionHUDClass;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UUserWidget> UpgradeHUDClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> CreditsHUDClass;
 
 	UFUNCTION()
 	void UnHideMainMenuButtons();

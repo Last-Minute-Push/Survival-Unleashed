@@ -24,7 +24,7 @@ class SURVIVALUNLEASHED_API UButtonBase : public UUserWidget
 protected:
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* Info;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly) USoundBase* ButtonHoverSFX;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly) USoundBase* ButtonHoverSFX;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly) USoundBase* ButtonClickedSFX;
 	USoundBase* CurrentButtonClicked;
 
