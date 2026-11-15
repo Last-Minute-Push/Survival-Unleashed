@@ -5,6 +5,9 @@
 #include "Framework/ObjectPoolSubsystem.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/World.h"
+#include "Enemies/SpawnDirector.h"
+#include "Framework/SUCollision.h"
+#include "Kismet/GameplayStatics.h"
 
 float ABossBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent,
 	AController* EventInstigator, AActor* DamageCauser)
@@ -119,4 +122,44 @@ void ABossBase::SpawnBossChest() const
 UBossEventSubsystem* ABossBase::GetBossEvents() const
 {
 	return GetWorld() ? GetWorld()->GetSubsystem<UBossEventSubsystem>() : nullptr;
+}
+
+bool ABossBase::FindGround(const FVector& Point, bool bMustBeClear, FVector& OutGround, float Clearance) const
+{
+	// With bMustBeClear, also hit obstacles so landing on one can be rejected.
+		// Without it (root walls), go straight through them to the floor.
+	FCollisionObjectQueryParams Query(ECC_WorldStatic);
+	if (bMustBeClear)
+	{
+		Query.AddObjectTypesToQuery(SUCollision::Obstacle);
+	}
+
+	FHitResult Hit;
+	if (!GetWorld()->LineTraceSingleByObjectType(Hit, Point + FVector(0.f, 0.f, 1000.f),
+		Point - FVector(0.f, 0.f, 2000.f), Query))
+	{
+		return false;
+	}
+
+	if (bMustBeClear)
+	{
+		const bool bOnObstacle = Hit.GetComponent() && Hit.GetComponent()->GetCollisionObjectType() == SUCollision::Obstacle;
+		if (bOnObstacle || GetWorld()->OverlapAnyTestByObjectType(Hit.ImpactPoint + FVector(0.f, 0.f, Clearance),
+			FQuat::Identity, FCollisionObjectQueryParams(SUCollision::Obstacle), FCollisionShape::MakeSphere(Clearance)))
+		{
+			return false;
+		}
+	}
+
+	OutGround = Hit.ImpactPoint;
+	return true;
+}
+
+ASpawnDirector* ABossBase::GetSpawnDirector()
+{
+	if (!SpawnDirector.IsValid())
+	{
+		SpawnDirector = Cast<ASpawnDirector>(UGameplayStatics::GetActorOfClass(this, ASpawnDirector::StaticClass()));
+	}
+	return SpawnDirector.Get();
 }

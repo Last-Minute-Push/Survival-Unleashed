@@ -7,6 +7,7 @@
 #include "BossBase.generated.h"
 
 class UBossEventSubsystem;
+class ASpawnDirector;
 
 /**
  * Every boss reports the fight to UBossEventSubsystem,
@@ -44,6 +45,12 @@ protected:
 	// Cancel anything in progress (telegraphs, casts)
 	virtual void OnFightEnded() {}
 
+	// Traces down for the floor at Point. With bMustBeClear, fails on top of an obstacle or within Clearance of one.
+	bool FindGround(const FVector & Point, bool bMustBeClear, FVector & OutGround, float Clearance = 60.f) const;
+	
+	// Summons go through the director, so they count as active enemies, scale with time and drop loot
+	ASpawnDirector * GetSpawnDirector();
+
 private:
 	void StartFight();
 	void EndFight(bool bDied);
@@ -56,4 +63,6 @@ private:
 
 	// Updated before anything that can kill us
 	FVector LastLocation = FVector::ZeroVector;
+
+	TWeakObjectPtr<ASpawnDirector> SpawnDirector;
 };

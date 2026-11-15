@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Utility/PlayerStatsComponent.h"
 #include "Utility/UpgradeOffers.h"
+#include "GameFramework/CheatManagerDefines.h"
 #include "UC_Player.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerLost);
@@ -101,6 +102,12 @@ protected:
 	UInputAction* Dashes;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UInputAction* Paused;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UInputAction* OverlayNext;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UInputAction* OverlayPrev;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UInputAction* OverlayTrigger;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	float LifeStealHeal = -2;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient, Category = "Weapons")
@@ -139,6 +146,13 @@ private:
 	float EXPPitch;
 	float EXPPitchTimer;
 
+
+	// - Debug Overlay -
+#if UE_WITH_CHEAT_MANAGER
+	void NextOverlay(const FInputActionValue& Value);
+	void PreviousOverlay(const FInputActionValue& Value);
+	void TriggerOverlay(const FInputActionValue& Value);
+#endif
 
 	UFUNCTION() 
 	void SetOwnedWeapons(TArray<FOwnedWeapon>& OwnedWeapons);

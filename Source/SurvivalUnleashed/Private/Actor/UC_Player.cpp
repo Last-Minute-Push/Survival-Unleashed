@@ -20,11 +20,11 @@
 #include "Actor/Magnet_PickUp.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
+#include "Debug/DebugOverlaySubsystem.h"
 #include "Engine/LocalPlayer.h" 
 #include "UserSettings/EnhancedInputUserSettings.h"
 #include "Components/AudioComponent.h"
 #include "InputMappingContext.h"
-
 
 DEFINE_LOG_CATEGORY_STATIC(LogPlayer, Log, All);
 
@@ -160,6 +160,7 @@ void AUC_Player::BeginPlay()
 	{
 		UE_LOG(LogPlayer, Error, TEXT("No Audio Library Instance has been found!"));
 	}
+
 	UpdatePickUpRadius(GetPlayerStatsComp()->GetPickupRange());
 	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
 	if (GI) {
@@ -178,9 +179,7 @@ void AUC_Player::BeginPlay()
 		BossEventSubsystem->OnBossHealthChanged.AddUObject(PlayerHUD, &UPlayerHUDBase::ChangeBossHealth);
 		BossEventSubsystem->OnBossDied.AddUObject(PlayerHUD, &UPlayerHUDBase::BossDeathInfo);
 	}
-
 }
-
 // Called every frame
 void AUC_Player::Tick(float DeltaTime)
 {
@@ -264,6 +263,13 @@ void AUC_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 		EnhancedInputComponent->BindAction(Moves, ETriggerEvent::Triggered, this, &AUC_Player::Move);
 		EnhancedInputComponent->BindAction(Dashes, ETriggerEvent::Started, this, &AUC_Player::Dash);
 		EnhancedInputComponent->BindAction(Paused, ETriggerEvent::Started, this, &AUC_Player::PlayerPause);
+		
+		// - Debug Overlay -
+#if UE_WITH_CHEAT_MANAGER
+		EnhancedInputComponent->BindAction(OverlayNext, ETriggerEvent::Started, this, &AUC_Player::NextOverlay);
+		EnhancedInputComponent->BindAction(OverlayPrev, ETriggerEvent::Started, this, &AUC_Player::PreviousOverlay);
+		EnhancedInputComponent->BindAction(OverlayTrigger, ETriggerEvent::Started, this, &AUC_Player::TriggerOverlay);
+#endif
 	}
 }
 
@@ -358,6 +364,27 @@ void AUC_Player::Dash(const FInputActionValue& Value)
 	}
 
 }
+
+// - Debug Overlay -
+#if UE_WITH_CHEAT_MANAGER
+void AUC_Player::NextOverlay(const FInputActionValue& Value)
+{
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+		Ovl->SwitchOverlay(Ovl->GetOverlayIndex() + 1);
+}
+
+void AUC_Player::PreviousOverlay(const FInputActionValue& Value)
+{
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+		Ovl->SwitchOverlay(Ovl->GetOverlayIndex() - 1);
+}
+
+void AUC_Player::TriggerOverlay(const FInputActionValue& Value)
+{
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+		Ovl->TriggerOverlay();
+}
+#endif
 
 void AUC_Player::PlayerPause(const FInputActionValue& Value)
 {
