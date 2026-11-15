@@ -17,6 +17,8 @@
 #include "Framework/SUCollision.h"
 #include "Enemies/BossBase.h"
 #include "Enemies/BossEventSubsystem.h"
+#include "Framework/UGM_SUPlayAreaGameMode.h"
+#include "Debug/DebugOverlaySubsystem.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogSpawnDirector, Log, All);
 
@@ -77,6 +79,14 @@ void ASpawnDirector::BeginPlay()
 	if (bStartOnBeginPlay)
 	{
 		StartSpawning();
+	}
+
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+	{
+		Ovl->AttachToOverlay("General", "Performance and Balance", "Active Enemies",
+			FOnOverlayUpdateInt32::CreateUFunction(this, "GetActiveEnemyCount"));
+
+
 	}
 }
 
@@ -253,6 +263,10 @@ void ASpawnDirector::ProcessEvents(float RunTime, const FVector& PlayerLocation)
 
 float ASpawnDirector::GetRunTime() const
 {
+	if (const AUGM_SUPlayAreaGameMode* GameMode = GetWorld()->GetAuthGameMode<AUGM_SUPlayAreaGameMode>())
+	{
+		return GameMode->GetRunTime();
+	}
 	return bRunStarted ? GetWorld()->GetTimeSeconds() - RunStartTime : 0.f;
 }
 
@@ -394,9 +408,9 @@ float ASpawnDirector::GetExitDistance(const FVector2D& Origin, const FVector2D& 
 	return Best;
 }
 
-void ASpawnDirector::HandleEnemyHit(AEnemyBase* Enemy, float Damage)
+void ASpawnDirector::HandleEnemyHit(AEnemyBase* Enemy, float Damage, AActor* DamageCauser)
 {
-	OnAnyEnemyHit.Broadcast(Enemy, Damage);
+	OnAnyEnemyHit.Broadcast(Enemy, Damage, DamageCauser);
 }
 
 void ASpawnDirector::HandleEnemyDied(AEnemyBase* Enemy)
@@ -537,6 +551,10 @@ void ASpawnDirector::SkipTime(float Seconds)
 	}
 
 	RunStartTime -= Seconds;
+	if (AUGM_SUPlayAreaGameMode* GameMode = GetWorld()->GetAuthGameMode<AUGM_SUPlayAreaGameMode>())
+	{
+		GameMode->SkipRunTime(Seconds);
+	}
 	const float Now = GetRunTime();
 
 	// Repeating events jump to their next future time instead of firing once per tick to catch up.

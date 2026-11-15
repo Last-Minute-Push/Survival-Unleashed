@@ -3,22 +3,26 @@
 #define LOCTEXT_NAMESPACE "MyNamespace"
 
 #include "UI/PlayerHUDBase.h"
+#include "UI/WeaponSlotsUI.h"
 #include "Components/ProgressBar.h"
 #include "Components/VerticalBox.h"
+#include "Components/HorizontalBox.h"
 #include "CommonNumericTextBlock.h"
 #include "Components/Image.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
+#include "Framework/UGM_SUPlayAreaGameMode.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPlayerHUD, Log, All);
 
 
-void UPlayerHUDBase::Construct()
+void UPlayerHUDBase::NativeConstruct()
 {
-	Super::Construct();
+	Super::NativeConstruct();
 
 	Timer = 0;
 	UpdateTimer(Timer);
 	RankIndex.Reserve(6);
+	BossHUDHolder->SetVisibility(ESlateVisibility::Hidden);
 
 	isPaused = false;
 }
@@ -27,10 +31,12 @@ void UPlayerHUDBase::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	if (!isPaused) {
-		Timer += InDeltaTime;
-		UpdateTimer(Timer);
+	// The same clock as the Spawn Director: 00:00 through the countdown, frozen while paused
+	if (const AUGM_SUPlayAreaGameMode* GameMode = GetWorld()->GetAuthGameMode<AUGM_SUPlayAreaGameMode>())
+	{
+		Timer = GameMode->GetRunTime();
 	}
+	UpdateTimer(Timer);
 }
 
 void UPlayerHUDBase::UpdateTimer(float TimePassed)
@@ -38,7 +44,7 @@ void UPlayerHUDBase::UpdateTimer(float TimePassed)
 	FTimespan CurrentSeconds = FTimespan::FromSeconds(Timer);
 
 	TimerText->SetText(FText::Format(FText::FromString(TEXT("{0} {1}")), FText::FromString("Timer: "), FText::AsTimespan(CurrentSeconds)));
-	
+
 }
 
 FText UPlayerHUDBase::GetRankName(EPlayerStats Stats)
@@ -48,7 +54,7 @@ FText UPlayerHUDBase::GetRankName(EPlayerStats Stats)
 	{
 	case EPlayerStats::EPS_Attack:
 		Result = FText::FromString("Attack : ");
-		return Result ;
+		return Result;
 		break;
 	case EPlayerStats::EPS_Health:
 		Result = FText::FromString("Health : ");
@@ -135,7 +141,7 @@ void UPlayerHUDBase::SetExperience(float ratio, float Max)
 		EXPBar->SetPercent(0);
 	}
 	else
-	EXPBar->SetPercent(ratio/Max);
+		EXPBar->SetPercent(ratio / Max);
 }
 
 void UPlayerHUDBase::SetLevelAndExp(float Level, float EXP)
@@ -151,8 +157,8 @@ void UPlayerHUDBase::SetPersonalBestTime(FText Time)
 
 void UPlayerHUDBase::PlayHurtFeedback()
 {
-	if(Fading)
-	PlayAnimation(Fading);
+	if (Fading)
+		PlayAnimation(Fading);
 
 	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
 	{
@@ -160,66 +166,92 @@ void UPlayerHUDBase::PlayHurtFeedback()
 
 			I->PlaySound(I->GetLibrary()->SFX_PlayerHurt);
 		}
-		
+
 	}
 }
 
 void UPlayerHUDBase::PlayHealFeedback()
 {
 	if (FadingHeal)
-	PlayAnimation(FadingHeal);
+		PlayAnimation(FadingHeal);
+}
+
+void UPlayerHUDBase::SpawnBossInfo(const FText& BossName, float MaxHealth)
+{
+	BossHUDHolder->SetVisibility(ESlateVisibility::Visible);
+	BossNameText->SetText(BossName);
+	BossHealthBar->SetPercent(1.f);
+	BossHealthCounter->SetText(FText::Format(FText::FromString(TEXT("{0} {1} {2} {3}")), FText::FromString("Health : "),
+		FText::AsNumber(FMath::CeilToInt(MaxHealth)), FText::FromString("/"), FText::AsNumber(FMath::CeilToInt(MaxHealth))));
+}
+
+void UPlayerHUDBase::ChangeBossHealth(float CurrentHealth, float MaxHealth)
+{
+	BossHealthBar->SetPercent(CurrentHealth / MaxHealth);
+	BossHealthCounter->SetText(FText::Format(FText::FromString(TEXT("{0} {1} {2} {3}")), FText::FromString("Health : "),
+		FText::AsNumber(FMath::CeilToInt(CurrentHealth)), FText::FromString("/"), FText::AsNumber(FMath::CeilToInt(MaxHealth))));
+}
+
+void UPlayerHUDBase::BossDeathInfo()
+{
+	BossHUDHolder->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UPlayerHUDBase::SetStatsText(EPlayerStats ChosenStats, int32 Ranks)
 {
-		FText CurrentString = FText::Format(FText::FromString(TEXT("{0} {1}")), GetRankName(ChosenStats), Ranks);
+	FText CurrentString = FText::Format(FText::FromString(TEXT("{0} {1}")), GetRankName(ChosenStats), Ranks);
 
-		if (RankIndex.Num() != 5) {
+	if (RankIndex.Num() != 5) {
 
-			if (RankIndex.IsEmpty()) 
-			{
-				RankIndex.Push(ChosenStats);
-				UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(0));
-				IndexPip->SetText(CurrentString);
-				UE_LOG(LogPlayerHUD, Log, TEXT("First Stat has been Pushed!"))
-			}
-			else {
-				for (int i = 0; i < RankIndex.Num(); i++)
-				{
-					
-						if (RankIndex[i] == ChosenStats)
-						{
-							UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(i));
-							IndexPip->SetText(CurrentString);
-							UE_LOG(LogPlayerHUD, Log, TEXT("Existing Stat has been updated!"))
-								break;
-						}
-						else if (i == RankIndex.Num()-1)
-						{
-							RankIndex.Push(ChosenStats);
-							UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(i + 1));
-							IndexPip->SetText(CurrentString);
-							UE_LOG(LogPlayerHUD, Log, TEXT("New Stat has been pushed!"))
-						}
-						
-				}
-			}
-		}
-		else
+		if (RankIndex.IsEmpty())
 		{
+			RankIndex.Push(ChosenStats);
+			UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(0));
+			IndexPip->SetText(CurrentString);
+			UE_LOG(LogPlayerHUD, Log, TEXT("First Stat has been Pushed!"))
+		}
+		else {
 			for (int i = 0; i < RankIndex.Num(); i++)
 			{
-				if (RankIndex.IsValidIndex(i))
+
+				if (RankIndex[i] == ChosenStats)
 				{
-					if (RankIndex[i] == ChosenStats)
-					{
-						UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(i));
-						IndexPip->SetText(CurrentString);
-					}
+					UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(i));
+					IndexPip->SetText(CurrentString);
+					UE_LOG(LogPlayerHUD, Log, TEXT("Existing Stat has been updated!"))
+						break;
+				}
+				else if (i == RankIndex.Num() - 1)
+				{
+					RankIndex.Push(ChosenStats);
+					UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(i + 1));
+					IndexPip->SetText(CurrentString);
+					UE_LOG(LogPlayerHUD, Log, TEXT("New Stat has been pushed!"))
+				}
+
+			}
+		}
+	}
+	else
+	{
+		for (int i = 0; i < RankIndex.Num(); i++)
+		{
+			if (RankIndex.IsValidIndex(i))
+			{
+				if (RankIndex[i] == ChosenStats)
+				{
+					UTextBlock* IndexPip = Cast<UTextBlock>(StatsBox->GetChildAt(i));
+					IndexPip->SetText(CurrentString);
 				}
 			}
 		}
-			
+	}
+
+}
+
+void UPlayerHUDBase::SetWeaponSlots(EWeaponCategory category, int level)
+{
+	WeaponSlots->SetWeaponSlot(category, level);
 }
 
 FText UPlayerHUDBase::GetCurrentTimer()

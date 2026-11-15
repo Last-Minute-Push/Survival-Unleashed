@@ -337,7 +337,7 @@ void APitcherPlant::SpitAcid(const APawn* Player)
 		FOnProjectileHit::CreateUObject(this, &APitcherPlant::HandleAcidHit));
 }
 
-void APitcherPlant::HandleAcidHit(AProjectileBase* Projectile, AActor* Target)
+void APitcherPlant::HandleAcidHit(AActor* Projectile, AActor* Target)
 {
 	// Same path as contact damage, so Defense, Evasion and dash invincibility all apply
 	UGameplayStatics::ApplyDamage(Target, AcidDamage, nullptr, this, nullptr);

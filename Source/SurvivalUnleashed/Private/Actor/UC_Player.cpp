@@ -20,10 +20,10 @@
 #include "Actor/Magnet_PickUp.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
+#include "Debug/DebugOverlaySubsystem.h"
 #include "Engine/LocalPlayer.h" 
 #include "UserSettings/EnhancedInputUserSettings.h"
 #include "InputMappingContext.h"
-
 
 DEFINE_LOG_CATEGORY_STATIC(LogPlayer, Log, All);
 
@@ -63,6 +63,7 @@ AUC_Player::AUC_Player()
 	PickUpRadius->SetCollisionProfileName(FName("PickupRadius"));
 	PickUpRadius->SetSphereRadius(PlayerStatsComponent->GetPickupRange());
 	PickUpRadius->OnComponentBeginOverlap.AddDynamic(this, &AUC_Player::HandlePickUpOverlap);
+	
 }
 
 // Called when the game starts or when spawned
@@ -117,6 +118,7 @@ void AUC_Player::BeginPlay()
 	if (UWeaponSubsystem* SS = GetWorld()->GetSubsystem<UWeaponSubsystem>())
 	{
 		WeaponSubsystem = SS;
+		WeaponSubsystem->OnWeaponsUIUpdate.AddDynamic(PlayerHUD, &UPlayerHUDBase::SetWeaponSlots);
 	}
 	WeaponInventory.Reserve(InventoryMaxSlots);
 	if (!StartingWeapons.IsEmpty())
@@ -124,6 +126,7 @@ void AUC_Player::BeginPlay()
 		FWeaponCreateParams Params;
 		Params.Attachment = GetCapsuleComponent();
 		Params.Player = this;
+		Params.bStartWeapon = false;
 
 		for (auto It = StartingWeapons.begin(); It != StartingWeapons.end(); ++It)
 		{
@@ -153,14 +156,26 @@ void AUC_Player::BeginPlay()
 	{
 		UE_LOG(LogPlayer, Error, TEXT("No Audio Library Instance has been found!"));
 	}
+
 	UpdatePickUpRadius(GetPlayerStatsComp()->GetPickupRange());
 	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
 	if (GI) {
 		GI->PlayerItself = this;
 		GI->LoadKeyBinds();
 	}
-}
 
+	if (UBossEventSubsystem* BS = GetWorld()->GetSubsystem<UBossEventSubsystem>())
+	{
+		BossEventSubsystem = BS;
+	}
+
+	if (BossEventSubsystem)
+	{
+		BossEventSubsystem->OnBossSpawned.AddUObject(PlayerHUD, &UPlayerHUDBase::SpawnBossInfo);
+		BossEventSubsystem->OnBossHealthChanged.AddUObject(PlayerHUD, &UPlayerHUDBase::ChangeBossHealth);
+		BossEventSubsystem->OnBossDied.AddUObject(PlayerHUD, &UPlayerHUDBase::BossDeathInfo);
+	}
+}
 // Called every frame
 void AUC_Player::Tick(float DeltaTime)
 {
@@ -245,6 +260,13 @@ void AUC_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 		EnhancedInputComponent->BindAction(Moves, ETriggerEvent::Triggered, this, &AUC_Player::Move);
 		EnhancedInputComponent->BindAction(Dashes, ETriggerEvent::Started, this, &AUC_Player::Dash);
 		EnhancedInputComponent->BindAction(Paused, ETriggerEvent::Started, this, &AUC_Player::PlayerPause);
+		
+		// - Debug Overlay -
+#if UE_WITH_CHEAT_MANAGER
+		EnhancedInputComponent->BindAction(OverlayNext, ETriggerEvent::Started, this, &AUC_Player::NextOverlay);
+		EnhancedInputComponent->BindAction(OverlayPrev, ETriggerEvent::Started, this, &AUC_Player::PreviousOverlay);
+		EnhancedInputComponent->BindAction(OverlayTrigger, ETriggerEvent::Started, this, &AUC_Player::TriggerOverlay);
+#endif
 	}
 }
 
@@ -257,7 +279,7 @@ void AUC_Player::SetOwnedWeapons(TArray<FOwnedWeapon>& OwnedWeapons)
 		{
 			FOwnedWeapon Owned;
 			Owned.Data = It->Key;
-			Owned.Level = W->GetWeaponUpgrade() + 1;
+			Owned.Level = W->GetWeaponUpgrade();
 			Owned.MaxLevel = WeaponSubsystem->GetCategoryUpgradeSize(It->Key);
 			OwnedWeapons.Add(Owned);
 		}
@@ -300,10 +322,18 @@ UPlayerStatsComponent* AUC_Player::GetPlayerStatsComp()
 	return PlayerStatsComponent;
 }
 
+void AUC_Player::StartWeapons()
+{
+	for (auto It = WeaponInventory.begin(); It != WeaponInventory.end(); ++It)
+		if (ABaseWeapon* W = Cast<ABaseWeapon>(It->Value->GetChildActor()))
+			W->StartWeapon();
+}
+
 void AUC_Player::SetWeapon(EWeaponCategory Type)
 {
 	FWeaponCreateParams P;
 	P.Attachment = GetCapsuleComponent();
+	P.bStartWeapon = true;
 	P.Player = this;
 	P.Type = Type;
 
@@ -331,6 +361,27 @@ void AUC_Player::Dash(const FInputActionValue& Value)
 	}
 
 }
+
+// - Debug Overlay -
+#if UE_WITH_CHEAT_MANAGER
+void AUC_Player::NextOverlay(const FInputActionValue& Value)
+{
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+		Ovl->SwitchOverlay(Ovl->GetOverlayIndex() + 1);
+}
+
+void AUC_Player::PreviousOverlay(const FInputActionValue& Value)
+{
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+		Ovl->SwitchOverlay(Ovl->GetOverlayIndex() - 1);
+}
+
+void AUC_Player::TriggerOverlay(const FInputActionValue& Value)
+{
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+		Ovl->TriggerOverlay();
+}
+#endif
 
 void AUC_Player::PlayerPause(const FInputActionValue& Value)
 {

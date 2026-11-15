@@ -20,6 +20,10 @@ void ULevelUpScreen::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
+	for (EWeaponCategory C : TEnumRange<EWeaponCategory>())
+		if (C != EWeaponCategory::EBP_OfferEnd)
+			WeaponPool.Add(C);
+
 	Cards = { Card1, Card2, Card3, Card4 };
 	for (int32 i = 0; i < Cards.Num(); ++i)
 	{

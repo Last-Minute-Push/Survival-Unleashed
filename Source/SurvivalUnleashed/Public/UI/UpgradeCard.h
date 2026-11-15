@@ -55,8 +55,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) TObjectPtr<UButton> PickButton;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) TObjectPtr<UTextBlock> NameText;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) TObjectPtr<UTextBlock> LevelText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UWidgetSwitcher* WeaponIconSwitcher;
+
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> DescriptionText;
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional)) TObjectPtr<UImage> IconImage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly) USoundBase* ButtonHoverSFX;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly) USoundBase* ButtonClickedSFX;
@@ -67,6 +69,7 @@ private:
 
 	UFUNCTION() void HandleHoverSFX();
 	UFUNCTION() void SetButtonClickSFX(USoundBase* SFX);
+	UFUNCTION() void GetWeaponImageIndex(EWeaponCategory Category);
 
 	UPROPERTY()
 	FUpgradeOffer Offer;

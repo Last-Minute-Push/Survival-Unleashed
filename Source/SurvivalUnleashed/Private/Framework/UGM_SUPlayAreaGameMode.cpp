@@ -25,7 +25,7 @@ void AUGM_SUPlayAreaGameMode::BeginPlay() {
 		{
 			CurrentPlayer = Player;
 			CurrentPlayer->OPL.AddDynamic(this, &AUGM_SUPlayAreaGameMode::RemovePlayer);
-
+			OnRunStarted.AddUFunction(CurrentPlayer, FName("StartWeapons"));
 		}
 	}
 
