@@ -5,6 +5,7 @@
 #include "UI/ButtonBase.h"
 #include "UI/OptionsMenuBase.h"
 #include "UI/PermaUpgradeMenu.h"
+#include "UI/Credits.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 #include"../SurvivalUnleashed.h"
 
@@ -30,6 +31,7 @@ void UMainMenu::NativeOnInitialized()
 			UpgradeButton->CodeButtonClick.AddDynamic(this, &UMainMenu::UpgradeButtonPressed);
 			SettingsButton->CodeButtonClick.AddDynamic(this, &UMainMenu::SettingsButtonPressed);
 			QuitButton->CodeButtonClick.AddDynamic(GI, &UUGI_SUGameInstance::QuitTheGame);
+			CreditsButton->CodeButtonClick.AddDynamic(this, &UMainMenu::CreditsButtonPressed);
 		}
 		else UE_LOG(LogMainMenu, Error, TEXT("PlayButton and/or QuitButton not bound to the widget!"));
 	}
@@ -90,6 +92,24 @@ void UMainMenu::EndMainMenuMusic()
 	{
 		UE_LOG(LogMainMenu, Error, TEXT("No Audio Library Instance has been found!"))
 	}
+}
+
+void UMainMenu::CreditsButtonPressed()
+{
+	if (!CreditsHud)
+	{
+		CreditsHud = CreateWidget<UCredits>(GetOwningPlayer(), CreditsHUDClass);
+		if (!CreditsHud)
+		{
+			UE_LOG(LogMainMenu, Error, TEXT("Could not create the Upgrade menu; is UpgradeHUDClass set?"));
+			return;
+		}
+		CreditsHud->SetIsFocusable(true);
+		CreditsHud->OnCreditsClose.AddDynamic(this, &UMainMenu::UnHideMainMenuButtons);
+	}
+
+	SetVisibility(ESlateVisibility::Collapsed); // hide the main menu
+	CreditsHud->AddToViewport();
 }
 
 void UMainMenu::UnHideMainMenuButtons()
