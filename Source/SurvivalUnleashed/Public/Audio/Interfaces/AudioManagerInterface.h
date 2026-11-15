@@ -36,19 +36,19 @@ public:
 
 
 	// Music
-	UFUNCTION() virtual uint64 PlayMusic(USoundBase* Music, const float NewFadeIn = 0, const float OldFadeOut = 0, USoundConcurrency* ConcurrencySettings = nullptr) = 0;
+	UFUNCTION() virtual uint64 PlayMusic(USoundBase* Music, const float NewFadeIn = 0, const float OldFadeOut = 0, const float PitchMultiplier = 1, USoundConcurrency* ConcurrencySettings = nullptr) = 0;
 	UFUNCTION() virtual void SetMusicPause(const bool bPaused) = 0;
-	UFUNCTION() virtual uint64 StackMusic(USoundBase* Music, const float FadeIn = 0, USoundConcurrency* ConcurrencySettings = nullptr) = 0;
+	UFUNCTION() virtual uint64 StackMusic(USoundBase* Music, const float FadeIn = 0, const float PitchMultiplier = 1, USoundConcurrency* ConcurrencySettings = nullptr) = 0;
 	UFUNCTION() virtual void DestackMusic(const float FadeOut = 0.f, const bool bSkipResume = false) = 0;
 	UFUNCTION() virtual void ResetStack() = 0;
 	UFUNCTION() virtual void StopMusic(const float FadeOut = 0) = 0;
 
 	// Sounds
 	// Cheapest option: returns no ID and can't be paused or stopped. Use for hits, pickups, UI clicks.
-	UFUNCTION() virtual void PlaySoundOneShot(USoundBase * Sound, USoundConcurrency * ConcurrencySettings = nullptr) = 0;
+	UFUNCTION() virtual void PlaySoundOneShot(USoundBase * Sound, const float PitchMultiplier = 1, USoundConcurrency* ConcurrencySettings = nullptr) = 0;
 
-	UFUNCTION() virtual uint64 PlaySound(USoundBase* Sound, USoundConcurrency* ConcurrencySettings = nullptr) = 0;
-	UFUNCTION() virtual uint64 PlaySoundInterrupt(USoundBase* Sound, USoundConcurrency* ConcurrencySettings = nullptr) = 0;
+	UFUNCTION() virtual uint64 PlaySound(USoundBase* Sound, const float PitchMultiplier = 1, USoundConcurrency* ConcurrencySettings = nullptr) = 0;
+	UFUNCTION() virtual uint64 PlaySoundInterrupt(USoundBase* Sound, const float PitchMultiplier = 1, USoundConcurrency* ConcurrencySettings = nullptr) = 0;
 	UFUNCTION() virtual void SetSoundPause(USoundBase const* Sound, const bool bPaused) = 0;
 	UFUNCTION() virtual void SetOneSoundPause(const uint64 AudioComponentID, const bool bPaused) = 0;
 	UFUNCTION() virtual void SetAllSoundPause(const bool bPaused) = 0;
