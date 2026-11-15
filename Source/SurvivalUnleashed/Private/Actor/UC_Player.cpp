@@ -71,6 +71,8 @@ AUC_Player::AUC_Player()
 void AUC_Player::BeginPlay()
 {
 	Super::BeginPlay();
+	EXPPitch = 0.8;
+	EXPPitchTimer = 0;
 	APC = Cast<APlayerController>(GetController());
 	APCP = Cast<APlayerController>(GetController());
 	if (IsValid(APC)) {
@@ -183,6 +185,8 @@ void AUC_Player::BeginPlay()
 void AUC_Player::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	EXPPitchTimer += DeltaTime;
 
 	for (int32 i = 0; i < AttractedActors.Num(); i++) {
 		AActor* Actor = AttractedActors[i].Get();
@@ -482,31 +486,13 @@ void AUC_Player::HandlePickUpOverlap(UPrimitiveComponent* OverlapComponent, AAct
 		AHealth_PickUp* Health_PickUp = Cast<AHealth_PickUp>(OtherActor);
 		AMagnet_PickUp* Magnet_PickUp = Cast<AMagnet_PickUp>(OtherActor);
 
-		if (EXP_PickUp)
-		{
-			if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
-			{
-
-				if (I->GetLibrary()->SFX_EXPPickUp) {
-					I->PlaySound(I->GetLibrary()->SFX_EXPPickUp, 1.f);
-				}
-			}
-			AttractedActors.Add(OtherActor);
-		}
-		else if (Health_PickUp)
-		{
-			AttractedActors.Add(OtherActor);
-		}
-		else if (Magnet_PickUp)
-		{
-			AttractedActors.Add(OtherActor);
-		}
-		/*if (EXP_PickUp || Health_PickUp || Magnet_PickUp) {
+		
+		if (EXP_PickUp || Health_PickUp || Magnet_PickUp) {
 			AttractedActors.Add(OtherActor);
 		}
 		else {
 			return;
-		}*/
+		}
 	}
 }
 
@@ -515,7 +501,19 @@ void AUC_Player::PlayEXPSound()
 	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
 	{
 		if (I->GetLibrary()->SFX_EXPPickUp) {
-			I->PlaySound(I->GetLibrary()->SFX_EXPPickUp);
+
+			if (EXPPitchTimer >= 3)
+			{
+				EXPPitchTimer = 0;
+				EXPPitch = 0.8;
+			}
+			else
+			{
+				EXPPitchTimer = 0;
+			}
+
+			EXPPitch = EXPPitch + 0.2f;
+			I->PlaySound(I->GetLibrary()->SFX_EXPPickUp, EXPPitch);
 		}
 
 	}

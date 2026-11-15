@@ -43,7 +43,8 @@ class SURVIVALUNLEASHED_API UWeaponSubsystem : public UWorldSubsystem
 
 	EWeaponUpgradeStatus CreateWeapon(FWeaponCreateParams& Params, TMap<EWeaponCategory, UChildActorComponent*>& Inventory, TArray<TSubclassOf<ABaseWeapon>>& Upgrades);
 	EWeaponUpgradeStatus UpgradeWeapon(FWeaponCreateParams& Params, TMap<EWeaponCategory, UChildActorComponent*>& Inventory, TWeakObjectPtr<UChildActorComponent> WeaponComponent, TArray<TSubclassOf<ABaseWeapon>>& Upgrades);
-
+	void PlayWeaponPickUpSFX();
+	void PlayUpgradeSFX();
 public:
 
 	UPROPERTY()

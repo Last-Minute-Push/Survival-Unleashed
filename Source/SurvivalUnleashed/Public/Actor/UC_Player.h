@@ -136,7 +136,8 @@ private:
 	bool CanDash = true;
 	bool Magnet = false;
 	float MagnetTimer = 0;
-	float EXPPitch = 1.f;
+	float EXPPitch;
+	float EXPPitchTimer;
 
 
 	UFUNCTION() 
