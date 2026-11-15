@@ -15,6 +15,11 @@ DEFINE_LOG_CATEGORY_STATIC(LogSplashScreen, Log, All);
 void USplashScreen::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
+
+	if (UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance()))
+	{
+		GI->LoadOrCreateSave();
+	}
 	this->bIsFocusable = true;
 	
 	this->OnSplashFinish.BindDynamic(this, &USplashScreen::SkippedIntro);
@@ -39,5 +44,5 @@ void USplashScreen::SkippedIntro()
 	{
 		GI->QuitToMenu();
 	}
-	UE_LOG(LogSplashScreen, Error, TEXT("SkippedIntro Worked and is ready for implimentation!!!"));
+
 }

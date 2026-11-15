@@ -21,7 +21,7 @@ UUGI_SUGameInstance::UUGI_SUGameInstance() : AudioLibraryClass(UAudioLibrary::St
 void UUGI_SUGameInstance::Init()
 {
 	Super::Init();
-	LoadOrCreateSave();
+	//LoadOrCreateSave();
 }
 
 

@@ -66,9 +66,10 @@ protected:
 	UPROPERTY() TObjectPtr<class USUSaveGame> SaveData;
 	UPROPERTY() FRunResults LastRunResults;
 
-	void LoadOrCreateSave();
+	
 	
 public:
+	void LoadOrCreateSave();
 
 	UUGI_SUGameInstance();
 
