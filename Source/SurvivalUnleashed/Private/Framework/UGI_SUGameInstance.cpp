@@ -9,6 +9,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "UserSettings/EnhancedInputUserSettings.h"
 #include "Actor/UC_Player.h"
+#include "Actor/EXP_PickUp.h"
 
 #ifndef UINT64_MAX
 #define UINT64_MAX 0xffffffffffffffffui64
@@ -106,6 +107,61 @@ void UUGI_SUGameInstance::QuitTheGame()
 		{
 			PC->ConsoleCommand("quit force");
 			return;
+		}
+	}
+}
+
+
+
+void UUGI_SUGameInstance::AddEXPtoNearestOne(FVector EnemyLocation, int32 EXPvalue)
+{
+	float closestDistance = INT_MAX;
+	ClosestEXPActor = EXPActors[0].Get();
+	for (int i = 1; i < EXPActors.Num(); i++) {
+		if (PlayerItself) {
+			if (!PlayerItself->AttractedActors.Contains(EXPActors[i])) {
+				if ((closestDistance > (ClosestEXPActor.Get()->GetActorLocation() - EnemyLocation).Size())){
+					ClosestEXPActor = EXPActors[i].Get();
+					closestDistance = (ClosestEXPActor.Get()->GetActorLocation() - EnemyLocation).Size();
+				}
+			}
+		}
+		else {
+			if (closestDistance > (ClosestEXPActor.Get()->GetActorLocation() - EnemyLocation).Size()) {
+				ClosestEXPActor = EXPActors[i].Get();
+				closestDistance = (ClosestEXPActor.Get()->GetActorLocation() - EnemyLocation).Size();
+			}
+		}
+	}
+	AEXP_PickUp* EXP = Cast<AEXP_PickUp>(ClosestEXPActor);
+	if (EXP) {
+		EXP->SetExpValue(EXP->EXPValue + EXPvalue);
+	}
+}
+
+void UUGI_SUGameInstance::EnableMerge()
+{
+	if (calledMerge == false) {
+		bool check = false;
+		for (int i = 0; i < EXPActors.Num(); i++) {
+			AEXP_PickUp* EXP = Cast<AEXP_PickUp>(EXPActors[i]);
+			if (EXP) {
+				if (EXP->MergeMode) {
+					check = true;
+				}
+			}
+		}
+		if (check == false) {
+			if (EXPActors.Num() > 1) {
+				if (EXPActors[0].Get()) {
+					AEXP_PickUp* EXP = Cast<AEXP_PickUp>(EXPActors[0]);
+					if (EXP) {
+						EXP->MergetoSelf();
+						EXP->ForceMergeTime();
+						calledMerge = true;
+					}
+				}
+			}
 		}
 	}
 }
