@@ -4,6 +4,7 @@
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Weapons/WeaponData.h"
+#include "Weapons/WeaponSubsystem.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 
 UUpgradeCard::UUpgradeCard()
@@ -20,7 +21,12 @@ void UUpgradeCard::NativeOnInitialized()
 	Super::NativeOnInitialized();
 	PickButton->OnClicked.AddDynamic(this, &UUpgradeCard::HandleClicked); // once per widget, so no double-binding
 	PickButton->OnHovered.AddDynamic(this, &UUpgradeCard::HandleHoverSFX);
-	
+
+	if (UWeaponSubsystem* WSS = GetWorld()->GetSubsystem<UWeaponSubsystem>())
+	{
+		WeaponSubsystem = WSS;
+		OnSetWeaponOffer.BindUFunction(WeaponSubsystem, "GetWeaponInfo");
+	}
 }
 
 void UUpgradeCard::SetOffer(const FUpgradeOffer& InOffer)
@@ -28,7 +34,7 @@ void UUpgradeCard::SetOffer(const FUpgradeOffer& InOffer)
 	Offer = InOffer;
 
 	// Look up what to show for this offer
-	const FUpgradeCardInfo* Info = &HealInfo;
+	FUpgradeCardInfo WeaponInfo, *Info = &HealInfo;
 	if (Offer.Kind == EUpgradeKind::Stat)
 	{
 		Info = StatInfo.Find(Offer.Stat);
@@ -36,11 +42,21 @@ void UUpgradeCard::SetOffer(const FUpgradeOffer& InOffer)
 	}
 	else if (Offer.Kind == EUpgradeKind::Weapon)
 	{
-		Info = WeaponInfo.Find(Offer.Weapon);
+		// Icons on a per weapon basis could be set via UWeaponSubsystem::GetWeaponInfo (bound to OnSetWeaponOffer).
+		// Keep a fallback function in case there is no icon present for a particular weapon upgrade.
 		GetWeaponImageIndex(Offer.Weapon);
+
+		if (OnSetWeaponOffer.IsBound())
+		{
+			Info = &(WeaponInfo = OnSetWeaponOffer.Execute(Offer.Weapon, Offer.CurrentLevel));
+		}
+		else
+		{
+			Info = nullptr;
+		}
 	}
 
-	if (Info)
+	if (Info && !Info->Name.IsEmpty())
 	{
 		NameText->SetText(Info->Name);
 	}

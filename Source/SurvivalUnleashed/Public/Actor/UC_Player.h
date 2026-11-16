@@ -10,7 +10,6 @@
 #include "Enemies/BossEventSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Utility/PlayerStatsComponent.h"
-#include "Utility/UpgradeOffers.h"
 #include "GameFramework/CheatManagerDefines.h"
 #include "UC_Player.generated.h"
 
@@ -78,6 +77,8 @@ public:
 	inline int32 GetInventoryMaxSlots() const { return InventoryMaxSlots; }
 	UFUNCTION(BlueprintCallable, Category = "Weapons")
 	inline void SetInventoryMaxSlots(int32 Slots) { InventoryMaxSlots = Slots; }
+	UFUNCTION(BlueprintCallable, Category = "Weapons")
+	inline UWeaponSubsystem* GetWeaponSubsystem() const { return WeaponSubsystem; }
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapons")
 	void StartWeapons();

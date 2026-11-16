@@ -1,4 +1,5 @@
 #include "Utility/UpgradeOffers.h"
+#include "Weapons/WeaponSubsystem.h"
 #include "Algo/RandomShuffle.h"
 
 namespace
@@ -30,14 +31,13 @@ namespace
 		}
 	}
 }
-
-TArray<FUpgradeOffer> UpgradeOffers::Generate(const FBuildSnapshot& Build, int32 Count)
+TArray<FUpgradeOffer> UpgradeOffers::Generate(const FBuildSnapshot& Build, int32 Count/*= 4*/, int32 MaxWeapons/*= 3*/, UWeaponSubsystem* WeaponSys/*= nullptr*/)
 {
 	// ---- Every legal weapon offer
 	TArray<FUpgradeOffer> Weapons;
 	for (const FOwnedWeapon& Owned : Build.OwnedWeapons)
 	{
-		if (Owned.Level < Owned.MaxLevel) // max-level weapons drop out
+		if (Owned.Level < Owned.FirstEvolution - 1) // max-level weapons drop out
 		{
 			Weapons.Add(MakeWeaponOffer(Owned.Data, Owned.Level + 1));
 		}
@@ -52,6 +52,10 @@ TArray<FUpgradeOffer> UpgradeOffers::Generate(const FBuildSnapshot& Build, int32
 				Weapons.Add(MakeWeaponOffer(Weapon, 0));
 			}
 		}
+	}
+	if (WeaponSys)
+	{
+		WeaponSys->GetAvailableEvolutions(Build.OwnedWeapons, Build.StatLevels, Weapons);
 	}
 
 	// ---- Every legal stat offer

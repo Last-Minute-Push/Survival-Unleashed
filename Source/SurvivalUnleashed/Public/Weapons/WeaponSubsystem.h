@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
-#include "Weapons/WeaponDatabase.h"
+#include "UI/UpgradeCard.h"
 #include "WeaponSubsystem.generated.h"
 
 UENUM(BlueprintType)
@@ -52,7 +52,10 @@ public:
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Tests") void WeaponSubsystemTest(FWeaponCreateParams& Params, TMap<EWeaponCategory, UChildActorComponent*>& Inventory);
-	UFUNCTION(BlueprintCallable, Category = "Weapon") bool GetCategoryUpgrades(EWeaponCategory& Category, TArray<TSubclassOf<ABaseWeapon>>& Upgrades);
-	UFUNCTION(BlueprintCallable, Category = "Weapon") int32 GetCategoryUpgradeSize(EWeaponCategory& Category);
+	UFUNCTION(BlueprintCallable, Category = "Weapon") bool GetCategoryUpgrades(EWeaponCategory Category, TArray<TSubclassOf<ABaseWeapon>>& Upgrades);
+	UFUNCTION(BlueprintCallable, Category = "Weapon") int32 GetCategoryUpgradeSize(EWeaponCategory Category);
+	UFUNCTION(BlueprintCallable, Category = "Weapon") FUpgradeCardInfo GetWeaponInfo(EWeaponCategory Category, int32 UpgradeLevel);
+	UFUNCTION(BlueprintCallable, Category = "Weapon") void GetAvailableEvolutions(const TArray<FOwnedWeapon>& OwnedWeapons, const TMap<EPlayerStats, int32>& OwnedStats, TArray<FUpgradeOffer>& OutEvolutions);
+	UFUNCTION(BlueprintCallable, Category = "Weapon") int32 GetCategoryEvolutionIndex(EWeaponCategory Category);
 	UFUNCTION(BlueprintCallable, Category = "Weapon") EWeaponUpgradeStatus SetWeapon(FWeaponCreateParams& Params, TMap<EWeaponCategory, UChildActorComponent*>& Inventory);
 };

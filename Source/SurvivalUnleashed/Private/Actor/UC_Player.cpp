@@ -280,6 +280,7 @@ void AUC_Player::SetOwnedWeapons(TArray<FOwnedWeapon>& OwnedWeapons)
 			FOwnedWeapon Owned;
 			Owned.Data = It->Key;
 			Owned.Level = W->GetWeaponUpgrade();
+			Owned.FirstEvolution = WeaponSubsystem->GetCategoryEvolutionIndex(W->GetEWeaponCategory());
 			Owned.MaxLevel = WeaponSubsystem->GetCategoryUpgradeSize(It->Key);
 			OwnedWeapons.Add(Owned);
 		}

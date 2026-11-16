@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Utility/PlayerStatsComponent.h"
 #include "Weapons/WeaponDatabase.h"
 #include "WeaponData.generated.h"
 
@@ -28,12 +29,15 @@ class SURVIVALUNLEASHED_API UWeaponData : public UPrimaryDataAsset
 	
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Defaults")                                           EWeaponCategory WeaponType;
-	UPROPERTY(EditDefaultsOnly, Category = "Stats", meta = (ClampMin = "0"))                     float Damage;
-	UPROPERTY(EditDefaultsOnly, Category = "Stats", Meta = (ClampMin = "0.1"))                   float Cooldown;
-	UPROPERTY(EditDefaultsOnly, Category = "Stats", meta = (ClampMin = "0.1"))                   float Range;
-	UPROPERTY(EditDefaultsOnly, Category = "Stats", meta = (ClampMin = "0"))                     float Knockback;
-	UPROPERTY(EditDefaultsOnly, Category = "Stats", meta = (ClampMin = "0"))                     float AttackSpeed;
-	UPROPERTY(EditDefaultsOnly, Transient, Category = "Stats")                                   Focus Alignment;
+	UPROPERTY(EditDefaultsOnly, Category = "Defaults")                                           FText Name = FText::GetEmpty();
+	UPROPERTY(EditDefaultsOnly, Category = "Defaults")                                           FText Description = FText::GetEmpty();
+	UPROPERTY(EditDefaultsOnly, Category = "Upgrades")                                           TMap<EPlayerStats, int32> UpgradeRequirements;
+	UPROPERTY(EditDefaultsOnly, Category = "DefaultStats", meta = (ClampMin = "0"))              float Damage;
+	UPROPERTY(EditDefaultsOnly, Category = "DefaultStats", meta = (ClampMin = "0.1"))            float Cooldown;
+	UPROPERTY(EditDefaultsOnly, Category = "DefaultStats", meta = (ClampMin = "0.1"))            float Range;
+	UPROPERTY(EditDefaultsOnly, Category = "DefaultStats", meta = (ClampMin = "0"))              float Knockback;
+	UPROPERTY(EditDefaultsOnly, Category = "DefaultStats", meta = (ClampMin = "0"))              float AttackSpeed;
+	UPROPERTY(EditDefaultsOnly, Transient, Category = "DefaultStats")                            Focus Alignment;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Mesh", meta = (ClampMin = "0"))           float Height;
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Mesh", meta = (ClampMin = "0"))           float DistanceFromPlayer;

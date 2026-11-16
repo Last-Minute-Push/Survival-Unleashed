@@ -22,16 +22,16 @@ namespace WeaponName
 UENUM(BlueprintType)
 enum class EWeaponCategory : uint8
 {
-	EBP_Sword          UMETA(DisplayName = Sword),
-	EBP_BowToGun       UMETA(DisplayName = BowToGun),
-	EBP_Axe            UMETA(DisplayName = Axe),
-	EBP_Spear          UMETA(DisplayName = Spear),
-	EBP_FireStaff      UMETA(DisplayName = FireStaff),
-	EBP_IceStaff       UMETA(DisplayName = IceStaff),
-	EBP_LightningStaff UMETA(DisplayName = LightningStaff),
-	EBP_EarthStaff     UMETA(DisplayName = EarthStaff),
+	EBP_Sword          UMETA(DisplayName = "Sword"),
+	EBP_BowToGun       UMETA(DisplayName = "Bow-To-Gun"),
+	EBP_Axe            UMETA(DisplayName = "Axe"),
+	EBP_Spear          UMETA(DisplayName = "Spear"),
+	EBP_FireStaff      UMETA(DisplayName = "Fire Staff"),
+	EBP_IceStaff       UMETA(DisplayName = "Ice Staff"),
+	EBP_LightningStaff UMETA(DisplayName = "Lightning Staff"),
+	EBP_EarthStaff     UMETA(DisplayName = "Earth Staff"),
 	EBP_OfferEnd       UMETA(Hidden), // Any category below will not be offered by the level up screen.
-	EBP_Gauntlets      UMETA(DisplayName = Gauntlets)
+	EBP_Gauntlets      UMETA(DisplayName = "Gauntlets")
 };
 ENUM_RANGE_BY_COUNT(EWeaponCategory, EWeaponCategory::EBP_OfferEnd);
 
@@ -46,6 +46,18 @@ class SURVIVALUNLEASHED_API UWeaponDatabase : public UPrimaryDataAsset
 	GENERATED_BODY()
 	
 public:
+	// Any weapon upgrades equal or above the index respective
+	// to their category will be considered an evolution of that weapon.
+	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexSword          = -1;
+	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexBowToGun       = -1;
+	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexAxe            = -1;
+	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexSpear          = -1;
+	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexGauntlets      = -1;
+	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexFireStaff      = -1;
+	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexIceStaff       = -1;
+	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexLightningStaff = -1;
+	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexEarthStaff     = -1;
+
 	UPROPERTY(EditDefaultsOnly) TArray<TSubclassOf<ABaseWeapon>> SwordUpgrades;
 	UPROPERTY(EditDefaultsOnly) TArray<TSubclassOf<ABaseWeapon>> BowToGunUpgrades;
 	UPROPERTY(EditDefaultsOnly) TArray<TSubclassOf<ABaseWeapon>> AxeUpgrades;
