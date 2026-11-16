@@ -56,4 +56,22 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Settings")
 	float SfxVolume = 1.f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Settings")
+	float SoundVolume = 1.f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Settings")
+	FInputChord ForwardInput = FInputChord(EKeys::W);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Settings")
+	FInputChord LeftInput = FInputChord(EKeys::A);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Settings")
+	FInputChord DownInput = FInputChord(EKeys::S);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Settings")
+	FInputChord RightInput = FInputChord(EKeys::D);
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Settings")
+	FInputChord DashInput = FInputChord(EKeys::SpaceBar);
 };

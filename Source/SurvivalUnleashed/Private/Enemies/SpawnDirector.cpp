@@ -368,9 +368,9 @@ float ASpawnDirector::GetExitDistance(const FVector2D& Origin, const FVector2D& 
 	return Best;
 }
 
-void ASpawnDirector::HandleEnemyHit(AEnemyBase* Enemy, float Damage)
+void ASpawnDirector::HandleEnemyHit(AEnemyBase* Enemy, float Damage, AActor* DamageCauser)
 {
-	OnAnyEnemyHit.Broadcast(Enemy, Damage);
+	OnAnyEnemyHit.Broadcast(Enemy, Damage, DamageCauser);
 }
 
 void ASpawnDirector::HandleEnemyDied(AEnemyBase* Enemy)
@@ -403,7 +403,7 @@ void ASpawnDirector::TryDropHealthPickup(const AEnemyBase* Enemy)
 
 	// Off to a random side so it doesn't land on top of the XP gem
 	const FVector Offset = FRotator(0.f, FMath::FRandRange(0.f, 360.f), 0.f).Vector() * HealthDropOffset;
-	Pool->Acquire(HealthPickupClass, FTransform(FRotator::ZeroRotator, Enemy->GetActorLocation() + Offset));
+	Pool->Acquire(HealthPickupClass, FTransform(FRotator::ZeroRotator, Enemy->GetLootLocation() + Offset));
 }
 
 FTransform ASpawnDirector::GetSpawnTransform(TSubclassOf<AEnemyBase> Class, const FVector& GroundLocation, const FVector& PlayerLocation) const

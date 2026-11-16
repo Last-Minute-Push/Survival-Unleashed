@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "Framework/UGI_SUGameInstance.h"
 #include "MainMenu.generated.h"
 
@@ -11,7 +11,7 @@
  * 
  */
 UCLASS()
-class SURVIVALUNLEASHED_API UMainMenu : public UUserWidget
+class SURVIVALUNLEASHED_API UMainMenu : public UHUDBase
 {
 	GENERATED_BODY()
 
@@ -21,6 +21,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* UpgradeButton;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* SettingsButton;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* QuitButton;
+	UPROPERTY(Transient, meta = (BindWidgetAnim)) class UWidgetAnimation* OpenFade;
+
 	UPROPERTY() TObjectPtr<class UOptionsMenuBase> OptionHud;
 	UPROPERTY() TObjectPtr<class UPermaUpgradeMenu> UpgradeHud;
 
@@ -43,5 +45,7 @@ public:
 
 	UFUNCTION()
 	void UnHideMainMenuButtons();
+
+	FWidgetAnimationDynamicEvent OnFadeFinish;
 
 };

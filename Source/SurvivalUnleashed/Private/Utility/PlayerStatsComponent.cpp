@@ -43,9 +43,10 @@ void UPlayerStatsComponent::ApplyStatUpgrade(EPlayerStats Stat)
 	if (Rank == 0)
 	{
 		MainStatArrayForUI.Add(Stat);
+		
 	}
 	++Rank;
-
+	OnStatUI.Broadcast(Stat, Rank);
 	switch (Stat)
 	{
 	case EPlayerStats::EPS_Attack:LevelUpAttack();break;
@@ -116,6 +117,7 @@ void UPlayerStatsComponent::UpdateExpANDLevel(int amount)
 		ExpReuirement += (ExpReuirementScaler + (Level*100)); 
 	}
 	OnLevelUp.Execute(Level, GetCurrentExpCountForDisplay());
+	
 }
 
 void UPlayerStatsComponent::LevelUpOverall()
@@ -136,9 +138,12 @@ void UPlayerStatsComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 void UPlayerStatsComponent::TakeDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
 	//Just Take Damage and apply anything needed.
-	CurrentHealth = FMath::Clamp(CurrentHealth - (Damage * GetDefensePercent()), 0.0, MaxHealth);
-	if (GetReflectStat() > 0) {
-		if (DamageCauser) {
+	// Negative damage is a heal, so don't apply defense to it
+	const float Taken = Damage > 0 ? Damage * (1.0f - GetDefensePercent()) : Damage;
+	CurrentHealth = FMath::Clamp(CurrentHealth - Taken, 0.0f, MaxHealth);
+		// Don't reflect heals
+		if (GetReflectStat() > 0 && Damage > 0) {
+		if (DamageCauser && DamageCauser != DamagedActor) {
 			UGameplayStatics::ApplyDamage(DamageCauser, Damage * GetReflectStatCalculated(), nullptr, DamagedActor, nullptr);
 		}
 	}
@@ -150,6 +155,7 @@ void UPlayerStatsComponent::TakeDamage(AActor* DamagedActor, float Damage, const
 			if (IsValid(DamagedActor)) {
 				if (OnHurt.IsBound() && OnHurt.GetUObject() != nullptr) {
 					OnHurt.Execute(CurrentHealth / MaxHealth);
+					OnHealthUIEffect.Broadcast(CurrentHealth, MaxHealth);
 					//UE_LOG(Game, Log, TEXT("Lost Health"));
 					//UE_LOG(Game, Log, TEXT("CurrentHealth is: %s"), *FString(UTF8_TO_TCHAR(std::to_string(CurrentHealth).c_str())));
 					OnHurtEffect.Execute();
@@ -160,6 +166,7 @@ void UPlayerStatsComponent::TakeDamage(AActor* DamagedActor, float Damage, const
 			if (IsValid(DamagedActor)) {
 				if (OnHeal.IsBound() && OnHeal.GetUObject() != nullptr) {
 					OnHeal.Execute(CurrentHealth / MaxHealth);
+					OnHealthUIEffect.Broadcast(CurrentHealth, MaxHealth);
 					//UE_LOG(Game, Log, TEXT("Lost Health"));
 					//UE_LOG(Game, Log, TEXT("CurrentHealth is: %s"), *FString(UTF8_TO_TCHAR(std::to_string(CurrentHealth).c_str())));
 					OnHealEffect.Execute();
@@ -206,7 +213,8 @@ void UPlayerStatsComponent::TakeDamage(AActor* DamagedActor, float Damage, const
 void UPlayerStatsComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
 	//EVASION CHECKFIRST!!!
-	if (GetEvasion() > 0) { //Got Evade stat?
+	if (GetEvasion() > 0 && Damage > 0) // Don't dodge heals
+	{
 		float chance = FMath::FRand();
 		if (GetEvasion() < chance) { //if you fail to evade take damage!
 			TakeDamage(DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
@@ -237,6 +245,7 @@ void UPlayerStatsComponent::LevelUpMaxHealth()
 	SetCurrentHealth(CurrentHealth + 10.0f);
 	if (OnHeal.IsBound() && OnHeal.GetUObject() != nullptr) {
 		OnHeal.Execute(CurrentHealth / MaxHealth);
+		OnHealthUIEffect.Broadcast(CurrentHealth, MaxHealth);
 		//UE_LOG(Game, Log, TEXT("Lost Health"));
 		//UE_LOG(Game, Log, TEXT("CurrentHealth is: %s"), *FString(UTF8_TO_TCHAR(std::to_string(CurrentHealth).c_str())));
 	}
@@ -247,6 +256,7 @@ void UPlayerStatsComponent::LevelUpMaxHealthMinor()
 	SetCurrentHealth(CurrentHealth + 5.0f);
 	if (OnHeal.IsBound() && OnHeal.GetUObject() != nullptr) {
 		OnHeal.Execute(CurrentHealth / MaxHealth);
+		OnHealthUIEffect.Broadcast(CurrentHealth, MaxHealth);
 		//UE_LOG(Game, Log, TEXT("Lost Health"));
 		//UE_LOG(Game, Log, TEXT("CurrentHealth is: %s"), *FString(UTF8_TO_TCHAR(std::to_string(CurrentHealth).c_str())));
 	}
@@ -465,7 +475,8 @@ int UPlayerStatsComponent::GetDefense()
 
 float UPlayerStatsComponent::GetDefensePercent()
 {
-	return TruncateToHundredths((FMath::Loge(Defense + (Defense * GetBarbaricPercent()) + (Defense * GetModernPercent()))/FMath::Loge(50000.0f)));
+	const float Effective = FMath::Max(1.0f, Defense + (Defense * GetBarbaricPercent()) + (Defense * GetModernPercent()));
+	return TruncateToHundredths(FMath::Loge(Effective) / FMath::Loge(50000.0f));
 }
 
 void UPlayerStatsComponent::SetDefense(int value)

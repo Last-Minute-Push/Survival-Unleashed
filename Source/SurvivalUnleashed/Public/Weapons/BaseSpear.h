@@ -9,22 +9,31 @@
 class UBoxComponent;
 
 UCLASS()
-class SURVIVALUNLEASHED_API ABaseSpear : public ABaseBowToGun
+class SURVIVALUNLEASHED_API ABaseSpear : public ABaseWeapon
 {
 	GENERATED_BODY()
 	
-	void StartThrust();    // Begins the thrust cycle and activates damage overlap events.
-	void StopThrust();     // Finalizes the thrust cycle and deactivates damage overlap events.
-	void EndThrustCycle(); // Resets the thrust cycle and delays before the next thrust cycle.
+	float MoveSpear(float DeltaTime);
+
+	void Thrust();         // Begins the thrust cycle and activates damage overlap events.
+	void Retreat();        // Finalizes the thrust cycle and deactivates damage overlap events.
+	void EndCycle();       // Resets the thrust cycle and delays before the next thrust cycle.
 
 	UFUNCTION(Category = "Damage") void ApplyDamageCollision(UPrimitiveComponent * OverlappedComponent, AActor * OtherActor, UPrimitiveComponent * OtherComp,
 		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 protected:
 	bool bIsAiming, bIsThrusting;
+	float Range;     // Data->Range	
+	float Height;    // Data->Height
+	float Radius;    // Data->DistanceFromPlayer
+	float Cooldown;  // Data->Cooldown
+	float Speed;     // Data->AttackSpeed
+	FTimerHandle TThrustCooldown;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Thrusting") float ThrustRetreatMultiplier = 0.25f;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Collision") UBoxComponent* BoxCollision;
+	UPROPERTY(Transient) TObjectPtr<UHordeSubsystem> Horde;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Thrusting") float RetreatMultiplier = 0.25f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Collision") TObjectPtr<UBoxComponent> BoxCollision;
 	UPROPERTY(VisibleAnywhere, Transient, Category = "Properties|Collision")          TArray<TObjectPtr<AActor>> HitActors;
 
 	virtual void BeginPlay();
@@ -34,5 +43,6 @@ protected:
 public:
 	ABaseSpear();
 
+	virtual void StartWeapon() override;
 	virtual void StopWeapon() override;
 };

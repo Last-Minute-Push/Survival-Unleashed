@@ -21,6 +21,7 @@ class SURVIVALUNLEASHED_API AStaffWeapon : public ABaseWeapon
 public:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void StartWeapon() override;
 	virtual void StopWeapon() override;
 
 protected:

@@ -171,7 +171,8 @@ void UHordeSubsystem::GetNearestEnemies(const FVector& Location, float MaxRange,
 
 bool UHordeSubsystem::IsTargetable(const AEnemyBase* Enemy)
 {
-	return IsValid(Enemy) && !Enemy->IsHidden() && !Enemy->IsDead();
+	// The enemy's own check covers death and anything class-specific
+	return IsValid(Enemy) && !Enemy->IsHidden() && Enemy->IsTargetable();
 }
 
 FIntPoint UHordeSubsystem::ToCell(const FVector& Location)

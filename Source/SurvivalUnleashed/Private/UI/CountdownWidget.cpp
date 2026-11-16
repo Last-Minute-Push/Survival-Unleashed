@@ -4,6 +4,11 @@
 #include "Framework/UGM_SUPlayAreaGameMode.h"
 #include "TimerManager.h"
 
+UCountdownWidget::UCountdownWidget()
+{
+	ZOrderLayer = 1;
+}
+
 void UCountdownWidget::NativeConstruct()
 {
 	Super::NativeConstruct();

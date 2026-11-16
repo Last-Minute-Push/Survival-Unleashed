@@ -47,7 +47,7 @@ void UDamageNumberLayer::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-void UDamageNumberLayer::HandleEnemyHit(AEnemyBase* Enemy, float Damage)
+void UDamageNumberLayer::HandleEnemyHit(AEnemyBase* Enemy, float Damage, AActor* DamageCauser)
 {
 	if (!Enemy || !NumberClass || !NumberCanvas || Damage <= 0.f || Entries.Num() == 0)
 	{

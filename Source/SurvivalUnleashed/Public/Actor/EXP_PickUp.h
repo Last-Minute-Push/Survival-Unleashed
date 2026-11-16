@@ -34,7 +34,6 @@ protected:
 
 	UPROPERTY()
 	class AUC_Player* SavedPlayer;
-	bool CanPickUp(AActor* OtherActor); //Defuct as CompCheck is required for it to work as intended! 
 	bool CanPickUpCompCheck(AActor* OtherActor, UPrimitiveComponent* OverlapComponent);
 	void PostPickUp();
 	void HandlePickUp();

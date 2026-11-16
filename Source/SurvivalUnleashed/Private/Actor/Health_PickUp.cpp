@@ -91,13 +91,31 @@ void AHealth_PickUp::PostPickUp() {
 	else Destroy();
 }
 void AHealth_PickUp::HandlePickUp() {
+	
 	if (SavedPlayer) {
-		if (SavedPlayer->GetPlayerStatsComp()->GetHealAmount() >0) {
-			UGameplayStatics::ApplyDamage(SavedPlayer, -Heal * SavedPlayer->GetPlayerStatsComp()->GetHealAmount(), nullptr, this, nullptr);
+		if ((Heal + SavedPlayer->GetPlayerStatsComp()->GetCurrentHealth() > SavedPlayer->GetPlayerStatsComp()->GetMaxHealth()) && SavedPlayer->GetPlayerStatsComp()->GetHealAmount() == 0) {
+			int tempheal = Heal;
+			Heal = SavedPlayer->GetPlayerStatsComp()->GetMaxHealth() - SavedPlayer->GetPlayerStatsComp()->GetCurrentHealth();
+			UGameplayStatics::ApplyDamage(SavedPlayer, -Heal, nullptr, this, nullptr);
+			Heal = tempheal;
+		}
+		else if (((Heal * SavedPlayer->GetPlayerStatsComp()->GetHealAmount()) + SavedPlayer->GetPlayerStatsComp()->GetCurrentHealth() > SavedPlayer->GetPlayerStatsComp()->GetMaxHealth())) {
+			int tempheal = Heal;
+			Heal = SavedPlayer->GetPlayerStatsComp()->GetMaxHealth() - SavedPlayer->GetPlayerStatsComp()->GetCurrentHealth();
+			UGameplayStatics::ApplyDamage(SavedPlayer, -Heal, nullptr, this, nullptr);
+			Heal = tempheal;
+
 		}
 		else {
-			UGameplayStatics::ApplyDamage(SavedPlayer, -Heal, nullptr, this, nullptr);
+			if (SavedPlayer->GetPlayerStatsComp()->GetHealAmount() > 0) {
+				UGameplayStatics::ApplyDamage(SavedPlayer, -Heal * SavedPlayer->GetPlayerStatsComp()->GetHealAmount(), nullptr, this, nullptr);
+			}
+			else {
+				UGameplayStatics::ApplyDamage(SavedPlayer, -Heal, nullptr, this, nullptr);
+			}
 		}
+		
+		SavedPlayer->AttractedActors.Remove(this);
 	}
 }
 

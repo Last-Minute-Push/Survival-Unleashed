@@ -61,19 +61,16 @@ void ABaseBowToGun::BeginPlay()
 	}
 
 	// Location
-	UE_LOG(LogBowToGun, Error, TEXT("HEIGHT: %f"), Height);
-	Mesh->AddLocalOffset(FVector(0.f, Radius, Height));
+	Mesh->SetRelativeLocation(FVector(0.f, Radius, Height));
 	Mesh->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
-
 	HideProjectile(true);
-	GetWorldTimerManager().SetTimer(TFireCooldown, this, &ABaseBowToGun::StartAim, Cooldown);
 }
 
 void ABaseBowToGun::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	FaceNearestEnemy(Mesh/*, false*/);
+	FaceNearestEnemy(Mesh, Horde, (AActor*)Parent, Range/*, false*/);
 }
 
 void ABaseBowToGun::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -84,9 +81,14 @@ void ABaseBowToGun::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-bool ABaseBowToGun::FaceNearestEnemy(USceneComponent* ToRotate, bool bFlipRotation/*= false*/, bool bForce/*= true*/)
+/*static*/bool ABaseBowToGun::FaceNearestEnemy(USceneComponent* ToRotate, UHordeSubsystem* Horde, AActor* WeaponParent, float ProjectileReach, bool bFlipRotation/*= false*/, bool bForce/*= true*/)
 {
-	AEnemyBase* Nearest = Horde->FindNearestEnemy(Parent->GetActorLocation(), Range);
+	if (!ToRotate || !Horde || !WeaponParent)
+	{
+		return false;
+	}
+
+	AEnemyBase* Nearest = Horde->FindNearestEnemy(WeaponParent->GetActorLocation(), ProjectileReach);
 
 	if (!Nearest)
 	{
@@ -94,7 +96,7 @@ bool ABaseBowToGun::FaceNearestEnemy(USceneComponent* ToRotate, bool bFlipRotati
 	}
 
 	// We create a normalized directional vector
-	FRotator Direction = FVector(Parent->GetActorLocation() - Nearest->GetActorLocation()).GetSafeNormal2D().Rotation();
+	FRotator Direction = FVector(WeaponParent->GetActorLocation() - Nearest->GetActorLocation()).GetSafeNormal2D().Rotation();
 	
 	if (Direction.IsNearlyZero())
 	{
@@ -147,6 +149,17 @@ void ABaseBowToGun::StopAim()
 	HideProjectile(true);
 
 	GetWorldTimerManager().SetTimer(TFireCooldown, this, &ABaseBowToGun::StartAim, Cooldown);
+}
+
+void ABaseBowToGun::StartWeapon()
+{
+	Super::StartWeapon();
+
+	// Location
+	Mesh->SetRelativeLocation(FVector(0.f, Radius, Height));
+	Mesh->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
+
+	StartAim();
 }
 
 void ABaseBowToGun::StopWeapon()
