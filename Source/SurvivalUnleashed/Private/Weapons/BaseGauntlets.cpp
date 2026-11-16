@@ -6,6 +6,7 @@
 #include "Weapons/GauntletData.h"
 #include "Weapons/BaseBowToGun.h"
 #include "Weapons/WeaponData.h"
+#include "Debug/DebugOverlaySubsystem.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogBaseGauntlets, Log, All);
 

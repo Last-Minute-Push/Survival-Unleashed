@@ -5,6 +5,7 @@
 #include "SUCheatManager.generated.h"
 
 class ASpawnDirector;
+class UDebugOverlaySubsystem;
 
 // Console commands for testing. Not created in shipping builds. "God" comes from UCheatManager.
 UCLASS()
@@ -37,7 +38,24 @@ public:
 	UFUNCTION(Exec)
 	void LevelUp(int32 Count);
 
+	// DebugOverlay General: Displays the "General" Debug Overlay
+	UFUNCTION(Exec)
+	void DebugOverlay(const FString& Type);
+
+	// Lists the overlays that are available
+	UFUNCTION(Exec)
+	void ListOverlays();
+
+	// Sets the ZOrder of the Overlay
+	UFUNCTION(Exec)
+	void SetOverlayZOrder(int32 ZOrder);
+
+	// Disables the Debug Overlay
+	UFUNCTION(Exec)
+	void DisableOverlay();
+
 private:
 	ASpawnDirector* FindSpawnDirector() const;
+	UDebugOverlaySubsystem* FindDebugOverlaySubsystem() const;
 	void Say(const FString& Message) const;
 };

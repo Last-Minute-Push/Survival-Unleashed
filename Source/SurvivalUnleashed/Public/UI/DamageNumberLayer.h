@@ -63,7 +63,7 @@ private:
 	TWeakObjectPtr<ASpawnDirector> SpawnDirector;
 
 	UFUNCTION()
-	void HandleEnemyHit(AEnemyBase* Enemy, float Damage);
+	void HandleEnemyHit(AEnemyBase* Enemy, float Damage, AActor* DamageCauser);
 
 	void UpdateEntry(FDamageNumberEntry& Entry, APlayerController* PC);
 };

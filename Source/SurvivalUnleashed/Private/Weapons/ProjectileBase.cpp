@@ -165,7 +165,7 @@ void AProjectileBase::HandleHit(AActor* Target)
 	}
 
 	AlreadyHit.Add(Target);
-	HitCallback.ExecuteIfBound(this, Target);
+	HitCallback.ExecuteIfBound(GetOwner(), Target);
 
 	if (HitsRemaining != INDEX_NONE && --HitsRemaining <= 0)
 	{

@@ -12,6 +12,8 @@
 #include "UI/ControlsMenu.h"
 #include "UGI_SUGameInstance.generated.h"
 
+class UDebugOverlayDatabase;
+
 // Activates the audio test
 #define AUDIO_MANAGER_TEST 0
 
@@ -44,6 +46,10 @@ protected:
 	UAudioComponent* CreateAudio(USoundBase* Sound, float VolumeMultiplier, float PitchMultiplier,
 		USoundConcurrency* ConcurrencySettings, bool bPersistAcrossLevels);
 
+        // - Debug Overlay Database -
+	UPROPERTY(EditDefaultsOnly, Category = "Debug") TObjectPtr<UDebugOverlayDatabase> OverlayDatabase;
+
+        // - Audio -
 	void ApplyMusicVolume();
 	void ApplySoundVolume();
 
@@ -103,6 +109,11 @@ public:
     // Weapon Database
     //----------------------------------------------------------------------//
 	UFUNCTION() inline UWeaponDatabase* GetWeaponDatabase() const { return Database; }
+
+	//----------------------------------------------------------------------//
+        // Debug Overlay Database
+        //----------------------------------------------------------------------//
+	UFUNCTION() inline UDebugOverlayDatabase* GetOverlayDatabase() const { return OverlayDatabase; }
 
 	//----------------------------------------------------------------------//
 	// Save / Run Results
@@ -174,17 +185,15 @@ public:
 	UFUNCTION() virtual void SetMusicVolume(float Volume);
 	UFUNCTION() virtual void SetSoundVolume(float Volume);
 
-
-
 	// - Music -
 
 	// We play the new song
-	UFUNCTION() virtual uint64 PlayMusic(USoundBase* Music, const float NewFadeIn = 0, const float OldFadeOut = 0, USoundConcurrency* ConcurrencySettings = nullptr) override;
+	UFUNCTION() virtual uint64 PlayMusic(USoundBase* Music, const float NewFadeIn = 0, const float OldFadeOut = 0, const float PitchMultiplier = 1, USoundConcurrency* ConcurrencySettings = nullptr) override;
 
 	// We pause the current song
 	UFUNCTION() virtual void SetMusicPause(const bool bPaused) override;
 	// We pause the current song, place it on top of the stack of CDs, and play the new song
-	UFUNCTION() virtual uint64 StackMusic(USoundBase* Music, const float FadeIn = 0, USoundConcurrency* ConcurrencySettings = nullptr) override;
+	UFUNCTION() virtual uint64 StackMusic(USoundBase* Music, const float FadeIn = 0, const float PitchMultiplier = 1, USoundConcurrency* ConcurrencySettings = nullptr) override;
 	// We stop the current song and remove the top song from the music stack of CDs to play it
 	UFUNCTION() virtual void DestackMusic(const float FadeOut = 0.f, const bool bSkipResume = false) override;
 	// We clear the stack of CDs
@@ -195,12 +204,12 @@ public:
 	// - Sounds -
 
 	// Fire and forget: no component, no ID. Use for anything you'll never pause or stop.
-	UFUNCTION() virtual void PlaySoundOneShot(USoundBase* Sound, USoundConcurrency* ConcurrencySettings = nullptr) override;
+	UFUNCTION() virtual void PlaySoundOneShot(USoundBase* Sound, const float PitchMultiplier = 1, USoundConcurrency* ConcurrencySettings = nullptr) override;
 
 	// We play a sound (regardless of audio spam)
-	UFUNCTION() virtual uint64 PlaySound(USoundBase* Sound, USoundConcurrency* ConcurrencySettings = nullptr) override;
+	UFUNCTION() virtual uint64 PlaySound(USoundBase* Sound, const float PitchMultiplier = 1, USoundConcurrency* ConcurrencySettings = nullptr) override;
 	// We stop all instances of our sound to hear our sound play only once (handles audio spam)
-	UFUNCTION() virtual uint64 PlaySoundInterrupt(USoundBase* Sound, USoundConcurrency* ConcurrencySettings = nullptr) override;
+	UFUNCTION() virtual uint64 PlaySoundInterrupt(USoundBase* Sound, const float PitchMultiplier = 1, USoundConcurrency* ConcurrencySettings = nullptr) override;
 	// We pause or resume all instances of our same sound
 	UFUNCTION() virtual void SetSoundPause(USoundBase const* Sound, const bool bPaused) override;
 	// We pause or resume only a specific sound linked to the AudioComponentID

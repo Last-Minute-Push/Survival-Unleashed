@@ -7,6 +7,7 @@
 #include "Enemies/EnemyBase.h"
 #include "Actor/UC_Player.h"
 #include "Utility/PlayerStatsComponent.h"
+#include "Debug/DebugOverlaySubsystem.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogBaseWeapon, Log, All);
 
@@ -31,6 +32,51 @@ ABaseWeapon::ABaseWeapon()
 void ABaseWeapon::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (Data)
+	{
+		Type = Data->WeaponType;
+	}
+
+#if UE_WITH_CHEAT_MANAGER
+	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
+	{
+		FString WeaponName;
+
+		switch (Type)
+		{
+		case EWeaponCategory::EBP_Sword:
+			WeaponName = WeaponName::Sword;
+			break;
+		case EWeaponCategory::EBP_BowToGun:
+			WeaponName = WeaponName::BowToGun;
+			break;
+		case EWeaponCategory::EBP_Axe:
+			WeaponName = WeaponName::Axe;
+			break;
+		case EWeaponCategory::EBP_Spear:
+			WeaponName = WeaponName::Spear;
+			break;
+		case EWeaponCategory::EBP_FireStaff:
+			WeaponName = WeaponName::FireStaff;
+			break;
+		case EWeaponCategory::EBP_IceStaff:
+			WeaponName = WeaponName::IceStaff;
+			break;
+		case EWeaponCategory::EBP_LightningStaff: 
+			WeaponName = WeaponName::LightningStaff;
+			break;
+		case EWeaponCategory::EBP_EarthStaff:
+			WeaponName = WeaponName::EarthStaff;
+			break;
+		case EWeaponCategory::EBP_Gauntlets:
+			WeaponName = WeaponName::Gauntlets;
+		}
+
+		Ovl->AttachToOverlay("General", "Performance and Balance", FName(WeaponName + " DPS"),
+			FOnOverlayUpdateFloat::CreateUFunction(this, "GetDamagePerSecond"), FOnOverlayResetValue::CreateUFunction(this, "ResetDamagePerSecond"));
+#endif
+}
 }
 
 // Called every frame
