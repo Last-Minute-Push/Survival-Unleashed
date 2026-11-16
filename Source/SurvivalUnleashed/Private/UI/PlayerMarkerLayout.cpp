@@ -4,8 +4,8 @@
 #include "UI/PlayerMarkerLayout.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
-#include "GameFramework/PlayerController.h"
 #include "GameFramework/Controller.h"
+#include "Actor/UC_Player.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/Image.h"
 
@@ -18,9 +18,14 @@ void UPlayerMarkerLayout::NativeConstruct()
 void UPlayerMarkerLayout::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
+	AUC_Player* OwningPlayer = Cast<AUC_Player>(GetOwningPlayerPawn());
 
-	if (GetOwningPlayerPawn()) {
-		UpdateMarkerPosition(GetOwningPlayerPawn()->GetActorLocation());
+	if (GetOwningPlayerPawn() && OwningPlayer) {
+
+		if (!OwningPlayer->WasRecentlyRendered(0)) {
+			UpdateMarkerPosition(GetOwningPlayerPawn()->GetActorLocation());
+		}
+		
 	}
 }
 

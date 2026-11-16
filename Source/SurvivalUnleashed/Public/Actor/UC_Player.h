@@ -64,6 +64,7 @@ public:
 	void ResumeGame();
 	void PlayerLost();
 	void MagnetEnable();
+	void LineDrawtoPlayer();
 
 	UCapsuleComponent* GetCapsuleComponent();
 	USphereComponent* GetRadiusComponent();
@@ -89,6 +90,7 @@ public:
 	TArray<TWeakObjectPtr<AActor>> AttractedActors;
 	UFUNCTION()
 	void UpdateKeyBinds();
+
 protected:
 	UPROPERTY(Category = Character, VisibleAnywhere)
 	class USpringArmComponent* SpringArm;

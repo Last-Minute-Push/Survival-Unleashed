@@ -11,6 +11,8 @@
 #include "Components/ChildActorComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/PrimitiveComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Weapons/BaseWeapon.h"
 #include "Actor/EXP_PickUp.h"
 #include "UI/LevelUpScreen.h"
@@ -181,8 +183,7 @@ void AUC_Player::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	
-
+	LineDrawtoPlayer();
 
 	for (int32 i = 0; i < AttractedActors.Num(); i++) {
 		AActor* Actor = AttractedActors[i].Get();
@@ -290,6 +291,27 @@ void AUC_Player::MagnetEnable()
 {
 	Magnet = true;
 	UpdatePickUpRadius(9999);
+}
+
+void AUC_Player::LineDrawtoPlayer()
+{
+	FHitResult Result;
+	FVector Start = Camera->GetComponentLocation();
+	FVector End = this->GetActorLocation();
+	FCollisionQueryParams Params;
+	
+	ActorLineTraceSingle(Result, Start, Start + End, ECollisionChannel::ECC_Visibility, Params);
+		//ActorTraceComponent(Result, Start, Start + End, Params);
+
+	if (Result.GetActor())
+	{
+		UE_LOG(LogPlayer, Warning, TEXT("Player has been detected"));
+	}
+	else
+	{
+		UE_LOG(LogPlayer, Error, TEXT("Player is Hidden"));
+	}
+
 }
 
 void AUC_Player::PlayerLost()
