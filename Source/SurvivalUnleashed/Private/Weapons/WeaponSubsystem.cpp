@@ -3,6 +3,7 @@
 
 #include "Weapons/WeaponSubsystem.h"
 #include "Framework/UGI_SUGameInstance.h"
+#include "Audio/Interfaces/AudioManagerInterface.h"
 #include "Weapons/BaseWeapon.h"
 #include "Actor/UC_Player.h"
 
@@ -192,6 +193,7 @@ EWeaponUpgradeStatus UWeaponSubsystem::SetWeapon(FWeaponCreateParams& Params, TM
 		// We'll check if the weapon can be upgraded further or if will be modified
 		if (W && W->GetWeaponUpgrade() < Upgrades.Num() - 1 || Params.DebugUpgrade != -1)
 		{
+			PlayUpgradeSFX();
 			return UpgradeWeapon(Params, Inventory, WC, Upgrades);
 		}
 		else // We cannot upgrade the weapon any further. Womp womp.
@@ -201,6 +203,7 @@ EWeaponUpgradeStatus UWeaponSubsystem::SetWeapon(FWeaponCreateParams& Params, TM
 	}
 	else if (Inventory.Num() < Params.Player->GetInventoryMaxSlots()) // Otherwise, we create one!
 	{
+		PlayWeaponPickUpSFX();
 		return CreateWeapon(Params, Inventory, Upgrades);
 	}
 
@@ -239,6 +242,26 @@ EWeaponUpgradeStatus UWeaponSubsystem::UpgradeWeapon(FWeaponCreateParams& Params
 
 	// ...and create its replacement!
 	return CreateWeapon(Params, Inventory, Upgrades);
+}
+
+void UWeaponSubsystem::PlayWeaponPickUpSFX()
+{
+	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
+	{
+		if (I->GetLibrary()->SFX_WeaponPickUp) {
+			I->PlaySound(I->GetLibrary()->SFX_WeaponPickUp);
+		}
+	}
+}
+
+void UWeaponSubsystem::PlayUpgradeSFX()
+{
+	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
+	{
+		if (I->GetLibrary()->SFX_UpgradeButtonClicked) {
+			I->PlaySound(I->GetLibrary()->SFX_UpgradeButtonClicked);
+		}
+	}
 }
 
 EWeaponUpgradeStatus UWeaponSubsystem::CreateWeapon(FWeaponCreateParams& Params, TMap<EWeaponCategory, UChildActorComponent*>& Inventory, TArray<TSubclassOf<ABaseWeapon>>& Upgrades)

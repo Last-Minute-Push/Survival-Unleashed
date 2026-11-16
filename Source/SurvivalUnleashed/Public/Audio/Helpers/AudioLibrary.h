@@ -55,4 +55,5 @@ public:
 	//PickUp SFX
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Sound) USoundBase* SFX_EXPPickUp;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Sound) USoundBase* SFX_HealthPickUp;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Sound) USoundBase* SFX_WeaponPickUp;
 };

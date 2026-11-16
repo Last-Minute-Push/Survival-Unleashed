@@ -95,10 +95,12 @@ void UPlayerStatsComponent::UpdateExpANDLevel(int amount)
 	if (GetEXPGain() != 0) {
 		CurrentExpCount += (amount * GetEXPGain());//add to current count
 		OnEXPPickUp.Execute(GetCurrentExpCountForDisplay(), GetExpReuirementForDisplay());
+		OnEXPEffect.Execute();
 	}
 	else {
 		CurrentExpCount += amount;
 		OnEXPPickUp.Execute(GetCurrentExpCountForDisplay(), GetExpReuirementForDisplay());
+		OnEXPEffect.Execute();
 	}
 	
 
