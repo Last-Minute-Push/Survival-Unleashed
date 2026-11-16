@@ -7,6 +7,7 @@
 #include "Framework/UPC_SUPlayAreaPlayerController.h"
 #include "Actor/UC_Player.h"
 #include "Enemies/SpawnDirector.h"
+#include "Enemies/BossBase.h"
 #include "Core/SUSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/CountdownWidget.h"
@@ -47,6 +48,12 @@ void AUGM_SUPlayAreaGameMode::BeginPlay() {
 		}
 	}
 
+	SpawnDirector = Cast<ASpawnDirector>(UGameplayStatics::GetActorOfClass(this, ASpawnDirector::StaticClass()));
+	if (SpawnDirector)
+	{
+		SpawnDirector->OnAnyEnemyDied.AddDynamic(this, &AUGM_SUPlayAreaGameMode::HandleEnemyDied);
+	}
+
 	// Countdown last, so the director is found before the run can start
 	SetPlayerControl(false);
 	CountdownRemaining = CountdownSeconds;
@@ -65,12 +72,6 @@ void AUGM_SUPlayAreaGameMode::BeginPlay() {
 	{
 		OnCountdownTick.Broadcast(CountdownRemaining);
 		GetWorldTimerManager().SetTimer(CountdownTimer, this, &AUGM_SUPlayAreaGameMode::CountdownTick, 1.f, true);
-	}
-
-	SpawnDirector = Cast<ASpawnDirector>(UGameplayStatics::GetActorOfClass(this, ASpawnDirector::StaticClass()));
-	if (SpawnDirector)
-	{
-		SpawnDirector->OnAnyEnemyDied.AddDynamic(this, &AUGM_SUPlayAreaGameMode::HandleEnemyDied);
 	}
 }
 
@@ -221,7 +222,14 @@ void AUGM_SUPlayAreaGameMode::SwapFromFocustoLevel()
 
 void AUGM_SUPlayAreaGameMode::HandleEnemyDied(AEnemyBase* Enemy)
 {
-	if (!bRunEnded) ++RunKills;
+	if (!bRunEnded && Enemy && Enemy->WasKilledByPlayer())
+	{
+		++RunKills;
+		if (Enemy->IsA<ABossBase>())
+		{
+			++RunBossKills;
+		}
+	}
 }
 
 void AUGM_SUPlayAreaGameMode::RecordRun()
@@ -229,10 +237,11 @@ void AUGM_SUPlayAreaGameMode::RecordRun()
 	FRunResults Results;
 	Results.TimeSurvived = GetRunTime();
 	Results.Kills = RunKills;
+	Results.BossesKilled = RunBossKills;
 	Results.LevelReached = CurrentPlayer->GetPlayerStatsComp()->GetCurrLevel();
 	// TODO (Chris): player's level once XP and level-up are in 
 	// TASK DONE, not sure where XP goes here but ya can always get level here!
-	// BossesKilled / ElitesKilled: filled in once bosses (B) and elites (C) exist
+	// ElitesKilled: filled in once elites (C) exist
 
 	UE_LOG(LogTemp, Log, TEXT("Run ended: %.1f s, %d kills"), Results.TimeSurvived, Results.Kills);
 

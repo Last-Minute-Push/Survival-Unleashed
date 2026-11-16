@@ -415,7 +415,10 @@ void ASpawnDirector::HandleEnemyHit(AEnemyBase* Enemy, float Damage, AActor* Dam
 
 void ASpawnDirector::HandleEnemyDied(AEnemyBase* Enemy)
 {
-	TryDropHealthPickup(Enemy);
+	if (Enemy && Enemy->WasKilledByPlayer())
+	{
+		TryDropHealthPickup(Enemy);
+	}
 	ActiveEnemyCount = FMath::Max(0, ActiveEnemyCount - 1);
 	ActiveEnemies.RemoveSingleSwap(Enemy);
 	OnAnyEnemyDied.Broadcast(Enemy);

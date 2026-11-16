@@ -145,6 +145,7 @@ void AEnemyBase::OnPoolRelease_Implementation()
 void AEnemyBase::ResetState()
 {
 	bIsDead = false;
+	bKilledByPlayer = true;
 	CurrentHealth = EnemyData ? EnemyData->MaxHealth : 1.f;
 	DamageMultiplier = 1.f;
 	CurrentVelocity = FVector::ZeroVector;
@@ -163,14 +164,15 @@ void AEnemyBase::ResetState()
 	StuckTime = 0.f;
 }
 
-void AEnemyBase::Die(bool bDropLoot)
+void AEnemyBase::Die(bool bInKilledByPlayer)
 {
 	bIsDead = true;
+	bKilledByPlayer = bInKilledByPlayer;
 	GetWorldTimerManager().ClearTimer(ContactDamageHandle);
 
 	// Broadcast before releasing so listeners can still read location and data
 	OnDied.Broadcast(this);
-	if (bDropLoot)
+	if (bKilledByPlayer)
 	{
 		DropLoot();
 	}

@@ -66,6 +66,7 @@ protected:
 	UPROPERTY() TObjectPtr<ASpawnDirector> SpawnDirector;
 	float RunStartTime = 0.f;
 	int32 RunKills = 0;
+	int32 RunBossKills = 0;
 	bool bRunEnded = false;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Run", meta = (ClampMin = "0"))
