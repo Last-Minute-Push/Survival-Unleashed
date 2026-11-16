@@ -170,6 +170,9 @@ private:
 
 	void TryDropHealthPickup(const AEnemyBase* Enemy);
 
+	// The most of Class the timeline can need at once
+	int32 GetPrewarmCount(TSubclassOf<AEnemyBase> Class) const;
+
 	// Bound to UBossEventSubsystem's native delegates (AddUObject, no UFUNCTION needed)
 	void HandleBossSpawned(const FText & BossName, float MaxHealth);
 	void HandleBossDied();
