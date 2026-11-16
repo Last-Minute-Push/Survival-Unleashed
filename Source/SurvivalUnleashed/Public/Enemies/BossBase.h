@@ -8,6 +8,7 @@
 
 class UBossEventSubsystem;
 class ASpawnDirector;
+class ABossChest;
 
 /**
  * Every boss reports the fight to UBossEventSubsystem,
@@ -33,9 +34,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Boss")
 	FText BossName;
 
-	// Spawned from the pool where the boss dies. Leave empty until the Boss Chest exists.
+	// Spawned from the pool where the boss dies.
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Loot")
-	TSubclassOf<AActor> BossChestClass;
+	TSubclassOf<ABossChest> BossChestClass;
 
 	bool IsFightActive() const { return bFightActive; }
 
