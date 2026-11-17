@@ -47,7 +47,7 @@ void ULevelUpScreen::SetFourUpgrades()
 	const TArray<FUpgradeOffer> Offers = UpgradeOffers::Generate(Build, Cards.Num());
 	for (int32 i = 0; i < Cards.Num(); ++i) {
 		Cards[i]->SetOffer(Offers[i]);
-
+		
 	}
 	bOfferTaken = false;
 }
