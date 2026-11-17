@@ -214,21 +214,31 @@ void UPlayerStatsComponent::TakeDamage(AActor* DamagedActor, float Damage, const
 
 void UPlayerStatsComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	//EVASION CHECKFIRST!!!
-	if (GetEvasion() > 0 && Damage > 0) // Don't dodge heals
+	if (Damage > 0.f)
 	{
-		float chance = FMath::FRand();
-		if (GetEvasion() < chance) { //if you fail to evade take damage!
-			TakeDamage(DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
+		if (IsInvincible())
+		{
+			return;
 		}
-		else {
-			// you dodged!
+		if (GetEvasion() > 0.f && FMath::FRand() < GetEvasion())
+		{
+			OnDodged.Broadcast();
+			return;
 		}
 	}
-	else { //just take damage normally
-		TakeDamage(DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
-	}
-	
+	// else
+	TakeDamage(DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
+}
+
+void UPlayerStatsComponent::GrantInvincibility(float Duration)
+{
+	// Never cuts short a longer window that's already running
+	InvincibleUntil = FMath::Max(InvincibleUntil, GetWorld()->GetTimeSeconds() + Duration);
+}
+
+bool UPlayerStatsComponent::IsInvincible() const
+{
+	return GetWorld() && GetWorld()->GetTimeSeconds() < InvincibleUntil;
 }
 
 #pragma region StatsGettersAndSetters 
