@@ -25,6 +25,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerLevelUpEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerFocusUpEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponUpgrade, EWeaponCategory, Category);
 DECLARE_MULTICAST_DELEGATE(FOnDodged);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnHitWindowStarted, float /*Duration*/);
 
 
 UENUM(BlueprintType)
@@ -112,6 +113,8 @@ public:
 	// Fires when Evasion dodges a hit, for Braulio's "Dodge" text. Native: bind with AddUObject.
 	FOnDodged OnDodged;
 
+	// Fires when a hit opens the hit window, for the player's hurt flash. Native: bind with AddUObject.
+	FOnHitWindowStarted OnHitWindowStarted;
 	
 	TMap<EPlayerStats, int32> StatRanks;
 	const TMap<EPlayerStats, int32>& GetStatRanks(); 
@@ -126,6 +129,18 @@ private:
 	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser); //Does a evasion check first!
 
 	float InvincibleUntil = -1.f; // world time
+
+	// After a hit, only damage bigger than the biggest hit so far gets through, for this long.
+	// A crowd then hurts like its strongest member, and big telegraphed attacks still land.
+	UPROPERTY(EditDefaultsOnly, Category = "Stats|Damage", meta = (ClampMin = "0"))
+	float HitWindowTime = 0.3f;
+	
+	float HitWindowEnd = -1.f;     // world time
+	float HitWindowBiggest = 0.f;  // the biggest hit inside the current window, before Defense
+	
+	// Returns the part of Damage that gets through the hit window (0 if none)
+	float ApplyHitWindow(float Damage);
+	void ReflectDamage(AActor * DamagedActor, float Damage, AActor * DamageCauser);
 	
 	//PlayerStats, 0 = not enabled!
 
