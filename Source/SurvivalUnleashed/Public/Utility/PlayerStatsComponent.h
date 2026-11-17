@@ -24,6 +24,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerFocusUp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerLevelUpEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerFocusUpEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponUpgrade, EWeaponCategory, Category);
+DECLARE_MULTICAST_DELEGATE(FOnDodged);
 
 
 UENUM(BlueprintType)
@@ -104,6 +105,13 @@ public:
 	void CallLevelUp();
 	void CallFocusStat();
 
+	// Blocks all damage, but not heals, for Duration seconds of game time. The dash uses it.
+	void GrantInvincibility(float Duration);
+	bool IsInvincible() const;
+
+	// Fires when Evasion dodges a hit, for Braulio's "Dodge" text. Native: bind with AddUObject.
+	FOnDodged OnDodged;
+
 	
 	TMap<EPlayerStats, int32> StatRanks;
 	const TMap<EPlayerStats, int32>& GetStatRanks(); 
@@ -116,6 +124,8 @@ protected:
 private:
 	UFUNCTION()
 	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser); //Does a evasion check first!
+
+	float InvincibleUntil = -1.f; // world time
 	
 	//PlayerStats, 0 = not enabled!
 

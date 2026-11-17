@@ -237,7 +237,6 @@ void AUC_Player::Tick(float DeltaTime)
 			this->AddActorWorldOffset(Offset, true);
 		}
 		else {
-			EnableCollision();
 			SetPlayerSpeed(GetPlayerStatsComp()->GetMoveSpeed());
 			IsDashing = false;
 			DashCDTimer = 0;
@@ -359,7 +358,7 @@ void AUC_Player::Dash(const FInputActionValue& Value)
 	if (CanDash == true && LastKnownInput != FVector2D::Zero()) {
 		IsDashing = true;
 		CanDash = false;
-		DisableCollision();
+		GetPlayerStatsComp()->GrantInvincibility(FMath::Max(DashInvincibilityTime, GetPlayerStatsComp()->GetDashLength()));
 		SetPlayerSpeed(GetPlayerStatsComp()->GetMoveSpeed() * 4);
 	}
 
@@ -401,16 +400,6 @@ void AUC_Player::PlayerPause(const FInputActionValue& Value)
 void AUC_Player::SetPlayerSpeed(float value)
 {
 	this->GetCharacterMovement()->MaxWalkSpeed = value;
-}
-
-void AUC_Player::EnableCollision()
-{
-	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
-}
-
-void AUC_Player::DisableCollision()
-{
-	GetCapsuleComponent()->SetGenerateOverlapEvents(false);
 }
 
 void AUC_Player::LevelUpPause()
