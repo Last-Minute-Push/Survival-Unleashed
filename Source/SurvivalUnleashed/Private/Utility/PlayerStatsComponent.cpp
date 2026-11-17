@@ -14,7 +14,7 @@ UPlayerStatsComponent::UPlayerStatsComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 
-	
+
 }
 
 
@@ -43,30 +43,30 @@ void UPlayerStatsComponent::ApplyStatUpgrade(EPlayerStats Stat)
 	if (Rank == 0)
 	{
 		MainStatArrayForUI.Add(Stat);
-		
+
 	}
 	++Rank;
 	OnStatUI.Broadcast(Stat, Rank);
 	switch (Stat)
 	{
-	case EPlayerStats::EPS_Attack:LevelUpAttack();break;
-	case EPlayerStats::EPS_Health:LevelUpMaxHealth();break;
-	case EPlayerStats::EPS_Defense:LevelUpDefense();break;
-	case EPlayerStats::EPS_WeaponAttack:LevelUpWeaponAttack();break;
-	case EPlayerStats::EPS_AttackSpeed:LevelUpAttackSpeed();break;
-	case EPlayerStats::EPS_Reflect:LevelUpReflectStat();break;
-	case EPlayerStats::EPS_DashCooldown:LevelUpDashCooldown();break;
-	case EPlayerStats::EPS_DashLength:LevelUpDashLength();break;
-	case EPlayerStats::EPS_Regen:LevelUpRegen();break;
-	case EPlayerStats::EPS_LifeSteal:LevelUpLifeStealStat();break;
-	case EPlayerStats::EPS_EXPGain:LevelUpEXPGain();break;
-	case EPlayerStats::EPS_Evasion:LevelUpEvasion();break;
-	case EPlayerStats::EPS_PickupRange:LevelUpPickupRange();break;
-	case EPlayerStats::EPS_ProjectileAmount:LevelUpProjectileAmount();break;
-	case EPlayerStats::EPS_ProjectileSpeed:LevelUpProjectileSpeed();break;
-	case EPlayerStats::EPS_HealAmount:LevelUpHealAmount();break;
+	case EPlayerStats::EPS_Attack:LevelUpAttack(); break;
+	case EPlayerStats::EPS_Health:LevelUpMaxHealth(); break;
+	case EPlayerStats::EPS_Defense:LevelUpDefense(); break;
+	case EPlayerStats::EPS_WeaponAttack:LevelUpWeaponAttack(); break;
+	case EPlayerStats::EPS_AttackSpeed:LevelUpAttackSpeed(); break;
+	case EPlayerStats::EPS_Reflect:LevelUpReflectStat(); break;
+	case EPlayerStats::EPS_DashCooldown:LevelUpDashCooldown(); break;
+	case EPlayerStats::EPS_DashLength:LevelUpDashLength(); break;
+	case EPlayerStats::EPS_Regen:LevelUpRegen(); break;
+	case EPlayerStats::EPS_LifeSteal:LevelUpLifeStealStat(); break;
+	case EPlayerStats::EPS_EXPGain:LevelUpEXPGain(); break;
+	case EPlayerStats::EPS_Evasion:LevelUpEvasion(); break;
+	case EPlayerStats::EPS_PickupRange:LevelUpPickupRange(); break;
+	case EPlayerStats::EPS_ProjectileAmount:LevelUpProjectileAmount(); break;
+	case EPlayerStats::EPS_ProjectileSpeed:LevelUpProjectileSpeed(); break;
+	case EPlayerStats::EPS_HealAmount:LevelUpHealAmount(); break;
 	}
-	
+
 
 	FinishUpgrade();
 }
@@ -83,7 +83,7 @@ void UPlayerStatsComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	CurrentHealth = MaxHealth;
-	
+
 	AActor* MyOwner = GetOwner();
 	if (MyOwner) {
 		MyOwner->OnTakeAnyDamage.AddDynamic(this, &UPlayerStatsComponent::HandleTakeAnyDamage);
@@ -102,7 +102,7 @@ void UPlayerStatsComponent::UpdateExpANDLevel(int amount)
 		OnEXPPickUp.Execute(GetCurrentExpCountForDisplay(), GetExpReuirementForDisplay());
 		OnEXPEffect.Execute();
 	}
-	
+
 
 	while (CurrentExpCount > ExpReuirement) { //levelup the needed amount of times
 		OnEXPPickUp.Execute(GetCurrentExpCountForDisplay(), 0);
@@ -116,10 +116,10 @@ void UPlayerStatsComponent::UpdateExpANDLevel(int amount)
 			QueueStyle.Add(ELevelUpStyle::ESP_Level);
 		}
 		OldExpRequirement = ExpReuirement;
-		ExpReuirement += (ExpReuirementScaler + (Level*100)); 
+		ExpReuirement += (ExpReuirementScaler + (Level * 100));
 	}
 	OnLevelUp.Execute(Level, GetCurrentExpCountForDisplay());
-	
+
 }
 
 void UPlayerStatsComponent::LevelUpOverall()
@@ -143,12 +143,6 @@ void UPlayerStatsComponent::TakeDamage(AActor* DamagedActor, float Damage, const
 	// Negative damage is a heal, so don't apply defense to it
 	const float Taken = Damage > 0 ? Damage * (1.0f - GetDefensePercent()) : Damage;
 	CurrentHealth = FMath::Clamp(CurrentHealth - Taken, 0.0f, MaxHealth);
-		// Don't reflect heals
-		if (GetReflectStat() > 0 && Damage > 0) {
-		if (DamageCauser && DamageCauser != DamagedActor) {
-			UGameplayStatics::ApplyDamage(DamageCauser, Damage * GetReflectStatCalculated(), nullptr, DamagedActor, nullptr);
-		}
-	}
 	if (CurrentHealth > 0) {
 		if (Damage > 0) {
 			if (OnHitAn.IsBound()) {
@@ -214,21 +208,71 @@ void UPlayerStatsComponent::TakeDamage(AActor* DamagedActor, float Damage, const
 
 void UPlayerStatsComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	//EVASION CHECKFIRST!!!
-	if (GetEvasion() > 0 && Damage > 0) // Don't dodge heals
+	if (Damage > 0.f)
 	{
-		float chance = FMath::FRand();
-		if (GetEvasion() < chance) { //if you fail to evade take damage!
-			TakeDamage(DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
+		if (IsInvincible())
+		{
+			return;
 		}
-		else {
-			// you dodged!
+		if (GetEvasion() > 0.f && FMath::FRand() < GetEvasion())
+		{
+			OnDodged.Broadcast();
+			return;
+		}
+
+		// Thorns answers every hit that wasn't dashed through or evaded, even one the hit window blocks
+		ReflectDamage(DamagedActor, Damage, DamageCauser);
+
+		Damage = ApplyHitWindow(Damage);
+		if (Damage <= 0.f)
+		{
+			return;
 		}
 	}
-	else { //just take damage normally
-		TakeDamage(DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
+	// else
+	TakeDamage(DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
+}
+
+float UPlayerStatsComponent::ApplyHitWindow(float Damage)
+{
+	const float Now = GetWorld()->GetTimeSeconds();
+	if (Now >= HitWindowEnd)
+	{
+		// A fresh hit lands in full and opens the window
+		HitWindowEnd = Now + HitWindowTime;
+		HitWindowBiggest = Damage;
+		OnHitWindowStarted.Broadcast(HitWindowTime);
+		return Damage;
 	}
-	
+
+	// Inside the window, only the part above the biggest hit so far gets through (25 after a 3 does 22).
+	// It doesn't extend the window, so a crowd can't keep it open forever.
+	const float Extra = Damage - HitWindowBiggest;
+	if (Extra <= 0.f)
+	{
+		return 0.f;
+	}
+	HitWindowBiggest = Damage;
+	return Extra;
+}
+
+void UPlayerStatsComponent::ReflectDamage(AActor* DamagedActor, float Damage, AActor* DamageCauser)
+{
+	if (GetReflectStat() > 0 && DamageCauser && DamageCauser != DamagedActor)
+	{
+		UGameplayStatics::ApplyDamage(DamageCauser, Damage * GetReflectStatCalculated(), nullptr, DamagedActor, nullptr);
+	}
+}
+
+void UPlayerStatsComponent::GrantInvincibility(float Duration)
+{
+	// Never cuts short a longer window that's already running
+	InvincibleUntil = FMath::Max(InvincibleUntil, GetWorld()->GetTimeSeconds() + Duration);
+}
+
+bool UPlayerStatsComponent::IsInvincible() const
+{
+	return GetWorld() && GetWorld()->GetTimeSeconds() < InvincibleUntil;
 }
 
 #pragma region StatsGettersAndSetters 
@@ -313,7 +357,7 @@ void UPlayerStatsComponent::LevelUpDashLength()
 }
 float UPlayerStatsComponent::GetRegen()
 {
-	return Regen - (Regen *(GetBarbaricPercent() * 0.1f));
+	return Regen - (Regen * (GetBarbaricPercent() * 0.1f));
 }
 void UPlayerStatsComponent::SetRegen(float regencd)
 {
@@ -392,11 +436,11 @@ void UPlayerStatsComponent::SetMoveSpeeds(float value)
 
 float UPlayerStatsComponent::GetReflectStat()
 {
-	return Reflect + (Reflect *(GetBarbaricPercent()/2.0f));
+	return Reflect + (Reflect * (GetBarbaricPercent() / 2.0f));
 }
 float UPlayerStatsComponent::GetReflectStatCalculated()
 {
-	return Reflect * ( ((1.0f - GetAttack())/2.0f)+ 1.0f)  *  (1.0f +( GetDefensePercent()/3.0f));
+	return Reflect * (((1.0f - GetAttack()) / 2.0f) + 1.0f) * (1.0f + (GetDefensePercent() / 3.0f));
 }
 
 void UPlayerStatsComponent::SetReflectStat(float value)
@@ -431,13 +475,13 @@ void UPlayerStatsComponent::LevelUpLifeStealStat()
 		SetLifeStealStat(0.02f);
 	}
 	else {
-		SetLifeStealStat(FMath::Clamp(LifeSteal + 0.04f,0.0f,1.0f));
+		SetLifeStealStat(FMath::Clamp(LifeSteal + 0.04f, 0.0f, 1.0f));
 	}
 }
 
 float UPlayerStatsComponent::GetEvasion()
 {
-	return Evasion + (Evasion* (GetIntelligencePercent()/2.0f));
+	return Evasion + (Evasion * (GetIntelligencePercent() / 2.0f));
 }
 
 void UPlayerStatsComponent::SetEvasion(float value)
@@ -498,7 +542,7 @@ void UPlayerStatsComponent::LevelUpDefenseMinor()
 
 float UPlayerStatsComponent::GetAttackSpeed()
 {
-	return AttackSpeed + (AttackSpeed * (GetIntelligencePercent() /1.5f)) + (AttackSpeed * (GetModernPercent() / 1.5f));
+	return AttackSpeed + (AttackSpeed * (GetIntelligencePercent() / 1.5f)) + (AttackSpeed * (GetModernPercent() / 1.5f));
 }
 
 void UPlayerStatsComponent::SetAttackSpeed(float value)
@@ -604,7 +648,7 @@ float UPlayerStatsComponent::GetModern()
 
 float UPlayerStatsComponent::GetModernPercent()
 {
-	return (Modern * 0.05f); 
+	return (Modern * 0.05f);
 }
 
 void UPlayerStatsComponent::SetModern(float value)
