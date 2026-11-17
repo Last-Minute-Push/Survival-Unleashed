@@ -10,7 +10,7 @@ class UDecalComponent;
 class UMaterialInstanceDynamic;
 class AHiveQueen;
 
-// Native hooks for Jorge's VFX and sounds: bind with AddUObject
+// Native hooks for VFX and sounds: bind with AddUObject
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnHiveQueenEvent, AHiveQueen*);
 
 /**
