@@ -89,6 +89,8 @@ public:
 	TArray<TWeakObjectPtr<AActor>> AttractedActors;
 	UFUNCTION()
 	void UpdateKeyBinds();
+	UFUNCTION()
+	void LoadPlayerData();
 protected:
 	UPROPERTY(Category = Character, VisibleAnywhere)
 	class USpringArmComponent* SpringArm;
@@ -100,6 +102,8 @@ protected:
 	UInputAction* Moves;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UInputAction* Dashes;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UDataAsset* PlayerData;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UInputAction* Paused;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
