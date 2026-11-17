@@ -190,7 +190,7 @@ void UWeaponSubsystem::GetAvailableEvolutions(const TArray<FOwnedWeapon>& OwnedW
 
 		// We validate!
 		bool IsEvolution = true;
-		for (auto It = Data->UpgradeRequirements.begin(); It != Data->UpgradeRequirements.end(); ++It)
+		for (auto It = Data->EvolutionRequirements.begin(); It != Data->EvolutionRequirements.end(); ++It)
 		{
 			const int32* OwnedStatLevel = OwnedStats.Find(It->Key);
 			if (!OwnedStatLevel || *OwnedStatLevel < It->Value)

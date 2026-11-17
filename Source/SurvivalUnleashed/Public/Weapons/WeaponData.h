@@ -31,7 +31,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Defaults")                                           EWeaponCategory WeaponType;
 	UPROPERTY(EditDefaultsOnly, Category = "Defaults")                                           FText Name = FText::GetEmpty();
 	UPROPERTY(EditDefaultsOnly, Category = "Defaults")                                           FText Description = FText::GetEmpty();
-	UPROPERTY(EditDefaultsOnly, Category = "Upgrades")                                           TMap<EPlayerStats, int32> UpgradeRequirements;
+	UPROPERTY(EditDefaultsOnly, Category = "Evolution")                                          int32 EvolutionLevel;
+	UPROPERTY(EditDefaultsOnly, Category = "Evolution")                                          TMap<EPlayerStats, int32> EvolutionRequirements;
 	UPROPERTY(EditDefaultsOnly, Category = "DefaultStats", meta = (ClampMin = "0"))              float Damage;
 	UPROPERTY(EditDefaultsOnly, Category = "DefaultStats", meta = (ClampMin = "0.1"))            float Cooldown;
 	UPROPERTY(EditDefaultsOnly, Category = "DefaultStats", meta = (ClampMin = "0.1"))            float Range;

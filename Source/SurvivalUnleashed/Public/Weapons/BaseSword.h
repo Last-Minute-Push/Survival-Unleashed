@@ -18,42 +18,28 @@ class SURVIVALUNLEASHED_API ABaseSword : public ABaseWeapon
 {
 	GENERATED_BODY()
 
-
 	void StartSwing();
 	void StopSwing();
 
 	UFUNCTION(Category = "Damage") void ApplyDamageCollision(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, 
-		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+		                                                     int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	void Swing(bool bRight, float DeltaTime) const;
+	void Swing(bool bRight, float DeltaTime);
 	void HideSword(bool bHide);
-
-public:
-	ABaseSword();
-
-	UPROPERTY(BlueprintAssignable, Category = "Properties|Swing|Event") FOnSwordEvent OnSwingStart;
-	UPROPERTY(BlueprintAssignable, Category = "Properties|Swing|Event") FOnSwordEvent OnSwingEnd;
-	// TODO: Create an event that takes in the final array of enemies that got hit in the arc after a swing (for points?)
-
-	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
-	UFUNCTION(BlueprintPure, Category = "Swing") virtual bool IsSwinging() const { return bIsSwinging; }
-	virtual void StartWeapon() override;
-	virtual void StopWeapon() override;
 
 protected:
 	bool bIsHidden;
 	bool bIsSwinging;
+	float Next, Prev, Difference;
 	float Height;
 	float Radius;
 	float SwingAngle;
 	float SwingSpeed;             // Data->AttackSpeed
 	float SwingArc;               // Data->Range
-	float SwingArcHalf;
+	float PastRangeRight;
+	float PastRangeLeft;
 	float SwingPatternCooldown;   // Data->Cooldown
-	uint32 CurrentSwingCount;
+	uint32 CurrentSwingCount, EvolutionLevel;
 	FTimerHandle TSwingStart, TDisappearDelay;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Swing", meta = (ClampMin = "0")) uint32 SwingCountMax;                      // Total number of swings in one set
@@ -65,4 +51,41 @@ protected:
 	UPROPERTY(VisibleAnywhere, Transient, Category = "Properties|Collision")            TArray<TObjectPtr<AActor>> HitActors;      // Collection of enemies that were previously hit by the sword's current swing
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Components")                     class UBoxComponent* BoxCollision;         // Collision used to hit enemies between swings
 	UPROPERTY(VisibleAnywhere, Category = "Properties|Niagara")                         class UNiagaraComponent* NiagaraComponent; // Niagara swing effect for the sword
+
+public:
+	ABaseSword();
+
+	UPROPERTY(BlueprintAssignable, Category = "Properties|Swing|Event") FOnSwordEvent OnSwingStart;
+	UPROPERTY(BlueprintAssignable, Category = "Properties|Swing|Event") FOnSwordEvent OnSwingEnd;
+
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	virtual void StartWeapon() override;
+	virtual void StopWeapon() override;
+
+	UFUNCTION(Category = "Type") inline int32 GetEvolutionLevel()        const { return EvolutionLevel; }
+
+	UFUNCTION(Category = "Components") inline float GetHeight()          const { return Height; }
+	UFUNCTION(Category = "Components") inline float GetRadius()          const { return Radius; }
+	UFUNCTION(Category = "Components") inline float GetCollisionHeight() const{ return CollisionHeightOffset; }
+
+	UFUNCTION(Category = "Swing") inline bool IsHidden()                 const { return bIsHidden; }
+	UFUNCTION(Category = "Swing") inline bool IsSwinging()               const { return bIsSwinging; }
+	UFUNCTION(Category = "Swing") inline float GetSwingSpeed()           const { return SwingSpeed; }
+	UFUNCTION(Category = "Swing") inline float GetSwingArc()             const { return SwingArc; }
+	UFUNCTION(Category = "Swing") inline float GetSwingInterval()        const { return SwingInterval; }
+	UFUNCTION(Category = "Swing") inline float GetDisappearingDelay()    const { return SwingDisappearingDelay; }
+	UFUNCTION(Category = "Swing") inline float GetCooldown()             const { return SwingPatternCooldown; }
+	UFUNCTION(Category = "Swing") inline float GetDisappearingDistance() const { return SwingDisappearingDistance; }
+	UFUNCTION(Category = "Swing") inline int32 GetSwingCountMax()        const { return SwingCountMax; }
+	UFUNCTION(Category = "Swing") inline int32 GetSwingCount()           const { return CurrentSwingCount; }
+	UFUNCTION(Category = "Swing") inline float GetNext()                 const { return Next; }
+	UFUNCTION(Category = "Swing") inline float GetPrev()                 const { return Prev; }
+	UFUNCTION(Category = "Swing") inline float GetDifference()           const { return Difference; }
+	UFUNCTION(Category = "Swing") inline float GetSwingAngle()           const { return SwingAngle; }
+	UFUNCTION(Category = "Swing") inline float GetPastRangeLeft()        const { return PastRangeLeft; }
+	UFUNCTION(Category = "Swing") inline float GetPastRangeRight()       const { return PastRangeRight; }
+	UFUNCTION(Category = "Swing") inline int32 GetHitCount()             const { return HitActors.Num(); }
 };

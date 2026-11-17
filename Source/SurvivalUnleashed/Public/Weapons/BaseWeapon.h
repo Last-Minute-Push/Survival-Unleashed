@@ -25,7 +25,6 @@ class SURVIVALUNLEASHED_API ABaseWeapon : public AActor
 	float DamagePerSecond = 0.f;
 	FTimerHandle TStartTimerTest, TStartTimerTest2;
 
-
 public:
 
 	// Sets default values for this actor's properties
