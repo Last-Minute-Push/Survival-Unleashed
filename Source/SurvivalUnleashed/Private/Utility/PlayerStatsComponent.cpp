@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "UI/LevelUpScreen.h"
 #include "Math/UnrealMathUtility.h"
+#include "Algo/Count.h"
 
 // Sets default values for this component's properties
 UPlayerStatsComponent::UPlayerStatsComponent()
@@ -14,12 +15,13 @@ UPlayerStatsComponent::UPlayerStatsComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 
-	
+
 }
 
 
 void UPlayerStatsComponent::CallLevelUp()
 {
+	BossChestPick = 0;
 	if (OPLU.IsBound()) {
 		OPLU.Broadcast();
 	}
@@ -27,8 +29,48 @@ void UPlayerStatsComponent::CallLevelUp()
 
 void UPlayerStatsComponent::CallFocusStat()
 {
+	BossChestPick = 0;
 	if (OPFU.IsBound()) {
 		OPFU.Broadcast();
+	}
+}
+
+bool UPlayerStatsComponent::OpenNextLevelUp()
+{
+	if (QueueStyle.Num() == 0)
+	{
+		return false;
+	}
+
+	// Removed before opening, so the count of chest menus still waiting is right
+	const ELevelUpStyle Style = QueueStyle[0];
+	QueueStyle.RemoveAt(0);
+
+	switch (Style)
+	{
+	case ESP_Focus:
+		CallFocusStat();
+		break;
+	case ESP_BossChest:
+		// Every chest queues BossChestPicks menus, so the chest menus still waiting tell which one this is
+		BossChestPick = BossChestPicks - Algo::Count(QueueStyle, ESP_BossChest) % BossChestPicks;
+		if (OPLU.IsBound()) {
+			OPLU.Broadcast();
+
+		}
+		break;
+	default:
+		CallLevelUp();
+		break;
+	}
+	return true;
+}
+
+void UPlayerStatsComponent::QueueBossChest()
+{
+	for (int32 i = 0; i < BossChestPicks; ++i)
+	{
+		QueueStyle.Add(ESP_BossChest);
 	}
 }
 
@@ -43,30 +85,30 @@ void UPlayerStatsComponent::ApplyStatUpgrade(EPlayerStats Stat)
 	if (Rank == 0)
 	{
 		MainStatArrayForUI.Add(Stat);
-		
+
 	}
 	++Rank;
 	OnStatUI.Broadcast(Stat, Rank);
 	switch (Stat)
 	{
-	case EPlayerStats::EPS_Attack:LevelUpAttack();break;
-	case EPlayerStats::EPS_Health:LevelUpMaxHealth();break;
-	case EPlayerStats::EPS_Defense:LevelUpDefense();break;
-	case EPlayerStats::EPS_WeaponAttack:LevelUpWeaponAttack();break;
-	case EPlayerStats::EPS_AttackSpeed:LevelUpAttackSpeed();break;
-	case EPlayerStats::EPS_Reflect:LevelUpReflectStat();break;
-	case EPlayerStats::EPS_DashCooldown:LevelUpDashCooldown();break;
-	case EPlayerStats::EPS_DashLength:LevelUpDashLength();break;
-	case EPlayerStats::EPS_Regen:LevelUpRegen();break;
-	case EPlayerStats::EPS_LifeSteal:LevelUpLifeStealStat();break;
-	case EPlayerStats::EPS_EXPGain:LevelUpEXPGain();break;
-	case EPlayerStats::EPS_Evasion:LevelUpEvasion();break;
-	case EPlayerStats::EPS_PickupRange:LevelUpPickupRange();break;
-	case EPlayerStats::EPS_ProjectileAmount:LevelUpProjectileAmount();break;
-	case EPlayerStats::EPS_ProjectileSpeed:LevelUpProjectileSpeed();break;
-	case EPlayerStats::EPS_HealAmount:LevelUpHealAmount();break;
+	case EPlayerStats::EPS_Attack:LevelUpAttack(); break;
+	case EPlayerStats::EPS_Health:LevelUpMaxHealth(); break;
+	case EPlayerStats::EPS_Defense:LevelUpDefense(); break;
+	case EPlayerStats::EPS_WeaponAttack:LevelUpWeaponAttack(); break;
+	case EPlayerStats::EPS_AttackSpeed:LevelUpAttackSpeed(); break;
+	case EPlayerStats::EPS_Reflect:LevelUpReflectStat(); break;
+	case EPlayerStats::EPS_DashCooldown:LevelUpDashCooldown(); break;
+	case EPlayerStats::EPS_DashLength:LevelUpDashLength(); break;
+	case EPlayerStats::EPS_Regen:LevelUpRegen(); break;
+	case EPlayerStats::EPS_LifeSteal:LevelUpLifeStealStat(); break;
+	case EPlayerStats::EPS_EXPGain:LevelUpEXPGain(); break;
+	case EPlayerStats::EPS_Evasion:LevelUpEvasion(); break;
+	case EPlayerStats::EPS_PickupRange:LevelUpPickupRange(); break;
+	case EPlayerStats::EPS_ProjectileAmount:LevelUpProjectileAmount(); break;
+	case EPlayerStats::EPS_ProjectileSpeed:LevelUpProjectileSpeed(); break;
+	case EPlayerStats::EPS_HealAmount:LevelUpHealAmount(); break;
 	}
-	
+
 
 	FinishUpgrade();
 }
@@ -83,7 +125,7 @@ void UPlayerStatsComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	CurrentHealth = MaxHealth;
-	
+
 	AActor* MyOwner = GetOwner();
 	if (MyOwner) {
 		MyOwner->OnTakeAnyDamage.AddDynamic(this, &UPlayerStatsComponent::HandleTakeAnyDamage);
@@ -102,7 +144,7 @@ void UPlayerStatsComponent::UpdateExpANDLevel(int amount)
 		OnEXPPickUp.Execute(GetCurrentExpCountForDisplay(), GetExpReuirementForDisplay());
 		OnEXPEffect.Execute();
 	}
-	
+
 
 	while (CurrentExpCount > ExpReuirement) { //levelup the needed amount of times
 		OnEXPPickUp.Execute(GetCurrentExpCountForDisplay(), 0);
@@ -116,10 +158,10 @@ void UPlayerStatsComponent::UpdateExpANDLevel(int amount)
 			QueueStyle.Add(ELevelUpStyle::ESP_Level);
 		}
 		OldExpRequirement = ExpReuirement;
-		ExpReuirement += (ExpReuirementScaler + (Level*100)); 
+		ExpReuirement += (ExpReuirementScaler + (Level * 100));
 	}
 	OnLevelUp.Execute(Level, GetCurrentExpCountForDisplay());
-	
+
 }
 
 void UPlayerStatsComponent::LevelUpOverall()
@@ -143,8 +185,8 @@ void UPlayerStatsComponent::TakeDamage(AActor* DamagedActor, float Damage, const
 	// Negative damage is a heal, so don't apply defense to it
 	const float Taken = Damage > 0 ? Damage * (1.0f - GetDefensePercent()) : Damage;
 	CurrentHealth = FMath::Clamp(CurrentHealth - Taken, 0.0f, MaxHealth);
-		// Don't reflect heals
-		if (GetReflectStat() > 0 && Damage > 0) {
+	// Don't reflect heals
+	if (GetReflectStat() > 0 && Damage > 0) {
 		if (DamageCauser && DamageCauser != DamagedActor) {
 			UGameplayStatics::ApplyDamage(DamageCauser, Damage * GetReflectStatCalculated(), nullptr, DamagedActor, nullptr);
 		}
@@ -228,7 +270,7 @@ void UPlayerStatsComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Dama
 	else { //just take damage normally
 		TakeDamage(DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
 	}
-	
+
 }
 
 #pragma region StatsGettersAndSetters 
@@ -313,7 +355,7 @@ void UPlayerStatsComponent::LevelUpDashLength()
 }
 float UPlayerStatsComponent::GetRegen()
 {
-	return Regen - (Regen *(GetBarbaricPercent() * 0.1f));
+	return Regen - (Regen * (GetBarbaricPercent() * 0.1f));
 }
 void UPlayerStatsComponent::SetRegen(float regencd)
 {
@@ -392,11 +434,11 @@ void UPlayerStatsComponent::SetMoveSpeeds(float value)
 
 float UPlayerStatsComponent::GetReflectStat()
 {
-	return Reflect + (Reflect *(GetBarbaricPercent()/2.0f));
+	return Reflect + (Reflect * (GetBarbaricPercent() / 2.0f));
 }
 float UPlayerStatsComponent::GetReflectStatCalculated()
 {
-	return Reflect * ( ((1.0f - GetAttack())/2.0f)+ 1.0f)  *  (1.0f +( GetDefensePercent()/3.0f));
+	return Reflect * (((1.0f - GetAttack()) / 2.0f) + 1.0f) * (1.0f + (GetDefensePercent() / 3.0f));
 }
 
 void UPlayerStatsComponent::SetReflectStat(float value)
@@ -431,13 +473,13 @@ void UPlayerStatsComponent::LevelUpLifeStealStat()
 		SetLifeStealStat(0.02f);
 	}
 	else {
-		SetLifeStealStat(FMath::Clamp(LifeSteal + 0.04f,0.0f,1.0f));
+		SetLifeStealStat(FMath::Clamp(LifeSteal + 0.04f, 0.0f, 1.0f));
 	}
 }
 
 float UPlayerStatsComponent::GetEvasion()
 {
-	return Evasion + (Evasion* (GetIntelligencePercent()/2.0f));
+	return Evasion + (Evasion * (GetIntelligencePercent() / 2.0f));
 }
 
 void UPlayerStatsComponent::SetEvasion(float value)
@@ -498,7 +540,7 @@ void UPlayerStatsComponent::LevelUpDefenseMinor()
 
 float UPlayerStatsComponent::GetAttackSpeed()
 {
-	return AttackSpeed + (AttackSpeed * (GetIntelligencePercent() /1.5f)) + (AttackSpeed * (GetModernPercent() / 1.5f));
+	return AttackSpeed + (AttackSpeed * (GetIntelligencePercent() / 1.5f)) + (AttackSpeed * (GetModernPercent() / 1.5f));
 }
 
 void UPlayerStatsComponent::SetAttackSpeed(float value)
@@ -604,7 +646,7 @@ float UPlayerStatsComponent::GetModern()
 
 float UPlayerStatsComponent::GetModernPercent()
 {
-	return (Modern * 0.05f); 
+	return (Modern * 0.05f);
 }
 
 void UPlayerStatsComponent::SetModern(float value)

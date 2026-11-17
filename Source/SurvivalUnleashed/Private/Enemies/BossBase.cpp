@@ -8,6 +8,7 @@
 #include "Enemies/SpawnDirector.h"
 #include "Framework/SUCollision.h"
 #include "Kismet/GameplayStatics.h"
+#include "Actor/BossChest.h"
 
 float ABossBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent,
 	AController* EventInstigator, AActor* DamageCauser)
