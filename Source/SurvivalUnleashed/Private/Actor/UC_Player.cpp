@@ -24,7 +24,7 @@
 #include "Engine/LocalPlayer.h" 
 #include "UserSettings/EnhancedInputUserSettings.h"
 #include "Components/AudioComponent.h"
-#include "Actor/BalancedPlayerDataAsset.h"
+
 #include "InputMappingContext.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPlayer, Log, All);
@@ -63,7 +63,6 @@ AUC_Player::AUC_Player()
 	PickUpRadius = CreateDefaultSubobject<USphereComponent>("PickUpRadius");
 	PickUpRadius->SetupAttachment(GetRootComponent());
 	PickUpRadius->SetCollisionProfileName(FName("PickupRadius"));
-
 	PickUpRadius->OnComponentBeginOverlap.AddDynamic(this, &AUC_Player::HandlePickUpOverlap);
 }
 
@@ -71,7 +70,12 @@ AUC_Player::AUC_Player()
 void AUC_Player::BeginPlay()
 {
 	Super::BeginPlay();
-	//Load Data here!
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	if (GI) {
+		GI->PlayerItself = this;
+		PlayerData = GI->PlayerData;
+		GI->LoadKeyBinds();
+	}
 	LoadPlayerData();
 	EXPPitch = 0.8;
 	EXPPitchTimer = 0;
@@ -164,11 +168,7 @@ void AUC_Player::BeginPlay()
 	}
 
 	UpdatePickUpRadius(GetPlayerStatsComp()->GetPickupRange());
-	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
-	if (GI) {
-		GI->PlayerItself = this;
-		GI->LoadKeyBinds();
-	}
+
 
 	if (UBossEventSubsystem* BS = GetWorld()->GetSubsystem<UBossEventSubsystem>())
 	{
@@ -548,6 +548,24 @@ void AUC_Player::PlayEXPSound()
 	}
 }
 
+void AUC_Player::PassiveEnable(EPassives ThePassive)
+{
+	switch (ThePassive) {
+	case(EPassives::Villager):
+		GetPlayerStatsComp()->BalancedPassive = true;
+		break;
+	case(EPassives::Wizard):
+		GetPlayerStatsComp()->WizardPassive = true;
+		break;
+	case(EPassives::Fighter):
+		GetPlayerStatsComp()->WarriorPassive = true;
+		break;
+	case(EPassives::Ranger):
+		GetPlayerStatsComp()->ModernPassive = true;
+		break;
+	}
+}
+
 void AUC_Player::UpdateKeyBinds()
 {
 	APlayerController* PC = Cast<APlayerController>(GetController());
@@ -574,7 +592,7 @@ void AUC_Player::LoadPlayerData()
 		if (GetPlayerStatsComp()) {
 			UBalancedPlayerDataAsset* Data = Cast<UBalancedPlayerDataAsset>(PlayerData);
 			if (Data) {
-				GetPlayerStatsComp()->BalancedPassive = true;
+				PassiveEnable(Data->Passive);
 				GetPlayerStatsComp()->SetAttack(Data->Attack);
 				GetPlayerStatsComp()->SetMaxHealth(Data->MaxHealth);
 				GetPlayerStatsComp()->SetDashCooldown(Data->DashCooldown);

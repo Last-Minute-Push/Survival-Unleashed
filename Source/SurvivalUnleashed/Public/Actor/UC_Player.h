@@ -12,6 +12,7 @@
 #include "Utility/PlayerStatsComponent.h"
 #include "Utility/UpgradeOffers.h"
 #include "GameFramework/CheatManagerDefines.h"
+#include "Actor/BalancedPlayerDataAsset.h"
 #include "UC_Player.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerLost);
@@ -171,4 +172,5 @@ private:
 	UFUNCTION()
 	void HandlePickUpOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
 	UFUNCTION() void PlayEXPSound();
+	void PassiveEnable(EPassives ThePassive);
 };

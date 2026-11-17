@@ -10,9 +10,15 @@
 #include "Weapons/WeaponDatabase.h"
 #include "BalancedPlayerDataAsset.generated.h"
 
-/**
- * 
- */
+
+UENUM(BlueprintType)
+enum class EPassives : uint8
+{
+	Villager,
+	Wizard,
+	Fighter,
+	Ranger
+};
 
 
 UCLASS()
@@ -75,6 +81,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float Reflect = 0;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Cost")
+	float UnlockCost = 0;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Model")
 	USkeletalMesh* Model;
 
@@ -84,5 +93,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapons")
 	TMap<EWeaponCategory, int32> StartingWeapons;
 
-
+	UPROPERTY(EditDefaultsOnly, Category = "Passive")
+	EPassives Passive;
 };
