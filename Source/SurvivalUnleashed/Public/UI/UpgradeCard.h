@@ -50,6 +50,9 @@ protected:
 	TMap<EWeaponCategory, FUpgradeCardInfo> WeaponInfo;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Upgrade Card")
+	TMap<EWeaponCategory, FText> WeaponTextMapIndexes;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Upgrade Card")
 	FUpgradeCardInfo HealInfo;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) TObjectPtr<UButton> PickButton;
@@ -70,6 +73,8 @@ private:
 	UFUNCTION() void HandleHoverSFX();
 	UFUNCTION() void SetButtonClickSFX(USoundBase* SFX);
 	UFUNCTION() void GetWeaponImageIndex(EWeaponCategory Category);
+
+	FText GetWeaponDescription(EWeaponCategory Category);
 
 	UPROPERTY()
 	FUpgradeOffer Offer;

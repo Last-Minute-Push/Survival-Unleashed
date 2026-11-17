@@ -38,6 +38,7 @@ void UUpgradeCard::SetOffer(const FUpgradeOffer& InOffer)
 	{
 		Info = WeaponInfo.Find(Offer.Weapon);
 		GetWeaponImageIndex(Offer.Weapon);
+		
 	}
 
 	if (Info)
@@ -64,9 +65,18 @@ void UUpgradeCard::SetOffer(const FUpgradeOffer& InOffer)
 		LevelText->SetText(FText::Format(INVTEXT("Lv {0} -> {1}"), Offer.CurrentLevel, Offer.CurrentLevel + 1));
 	}
 
+	
 	if (DescriptionText)
 	{
-		DescriptionText->SetText(Info ? Info->Description : FText::GetEmpty());
+		if (Offer.Kind == EUpgradeKind::Weapon) 
+		{
+			if (WeaponTextMapIndexes.Contains(Offer.Weapon)) {
+				DescriptionText->SetText(*WeaponTextMapIndexes.Find(Offer.Weapon));
+			}
+		}
+		else {
+			DescriptionText->SetText(Info ? Info->Description : FText::GetEmpty());
+		}
 	}
 
 }
@@ -119,39 +129,56 @@ void UUpgradeCard::GetWeaponImageIndex(EWeaponCategory Category)
 	{
 	case EWeaponCategory::EBP_Sword:
 		WeaponIconSwitcher->SetActiveWidgetIndex(1);
-		//return 1;
+		return;
 		break;
 	case EWeaponCategory::EBP_Gauntlets:
 		WeaponIconSwitcher->SetActiveWidgetIndex(2);
-		//return 2;
+		return;
 		break;
 	case EWeaponCategory::EBP_Axe:
 		WeaponIconSwitcher->SetActiveWidgetIndex(3);
-		//return 3;
+		return;
 		break;
 	case EWeaponCategory::EBP_Spear:
 		WeaponIconSwitcher->SetActiveWidgetIndex(4);
-		//return 4;
+		return;
 		break;
 	case EWeaponCategory::EBP_BowToGun:
 		WeaponIconSwitcher->SetActiveWidgetIndex(5);
-		//return 5;
+		return;
+		break;
 	case EWeaponCategory::EBP_IceStaff:
 		WeaponIconSwitcher->SetActiveWidgetIndex(6);
-		//return 6;
+		return;
 		break;
 	case EWeaponCategory::EBP_EarthStaff:
 		WeaponIconSwitcher->SetActiveWidgetIndex(7);
-		//return 7;
+		return;
 		break;
 	case EWeaponCategory::EBP_FireStaff:
 		WeaponIconSwitcher->SetActiveWidgetIndex(8);
-		//return 8;
+		return;
 		break;
 	case EWeaponCategory::EBP_LightningStaff:
 		WeaponIconSwitcher->SetActiveWidgetIndex(9);
-		//return 9;
+		return;
 		break;
 	}
 	//return 0;
+	WeaponIconSwitcher->SetActiveWidgetIndex(0);
+}
+
+FText UUpgradeCard::GetWeaponDescription(EWeaponCategory Category)
+{
+	
+	switch (Category)
+	{
+	case EWeaponCategory::EBP_Sword:
+		return FText::FromString("-A average speed swinging weapon that damages\n that makes contact!-");
+		break;
+	case EWeaponCategory::EBP_BowToGun:
+		return FText::FromString("-Shoot projectiles to the nearest enemy!-");
+		break;
+	}
+	return FText();
 }
