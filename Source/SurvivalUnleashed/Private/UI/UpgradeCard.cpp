@@ -34,7 +34,7 @@ void UUpgradeCard::SetOffer(const FUpgradeOffer& InOffer)
 	Offer = InOffer;
 
 	// Look up what to show for this offer
-	FUpgradeCardInfo WeaponInfo, *Info = &HealInfo;
+	FUpgradeCardInfo WeaponCardInfo, *Info = &HealInfo, *WeaponUpgradeInfo = nullptr;
 	if (Offer.Kind == EUpgradeKind::Stat)
 	{
 		Info = StatInfo.Find(Offer.Stat);
@@ -48,15 +48,27 @@ void UUpgradeCard::SetOffer(const FUpgradeOffer& InOffer)
 
 		if (OnSetWeaponOffer.IsBound())
 		{
-			Info = &(WeaponInfo = OnSetWeaponOffer.Execute(Offer.Weapon, Offer.CurrentLevel));
+			WeaponUpgradeInfo = &(WeaponCardInfo = OnSetWeaponOffer.Execute(Offer.Weapon, Offer.CurrentLevel));
 		}
-		else
-		{
-			Info = nullptr;
-		}
+
+		Info = WeaponInfo.Find(Offer.Weapon);
+	}
+	
+
+	if (WeaponUpgradeInfo && !WeaponUpgradeInfo->Description.IsEmpty())
+	{
+		DescriptionText->SetText(WeaponUpgradeInfo->Description);
+	}
+	else if (Info && !Info->Description.IsEmpty())
+	{
+		DescriptionText->SetText(Info->Description);
 	}
 
-	if (Info && !Info->Name.IsEmpty())
+	if (WeaponUpgradeInfo && !WeaponUpgradeInfo->Name.IsEmpty())
+	{
+		NameText->SetText(WeaponUpgradeInfo->Name);
+	}
+	else if (Info && !Info->Name.IsEmpty())
 	{
 		NameText->SetText(Info->Name);
 	}

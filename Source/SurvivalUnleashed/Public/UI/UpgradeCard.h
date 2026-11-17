@@ -50,6 +50,9 @@ protected:
 	TMap<EPlayerStats, FUpgradeCardInfo> StatInfo;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Upgrade Card")
+	TMap<EWeaponCategory, FUpgradeCardInfo> WeaponInfo;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Upgrade Card")
 	FUpgradeCardInfo HealInfo;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) TObjectPtr<UButton> PickButton;
