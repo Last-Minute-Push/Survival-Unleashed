@@ -37,7 +37,7 @@ TArray<FUpgradeOffer> UpgradeOffers::Generate(const FBuildSnapshot& Build, int32
 	TArray<FUpgradeOffer> Weapons;
 	for (const FOwnedWeapon& Owned : Build.OwnedWeapons)
 	{
-		if (Owned.Level < Owned.FirstEvolution - 1) // max-level weapons drop out
+		if (Owned.FirstEvolution != -1 && Owned.Level < Owned.FirstEvolution - 1 || Owned.Level < Owned.MaxLevel - 1) // max-level weapons drop out
 		{
 			Weapons.Add(MakeWeaponOffer(Owned.Data, Owned.Level + 1));
 		}

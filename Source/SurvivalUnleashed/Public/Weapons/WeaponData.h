@@ -8,6 +8,7 @@
 #include "Weapons/WeaponDatabase.h"
 #include "WeaponData.generated.h"
 
+class UImage;
 class UNiagaraSystem;
 class AProjectileBase;
 
@@ -29,8 +30,10 @@ class SURVIVALUNLEASHED_API UWeaponData : public UPrimaryDataAsset
 	
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Defaults")                                           EWeaponCategory WeaponType;
-	UPROPERTY(EditDefaultsOnly, Category = "Defaults")                                           FText Name = FText::GetEmpty();
-	UPROPERTY(EditDefaultsOnly, Category = "Defaults")                                           FText Description = FText::GetEmpty();
+	UPROPERTY(EditDefaultsOnly, Category = "Defaults|UpgradeCard")                               FText Name = FText::GetEmpty();
+	UPROPERTY(EditDefaultsOnly, Category = "Defaults|UpgradeCard")                               FText Description = FText::GetEmpty();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Defaults|UpgradeCard")                               TObjectPtr<UTexture2D> Icon;
 	UPROPERTY(EditDefaultsOnly, Category = "Evolution")                                          int32 EvolutionLevel;
 	UPROPERTY(EditDefaultsOnly, Category = "Evolution")                                          TMap<EPlayerStats, int32> EvolutionRequirements;
 	UPROPERTY(EditDefaultsOnly, Category = "DefaultStats", meta = (ClampMin = "0"))              float Damage;

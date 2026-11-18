@@ -10,6 +10,7 @@ class UButton;
 class UImage;
 class UTextBlock;
 class UTexture2D;
+class UWidgetSwitcher;
 class UWeaponSubsystem;
 
 DECLARE_DELEGATE_OneParam(FOnUpgradeCardPicked, int32 /*CardIndex*/);
@@ -55,11 +56,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Upgrade Card")
 	FUpgradeCardInfo HealInfo;
 
+
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) TObjectPtr<UButton> PickButton;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) TObjectPtr<UTextBlock> NameText;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) TObjectPtr<UTextBlock> LevelText;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UWidgetSwitcher* WeaponIconSwitcher;
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) UWidgetSwitcher* WeaponIconSwitcher;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) TObjectPtr<UImage> LastIcon;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> DescriptionText;
 
@@ -68,13 +72,11 @@ protected:
 	USoundBase* CurrentButtonClicked;
 private:
 	UFUNCTION(BlueprintCallable) // required: UButton::OnClicked is a dynamic delegate
-	void HandleClicked();
+		void HandleClicked();
 
 	UFUNCTION() void HandleHoverSFX();
 	UFUNCTION() void SetButtonClickSFX(USoundBase* SFX);
 	UFUNCTION() void GetWeaponImageIndex(EWeaponCategory Category);
-
-	FText GetWeaponDescription(EWeaponCategory Category);
 
 	UPROPERTY()
 	FUpgradeOffer Offer;

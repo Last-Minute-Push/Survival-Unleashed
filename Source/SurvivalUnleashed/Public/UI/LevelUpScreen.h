@@ -47,7 +47,7 @@ public:
 	// Every weapon a level-up can offer.
 	UPROPERTY(BlueprintReadOnly, Category = "Level Up")
 	TArray<EWeaponCategory> WeaponPool;
-	
+
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	class UHorizontalBox* HorizontalBox;
 

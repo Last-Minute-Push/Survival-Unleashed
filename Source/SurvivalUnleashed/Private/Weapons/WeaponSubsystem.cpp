@@ -166,6 +166,7 @@ FUpgradeCardInfo UWeaponSubsystem::GetWeaponInfo(EWeaponCategory Category, int32
 	{
 		OutInfo.Name = Data->Name;
 		OutInfo.Description = Data->Description;
+		OutInfo.Icon = Data->Icon;
 	}
 
 	return OutInfo;
