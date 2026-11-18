@@ -73,7 +73,7 @@ protected:
 	UPROPERTY() FRunResults LastRunResults;
 
 	void LoadOrCreateSave();
-	
+
 public:
 
 	UUGI_SUGameInstance();
@@ -91,8 +91,23 @@ public:
 	UFUNCTION() void QuitTheGame();
 
 	//----------------------------------------------------------------------//
-        // Weapon Database
-        //----------------------------------------------------------------------//
+	//EXP Merge Handling
+	//----------------------------------------------------------------------//
+
+	UPROPERTY()
+	TArray<TWeakObjectPtr<AActor>> EXPActors;
+	UPROPERTY()
+	TWeakObjectPtr<AActor> ClosestEXPActor;
+	UPROPERTY(EditDefaultsOnly)
+	float EXPLimit = 300;
+	void AddEXPtoNearestOne(FVector EnemyLocation, int32 EXPvalue);
+	void EnableMerge();
+
+	bool calledMerge = false;
+
+	//----------------------------------------------------------------------//
+    // Weapon Database
+    //----------------------------------------------------------------------//
 	UFUNCTION() inline UWeaponDatabase* GetWeaponDatabase() const { return Database; }
 
 	//----------------------------------------------------------------------//

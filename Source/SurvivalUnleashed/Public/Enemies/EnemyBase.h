@@ -74,6 +74,10 @@ public:
 	// Where drops should appear: near the ground under this enemy, however tall its capsule is
 	FVector GetLootLocation() const;
 
+	// False when the enemy died on its own: no kill credit, no gem, no health drop.
+	// Valid while OnDied is broadcasting.
+	bool WasKilledByPlayer() const { return bKilledByPlayer; }
+
 	// Magnitude: damage per 0.5 s for Burn/Freeze, pull speed for Pull, unused for Stun.
 	// Reapplying refreshes the duration. It never stacks.
 	UFUNCTION(BlueprintCallable, Category = "Enemy|Status")
@@ -134,9 +138,9 @@ protected:
 	// For subclasses that need their own neighbor queries (flocking)
 	UHordeSubsystem* GetHorde() const { return Horde; }
 
-	// Death: broadcasts OnDied, drops loot unless told not to, and returns this enemy to the pool.
-	// Protected so subclasses can die on their own terms (the Puffball's self-burst drops no gem).
-	void Die(bool bDropLoot = true);
+	// Death: broadcasts OnDied and returns this enemy to the pool. bKilledByPlayer = false for deaths the player
+	// didn't cause: no loot, and listeners can skip kill credit via WasKilledByPlayer.
+	void Die(bool bInKilledByPlayer = true);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Steering", meta = (ClampMin = "0"))
 	float SeekWeight = 1.f;
@@ -227,6 +231,7 @@ private:
 	float CurrentHealth = 0.f;
 	float DamageMultiplier = 1.f;
 	bool bIsDead = false;
+	bool bKilledByPlayer = true;
 	FVector CurrentVelocity = FVector::ZeroVector;
 	FTimerHandle ContactDamageHandle;
 	FTimerHandle HitFlashDurationHandle;

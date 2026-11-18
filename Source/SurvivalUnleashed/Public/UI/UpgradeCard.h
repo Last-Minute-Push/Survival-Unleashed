@@ -74,6 +74,8 @@ private:
 	UFUNCTION() void SetButtonClickSFX(USoundBase* SFX);
 	UFUNCTION() void GetWeaponImageIndex(EWeaponCategory Category);
 
+	FText GetWeaponDescription(EWeaponCategory Category);
+
 	UPROPERTY()
 	FUpgradeOffer Offer;
 

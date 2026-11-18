@@ -123,6 +123,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	UPlayerStatsComponent* PlayerStatsComponent;
 
+	UPROPERTY(EditDefaultsOnly, Category = "PickUpAudioConcurrency")
+	USoundConcurrency* PickUpConcurrency;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient, Category = "Boss")
 	UBossEventSubsystem* BossEventSubsystem;
 	// Called when the game starts or when spawned
@@ -141,6 +144,8 @@ private:
 	bool CanDash = true;
 	bool Magnet = false;
 	float MagnetTimer = 0;
+	float EXPPitch;
+	float EXPPitchTimer;
 
 
 	// - Debug Overlay -
@@ -162,4 +167,5 @@ private:
 	void UpdatePickUpRadius(float value);
 	UFUNCTION()
 	void HandlePickUpOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
+	UFUNCTION() void PlayEXPSound();
 };

@@ -89,7 +89,7 @@ void ASporePuffball::Burst()
 	SpawnCloud(GetActorLocation());
 
 	// Its own burst: dies (OnDied still fires, so the Spawn Director's count stays right) but drops no gem
-	Die(/*bDropLoot*/ false);
+	Die(/*bKilledByPlayer*/ false);
 }
 
 void ASporePuffball::SpawnCloud(const FVector& ActorLocation) const

@@ -60,9 +60,8 @@ void ASpawnDirector::BeginPlay()
 			Timeline->GetAllEnemyClasses(Classes);
 			for (const TSubclassOf<AEnemyBase>& Class : Classes)
 			{
-				// One of each boss is enough
-				const bool bIsBoss = Class && Class->IsChildOf(ABossBase::StaticClass());
-				Pool->Prewarm(Class, bIsBoss ? 1 : TimelinePrewarmPerClass);
+				// Sized from the timeline, so common enemies never run out mid-run and rare ones don't waste memory
+				Pool->Prewarm(Class, FMath::Max(1, GetPrewarmCount(Class)));
 			}
 		}
 		else
@@ -415,7 +414,10 @@ void ASpawnDirector::HandleEnemyHit(AEnemyBase* Enemy, float Damage, AActor* Dam
 
 void ASpawnDirector::HandleEnemyDied(AEnemyBase* Enemy)
 {
-	TryDropHealthPickup(Enemy);
+	if (Enemy && Enemy->WasKilledByPlayer())
+	{
+		TryDropHealthPickup(Enemy);
+	}
 	ActiveEnemyCount = FMath::Max(0, ActiveEnemyCount - 1);
 	ActiveEnemies.RemoveSingleSwap(Enemy);
 	OnAnyEnemyDied.Broadcast(Enemy);
@@ -641,4 +643,40 @@ void ASpawnDirector::HandleBossSpawned(const FText& BossName, float MaxHealth)
 void ASpawnDirector::HandleBossDied()
 {
 	bBossFightActive = false;
+}
+
+int32 ASpawnDirector::GetPrewarmCount(TSubclassOf<AEnemyBase> Class) const
+{
+	// Phases: this class's weighted share of each phase's target, at the largest phase
+	float Peak = 0.f;
+	for (const FSpawnPhase& Phase : Timeline->Phases)
+	{
+		float Total = 0.f;
+		float Mine = 0.f;
+		for (const FSpawnEntry& Entry : Phase.Enemies)
+		{
+			Total += Entry.Weight;
+			if (Entry.EnemyClass == Class)
+			{
+				Mine += Entry.Weight;
+			}
+		}
+		if (Total > 0.f)
+		{
+			Peak = FMath::Max(Peak, FMath::Min(Phase.TargetActive, MaxActiveEnemies) * Mine / Total);
+		}
+	}
+
+	// Events: whole groups, two of a repeating one in case the last group is still alive (bosses come out as 1)
+	int32 FromEvents = 0;
+	for (const FSpawnEvent& Event : Timeline->Events)
+	{
+		if (Event.EnemyClass == Class)
+		{
+			FromEvents += Event.Count * (Event.RepeatInterval > 0.f ? 2 : 1);
+		}
+	}
+
+	// 25% extra for the random mix and boss summons (the Treant's Vine Crawlers come from this pool too)
+	return FMath::CeilToInt(Peak * 1.25f) + FromEvents;
 }
