@@ -37,7 +37,7 @@ void UUpgradeCard::SetOffer(const FUpgradeOffer& InOffer)
 	FUpgradeCardInfo WeaponCardInfo, *Info = &HealInfo, *WeaponUpgradeInfo = nullptr;
 	if (Offer.Kind == EUpgradeKind::Stat)
 	{
-		Info = StatInfo.Find(Offer.Stat);
+		Info = StatsInfo.Find(Offer.Stat);
 		WeaponIconSwitcher->SetVisibility(ESlateVisibility::Hidden);
 	}
 	else if (Offer.Kind == EUpgradeKind::Weapon)
@@ -51,7 +51,7 @@ void UUpgradeCard::SetOffer(const FUpgradeOffer& InOffer)
 			WeaponUpgradeInfo = &(WeaponCardInfo = OnSetWeaponOffer.Execute(Offer.Weapon, Offer.CurrentLevel));
 		}
 
-		Info = WeaponInfo.Find(Offer.Weapon);
+		Info = WeaponsInfo.Find(Offer.Weapon);
 		
 	}
 	

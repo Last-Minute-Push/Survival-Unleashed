@@ -47,10 +47,10 @@ protected:
 	virtual void NativePreConstruct() override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Upgrade Card")
-	TMap<EPlayerStats, FUpgradeCardInfo> StatInfo;
+	TMap<EPlayerStats, FUpgradeCardInfo> StatsInfo;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Upgrade Card")
-	TMap<EWeaponCategory, FUpgradeCardInfo> WeaponInfo;
+	TMap<EWeaponCategory, FUpgradeCardInfo> WeaponsInfo;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Upgrade Card")
 	FUpgradeCardInfo HealInfo;
