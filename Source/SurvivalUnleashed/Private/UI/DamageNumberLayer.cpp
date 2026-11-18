@@ -57,7 +57,6 @@ void UDamageNumberLayer::HandleEnemyHit(AEnemyBase* Enemy, float Damage, AActor*
 	// Take the next entry in the ring; if it's still showing, it just restarts here
 	FDamageNumberEntry& Entry = Entries[NextEntry];
 	NextEntry = (NextEntry + 1) % Entries.Num();
-
 	if (!Entry.Widget)
 	{
 		Entry.Widget = CreateWidget<UDamageNumbersUI>(this, NumberClass);

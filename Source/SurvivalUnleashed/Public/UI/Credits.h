@@ -18,9 +18,14 @@ class SURVIVALUNLEASHED_API UCredits : public UUserWidget
 	virtual void NativeOnInitialized() override;
 
 protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Credits")
+	TArray<FText> TextArray;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* BackButton;
-
+	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim)) class UWidgetAnimation* CreditsAnimation;
+	
 	UFUNCTION() void BackButtonPressed();
+
+	FWidgetAnimationDynamicEvent OnCreditsFinish;
 
 public:
 	FOnCreditsClosed OnCreditsClose;
