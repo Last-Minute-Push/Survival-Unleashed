@@ -43,6 +43,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "DefaultStats", meta = (ClampMin = "0"))              float AttackSpeed;
 	UPROPERTY(EditDefaultsOnly, Transient, Category = "DefaultStats")                            Focus Alignment;
 
+	UPROPERTY(EditDefaultsOnly, Category = "EvolutionStats", meta = (ClampMin = "0"))            float HealAmount;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Mesh", meta = (ClampMin = "0"))           float Height;
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Mesh", meta = (ClampMin = "0"))           float DistanceFromPlayer;
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|ProjectileMesh")                          TSubclassOf<AProjectileBase> ProjectileType;

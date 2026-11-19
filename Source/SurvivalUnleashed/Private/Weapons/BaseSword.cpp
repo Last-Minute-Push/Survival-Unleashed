@@ -6,7 +6,10 @@
 #include "Weapons/WeaponData.h"
 #include "Utility/PlayerStatsComponent.h"
 #include "NiagaraComponent.h"
+#include "Actor/UC_Player.h"
+#include "Engine/DamageEvents.h"
 #include "Debug/DebugOverlaySubsystem.h"
+#include "Enemies/EnemyBase.h"
 #include "GameFramework/CheatManagerDefines.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogBaseSword, Log, All);
@@ -47,6 +50,7 @@ void ABaseSword::BeginPlay()
 
     // Delegate Binding
     BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &ABaseSword::ApplyDamageCollision);
+
 
 #if UE_WITH_CHEAT_MANAGER
     if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
@@ -89,12 +93,13 @@ void ABaseSword::BeginPlay()
             NiagaraComponent->Deactivate();
         }
 
-        SwingPatternCooldown = Data->Cooldown;
-        EvolutionLevel       = Data->EvolutionLevel;
-        SwingArc             = Data->Range;
-        SwingSpeed           = Data->AttackSpeed;
-        Height               = Data->Height;
-        Radius               = Data->DistanceFromPlayer;
+        SwingPatternCooldown  = Data->Cooldown;
+        EvolutionLevel        = Data->EvolutionLevel;
+        SwingArc              = Data->Range;
+        SwingSpeed            = Data->AttackSpeed;
+        HealAmount            = Data->HealAmount;
+        Height                = Data->Height;
+        Radius                = Data->DistanceFromPlayer;
     }
     else
     {
@@ -104,12 +109,25 @@ void ABaseSword::BeginPlay()
         EvolutionLevel        = 0.f;
         SwingArc              = 0.f;
         SwingSpeed            = 0.f;
+        HealAmount            = 0.f;
         Height                = 0.f;
         Radius                = 0.f;
     }
 
-    PastRangeRight            = (EvolutionLevel > 0) ? SwingArc * 0.5f + 180 : SwingArc * 0.5f;
-    PastRangeLeft             = (EvolutionLevel > 0) ? PastRangeRight - 360 : PastRangeRight;
+    if (Type == EWeaponCategory::EBP_Axe && EvolutionLevel > 0)
+    {
+        OnWeaponHit.AddDynamic(this, &ABaseSword::BloodrootAxeHeal);
+    }
+
+    if (Type == EWeaponCategory::EBP_Sword && EvolutionLevel > 0)
+    {
+        PastRangeRight        = SwingArc * 0.5f + 180;
+        PastRangeLeft         = PastRangeRight -360;
+    }
+    else
+    {
+        PastRangeLeft         = PastRangeRight = SwingArc * 0.5f;
+    }
     SwingDisappearingDelay    = (SwingDisappearingDelay < SwingPatternCooldown) ? SwingDisappearingDelay : 0.f;
 
     // Collision
@@ -265,9 +283,18 @@ void ABaseSword::StopWeapon()
 void ABaseSword::ApplyDamageCollision(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		                              int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (bIsSwinging && !HitActors.Contains(OtherActor))
+    if (!bIsSwinging || HitActors.Contains(OtherActor))
     {
-        HitActors.Add(OtherActor);
-        ApplyDamage(this, OtherActor);
-    }
+        return;
+	}
+
+	HitActors.Add(OtherActor);
+	ApplyDamage(this, OtherActor);
+}
+
+void ABaseSword::BloodrootAxeHeal(float Damage)
+{
+    TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
+    FDamageEvent DamageEvent(ValidDamageTypeClass);
+    Parent->TakeDamage(-HealAmount + ParentStats->GetLifeStealStat(), DamageEvent, GetInstigatorController(), this);
 }

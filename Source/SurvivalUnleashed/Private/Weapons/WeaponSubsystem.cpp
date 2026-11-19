@@ -206,7 +206,7 @@ void UWeaponSubsystem::GetAvailableEvolutions(const TArray<FOwnedWeapon>& OwnedW
 		// Evolution can be offered!
 		FUpgradeOffer EvlOffer;
 		EvlOffer.Kind = EUpgradeKind::Weapon;
-		EvlOffer.Weapon = W->GetEWeaponCategory();
+		EvlOffer.Weapon = Data->WeaponType;
 		EvlOffer.CurrentLevel = OwnedWeapon.Level + 1;
 
 		OutEvolutions.Add(EvlOffer);

@@ -24,12 +24,15 @@ class SURVIVALUNLEASHED_API ABaseSword : public ABaseWeapon
 	UFUNCTION(Category = "Damage") void ApplyDamageCollision(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, 
 		                                                     int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	UFUNCTION(Category = "Damage") void BloodrootAxeHeal(float Damage);
+
 	void Swing(bool bRight, float DeltaTime);
 	void HideSword(bool bHide);
 
 protected:
 	bool bIsHidden;
 	bool bIsSwinging;
+	float HealAmount;
 	float Next, Prev, Difference;
 	float Height;
 	float Radius;

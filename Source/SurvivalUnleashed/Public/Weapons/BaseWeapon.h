@@ -55,6 +55,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Damage") inline void AddToDamagePerSecond(float Damage) { DamagePerSecond += Damage; }
 	UFUNCTION(BlueprintCallable, Category = "Damage") inline void ResetDamagePerSecond() { DamagePerSecond = 0.f; }
 	UFUNCTION(BlueprintCallable, Category = "Damage") virtual void ApplyDamage(AActor * Source, AActor * Target);
+	UFUNCTION(BlueprintCallable, Category = "Damage") void PlayerLifeSteal(float Damage);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Properties") bool bAbsoluteRotation;                  // Rotates on its own regard

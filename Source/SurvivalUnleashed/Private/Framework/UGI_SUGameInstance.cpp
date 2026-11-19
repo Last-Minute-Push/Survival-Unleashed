@@ -115,7 +115,7 @@ void UUGI_SUGameInstance::QuitTheGame()
 
 void UUGI_SUGameInstance::AddEXPtoNearestOne(FVector EnemyLocation, int32 EXPvalue)
 {
-	float closestDistance = INT_MAX;
+	float closestDistance = FLT_MAX;
 	ClosestEXPActor = EXPActors[0].Get();
 	for (int i = 1; i < EXPActors.Num(); i++) {
 		if (PlayerItself) {
