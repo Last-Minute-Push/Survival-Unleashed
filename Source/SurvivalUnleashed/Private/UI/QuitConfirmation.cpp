@@ -12,15 +12,15 @@ void UQuitConfirmation::NativeOnInitialized()
 
 	if (UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance()))
 	{
-		YesButton->OnBut;
+		YesButton->CodeButtonClick.AddDynamic(GI, &UUGI_SUGameInstance::QuitTheGame);
+		NoButton->CodeButtonClick.AddDynamic(this, &UQuitConfirmation::NoButtonPressed);
 	}
 
 }
 
 void UQuitConfirmation::NoButtonPressed()
 {
+	OnQuitClosed.Broadcast();
+	RemoveFromParent();
 }
 
-void UQuitConfirmation::YesButtonPressed()
-{
-}

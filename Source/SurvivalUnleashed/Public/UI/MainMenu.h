@@ -26,6 +26,8 @@ protected:
 	UPROPERTY() TObjectPtr<class UPermaUpgradeMenu> UpgradeHud;
 	UPROPERTY() TObjectPtr<class UCredits> CreditsHud;
 
+	UPROPERTY() TObjectPtr<class UQuitConfirmation> QuitHud;
+
 	virtual void NativeOnInitialized() override;
 
 	UFUNCTION()
@@ -40,6 +42,9 @@ protected:
 	UFUNCTION()
 	void CreditsButtonPressed();
 
+	UFUNCTION()
+	void QuitButtonPressed();
+
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UUserWidget> OptionHUDClass;
@@ -48,6 +53,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UUserWidget> CreditsHUDClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> QuitHUDClass;
 
 	UFUNCTION()
 	void UnHideMainMenuButtons();

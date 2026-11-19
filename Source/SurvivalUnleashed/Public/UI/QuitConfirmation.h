@@ -9,6 +9,7 @@
 /**
  * 
  */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnQuitClosed);
 UCLASS()
 class SURVIVALUNLEASHED_API UQuitConfirmation : public UUserWidget
 {
@@ -23,5 +24,6 @@ protected:
 	UPROPERTY(meta = (BindWidget)) class UButtonBase* NoButton;
 
 	UFUNCTION() void NoButtonPressed();
-	UFUNCTION() void YesButtonPressed();
+public:
+	FOnQuitClosed OnQuitClosed;
 };

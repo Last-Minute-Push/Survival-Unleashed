@@ -6,6 +6,7 @@
 #include "UI/OptionsMenuBase.h"
 #include "UI/PermaUpgradeMenu.h"
 #include "UI/Credits.h"
+#include "UI/QuitConfirmation.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 #include"../SurvivalUnleashed.h"
 
@@ -30,7 +31,7 @@ void UMainMenu::NativeOnInitialized()
 			PlayButton->CodeButtonClick.AddDynamic(GI, &UUGI_SUGameInstance::LoadFirstLevel);
 			UpgradeButton->CodeButtonClick.AddDynamic(this, &UMainMenu::UpgradeButtonPressed);
 			SettingsButton->CodeButtonClick.AddDynamic(this, &UMainMenu::SettingsButtonPressed);
-			QuitButton->CodeButtonClick.AddDynamic(GI, &UUGI_SUGameInstance::QuitTheGame);
+			QuitButton->CodeButtonClick.AddDynamic(this, &UMainMenu::QuitButtonPressed);
 			CreditsButton->CodeButtonClick.AddDynamic(this, &UMainMenu::CreditsButtonPressed);
 		}
 		else UE_LOG(LogMainMenu, Error, TEXT("PlayButton and/or QuitButton not bound to the widget!"));
@@ -110,6 +111,24 @@ void UMainMenu::CreditsButtonPressed()
 
 	SetVisibility(ESlateVisibility::Collapsed); // hide the main menu
 	CreditsHud->AddToViewport();
+}
+
+void UMainMenu::QuitButtonPressed()
+{
+	if (!QuitHud)
+	{
+		QuitHud = CreateWidget<UQuitConfirmation>(GetOwningPlayer(), QuitHUDClass);
+		if (!QuitHud)
+		{
+			UE_LOG(LogMainMenu, Error, TEXT("Could not create the Quit menu; is QuitHUDClass set?"));
+			return;
+		}
+		QuitHud->SetIsFocusable(true);
+		QuitHud->OnQuitClosed.AddDynamic(this, &UMainMenu::UnHideMainMenuButtons);
+	}
+
+	SetVisibility(ESlateVisibility::Collapsed); // hide the main menu
+	QuitHud->AddToViewport();
 }
 
 void UMainMenu::UnHideMainMenuButtons()
