@@ -188,6 +188,8 @@ public:
 	bool WarriorPassive = false;
 	bool WizardPassive = false;
 	bool ModernPassive = false;
+	void BalancedCheck();
+
 	void UpdateExpANDLevel(int amount); 
 	void LevelUpOverall(); //happens on every levelup and is to give player an overall lvl up.
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
