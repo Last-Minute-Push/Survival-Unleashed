@@ -18,6 +18,7 @@
 #include "UI/LevelUpScreen.h"
 #include "Weapons/WeaponSubsystem.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Actor/Health_PickUp.h"
 #include "Actor/Magnet_PickUp.h"
 #include "GenericPlatform/GenericPlatformMath.h"
@@ -295,15 +296,27 @@ void AUC_Player::MagnetEnable()
 
 void AUC_Player::LineDrawtoPlayer()
 {
+
 	FHitResult Result;
+
+	FVector halfSize = { 200.0f,200.0f,0};
+
 	FVector Start = Camera->GetComponentLocation();
 	FVector End = this->GetActorLocation();
-	FCollisionQueryParams Params;
-	
-	ActorLineTraceSingle(Result, Start, Start + End, ECollisionChannel::ECC_Visibility, Params);
-		//ActorTraceComponent(Result, Start, Start + End, Params);
+	End.Z += 40;
 
-	if (Result.GetActor())
+
+	UKismetSystemLibrary::LineTraceSingle(Camera, Start, End, ETraceTypeQuery::TraceTypeQuery1,
+		false, ActorsToIgnore, EDrawDebugTrace::Persistent, Result, true);
+
+	
+	
+	//FCollisionQueryParams Params;
+	//
+	//ActorLineTraceSingle(Result, Start, Start + End, ECollisionChannel::ECC_Visibility, Params);
+	//	//ActorTraceComponent(Result, Start, Start + End, Params);
+
+	if (Result.GetActor() == this)
 	{
 		UE_LOG(LogPlayer, Warning, TEXT("Player has been detected"));
 	}

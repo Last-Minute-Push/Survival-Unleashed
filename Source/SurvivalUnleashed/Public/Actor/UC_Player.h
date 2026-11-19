@@ -143,6 +143,7 @@ private:
 	bool Magnet = false;
 	float MagnetTimer = 0;
 
+	UPROPERTY(EditDefaultsOnly) TArray<AActor*> ActorsToIgnore;
 
 	// - Debug Overlay -
 #if UE_WITH_CHEAT_MANAGER
