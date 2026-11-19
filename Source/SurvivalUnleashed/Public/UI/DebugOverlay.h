@@ -29,5 +29,5 @@ public:
 	void SetBackgroundColor(FLinearColor Color);
 	void SetZOrder(int32 ZOrder);
 
-	inline void SetTitle(const FName& Name);
+	void SetTitle(const FName& Name);
 };
