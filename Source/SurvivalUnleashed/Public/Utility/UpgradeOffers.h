@@ -2,10 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "Utility/PlayerStatsComponent.h" // EPlayerStats
-#include "Weapons/WeaponDatabase.h"
+#include "Weapons/WeaponDatabase.h"       // EWeaponCategory
 #include "UpgradeOffers.generated.h"
 
 class UWeaponData;
+class UWeaponSubsystem;
 
 UENUM(BlueprintType)
 enum class EUpgradeKind : uint8 { Stat, Weapon, Heal };
@@ -31,6 +32,7 @@ struct FOwnedWeapon
 
 	EWeaponCategory Data;
 	int32 Level = 1;
+	int32 FirstEvolution = 1;
 	int32 MaxLevel = 1;
 };
 
@@ -44,9 +46,8 @@ struct FBuildSnapshot
 
 namespace UpgradeOffers
 {
-	constexpr int32 MaxWeapons = 3;
 	constexpr int32 MaxStats = 5;
 
 	// Up to Count distinct offers: 2 weapons + 2 stats when possible, backfilled from the other kind, then heals
-	TArray<FUpgradeOffer> Generate(const FBuildSnapshot& Build, int32 Count = 4);
+	TArray<FUpgradeOffer> Generate(const FBuildSnapshot& Build, int32 Count = 4, int32 MaxWeapons = 3, UWeaponSubsystem* WeaponSys = nullptr);
 }

@@ -106,7 +106,7 @@ void UWeaponSubsystem::WeaponSubsystemTest(FWeaponCreateParams& Params, TMap<EWe
 }
 #pragma endregion
 
-bool UWeaponSubsystem::GetCategoryUpgrades(EWeaponCategory& Category, TArray<TSubclassOf<ABaseWeapon>>& Upgrades)
+bool UWeaponSubsystem::GetCategoryUpgrades(EWeaponCategory Category, TArray<TSubclassOf<ABaseWeapon>>& Upgrades)
 {
 	switch (Category)
 	{
@@ -144,7 +144,8 @@ bool UWeaponSubsystem::GetCategoryUpgrades(EWeaponCategory& Category, TArray<TSu
 	return true;
 }
 
-int32 UWeaponSubsystem::GetCategoryUpgradeSize(EWeaponCategory& Category)
+
+int32 UWeaponSubsystem::GetCategoryUpgradeSize(EWeaponCategory Category)
 {
 	TArray<TSubclassOf<ABaseWeapon>> Upgrades;
 	if (GetCategoryUpgrades(Category, Upgrades))
@@ -153,6 +154,100 @@ int32 UWeaponSubsystem::GetCategoryUpgradeSize(EWeaponCategory& Category)
 	}
 
 	return -1;
+}
+
+FUpgradeCardInfo UWeaponSubsystem::GetWeaponInfo(EWeaponCategory Category, int32 UpgradeLevel)
+{
+	FUpgradeCardInfo OutInfo;
+	TArray<TSubclassOf<ABaseWeapon>> Upgrades;
+	if (!GetCategoryUpgrades(Category, Upgrades) && UpgradeLevel >= Upgrades.Num()) return OutInfo;
+	
+	if (UWeaponData* Data = Upgrades[UpgradeLevel]->GetDefaultObject<ABaseWeapon>()->GetWeaponData())
+	{
+		OutInfo.Name = Data->Name;
+		OutInfo.Description = Data->Description;
+		OutInfo.Icon = Data->Icon;
+	}
+
+	return OutInfo;
+}
+
+void UWeaponSubsystem::GetAvailableEvolutions(const TArray<FOwnedWeapon>& OwnedWeapons, const TMap<EPlayerStats, int32>& OwnedStats, TArray<FUpgradeOffer>& OutEvolutions)
+{
+	for (const FOwnedWeapon& OwnedWeapon : OwnedWeapons)
+	{
+		TArray<TSubclassOf<ABaseWeapon>> Upgrades;
+
+		// We check before validation.
+		if (OwnedWeapon.Level >= OwnedWeapon.MaxLevel ||          // The weapon cannot be at its max upgrade.
+			OwnedWeapon.FirstEvolution < 0 ||                     // There should be at least one evolution for this weapon.
+			OwnedWeapon.Level < OwnedWeapon.FirstEvolution - 1 || // The next upgrade for the owned weapon must be an evolution.
+			!GetCategoryUpgrades(OwnedWeapon.Data, Upgrades))     // This weapon must have upgrades (should always return true; upgrades missing?).
+			continue;
+
+		ABaseWeapon* W = Upgrades[OwnedWeapon.Level + 1].GetDefaultObject();
+		if (!W) continue;
+		UWeaponData* Data = W->GetWeaponData();
+		if (!Data) continue;
+
+		// We validate!
+		bool IsEvolution = true;
+		for (auto It = Data->EvolutionRequirements.begin(); It != Data->EvolutionRequirements.end(); ++It)
+		{
+			const int32* OwnedStatLevel = OwnedStats.Find(It->Key);
+			if (!OwnedStatLevel || *OwnedStatLevel < It->Value)
+			{
+				IsEvolution = false; // Failed to pass the stat requirements
+				break;
+			}
+		}
+		if (!IsEvolution) continue;
+
+		// Evolution can be offered!
+		FUpgradeOffer EvlOffer;
+		EvlOffer.Kind = EUpgradeKind::Weapon;
+		EvlOffer.Weapon = Data->WeaponType;
+		EvlOffer.CurrentLevel = OwnedWeapon.Level + 1;
+
+		OutEvolutions.Add(EvlOffer);
+	}
+}
+
+int32 UWeaponSubsystem::GetCategoryEvolutionIndex(EWeaponCategory Category)
+{
+	int32 RetIdx = -1;
+	switch (Category)
+	{
+	case EWeaponCategory::EBP_Sword:
+		RetIdx = Database->FirstEvolutionIndexSword;
+		break;
+	case EWeaponCategory::EBP_BowToGun:
+		RetIdx = Database->FirstEvolutionIndexBowToGun;
+		break;
+	case EWeaponCategory::EBP_Axe:
+		RetIdx = Database->FirstEvolutionIndexAxe;
+		break;
+	case EWeaponCategory::EBP_Spear:
+		RetIdx = Database->FirstEvolutionIndexSpear;
+		break;
+	case EWeaponCategory::EBP_Gauntlets:
+		RetIdx = Database->FirstEvolutionIndexGauntlets;
+		break;
+	case EWeaponCategory::EBP_FireStaff:
+		RetIdx = Database->FirstEvolutionIndexFireStaff;
+		break;
+	case EWeaponCategory::EBP_IceStaff:
+		RetIdx = Database->FirstEvolutionIndexIceStaff;
+		break;
+	case EWeaponCategory::EBP_LightningStaff:
+		RetIdx = Database->FirstEvolutionIndexLightningStaff;
+		break;
+	case EWeaponCategory::EBP_EarthStaff:
+		RetIdx = Database->FirstEvolutionIndexEarthStaff;
+		break;
+	}
+
+	return RetIdx;
 }
 
 EWeaponUpgradeStatus UWeaponSubsystem::SetWeapon(FWeaponCreateParams& Params, TMap<EWeaponCategory, UChildActorComponent*>& Inventory)
@@ -212,6 +307,8 @@ EWeaponUpgradeStatus UWeaponSubsystem::SetWeapon(FWeaponCreateParams& Params, TM
 
 EWeaponUpgradeStatus UWeaponSubsystem::UpgradeWeapon(FWeaponCreateParams& Params, TMap<EWeaponCategory, UChildActorComponent*>& Inventory, TWeakObjectPtr<UChildActorComponent> WeaponComponent, TArray<TSubclassOf<ABaseWeapon>>& Upgrades)
 {
+	if (!WeaponComponent.IsValid()) return EWeaponUpgradeStatus::E_Error;
+
 	// We end all activity from the old weapon
 	if (ABaseWeapon* W = Cast<ABaseWeapon>(WeaponComponent->GetChildActor()))
 	{
@@ -220,14 +317,16 @@ EWeaponUpgradeStatus UWeaponSubsystem::UpgradeWeapon(FWeaponCreateParams& Params
 		Params.Type = W->GetEWeaponCategory();
 
 		/*
-		* DebugUpgrade is a variable that will store the value for the next upgrade availbale to the weapon.
-		*
-		* It gets its name from your ability to override the weapon upgrading system and allowing you to
-		* choose which upgrade from the weapon type you'd like to pick.
-		*
-		* If DebugUpgrade is negative one     -> Automatically assigned to the next upgrade number.
-		* If DebugUpgrade is any other number -> You pick the upgrade we will get.
-		*/
+		 * DebugUpgrade is a variable that will store the value for the next upgrade availbale to the weapon.
+		 *
+		 * It gets its name from your ability to override the weapon upgrading system and allowing you to
+		 * choose which upgrade from the weapon type you'd like to pick.
+		 *
+		 * If DebugUpgrade is negative one     -> Automatically assigned to the next upgrade number.
+		 * If DebugUpgrade is any other number -> You pick the upgrade we will get regardless of the upgrade requirements.
+		 * 
+		 * This function does not handle weapon evolution criteria.
+		 */
 		Params.DebugUpgrade = (Params.DebugUpgrade == -1) ? W->GetWeaponUpgrade() + 1 : Params.DebugUpgrade;
 
 		Params.Player->OPL.Remove(W, TEXT("StopWeapon"));
