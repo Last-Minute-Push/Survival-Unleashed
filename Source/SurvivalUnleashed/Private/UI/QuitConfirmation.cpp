@@ -12,7 +12,7 @@ void UQuitConfirmation::NativeOnInitialized()
 
 	if (UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance()))
 	{
-		YesButton;
+		YesButton->OnBut;
 	}
 
 }
