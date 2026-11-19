@@ -11,7 +11,7 @@ class SURVIVALUNLEASHED_API USUSaveGame : public USaveGame
 	GENERATED_BODY()
 
 public:
-	static constexpr int32 LatestVersion = 2;
+	static constexpr int32 LatestVersion = 3;
 
 	UPROPERTY()
 	int32 SaveVersion = LatestVersion;
@@ -35,6 +35,15 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Progress")
 	int32 FocusModern = 0;
+
+	// Characters bought with upgrade points, by ID ("CHR_Wizard"). Free characters (the Villager) aren't listed.
+	// Refund All never touches this: unlocks are permanent.
+	UPROPERTY(BlueprintReadOnly, Category = "Progress")
+	TArray<FName> UnlockedCharacters;
+	
+	// The character picked for the last run, so the select screen opens on it
+	UPROPERTY(BlueprintReadOnly, Category = "Progress")
+	FName LastCharacter;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Records")
 	float BestTime = 0.f;

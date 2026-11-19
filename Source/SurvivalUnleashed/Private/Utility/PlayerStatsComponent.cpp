@@ -6,6 +6,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "UI/LevelUpScreen.h"
 #include "Math/UnrealMathUtility.h"
+#include "Framework/UGI_SUGameInstance.h"
+#include "Core/PermanentUpgradeRules.h"
 
 // Sets default values for this component's properties
 UPlayerStatsComponent::UPlayerStatsComponent()
@@ -82,7 +84,9 @@ void UPlayerStatsComponent::FinishUpgrade()
 void UPlayerStatsComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	CurrentHealth = MaxHealth;
+	// Before health is filled, so a Health rank starts the run at full health
+	ApplyPermanentUpgrades();
+	CurrentHealth = GetMaxHealth();
 	
 	AActor* MyOwner = GetOwner();
 	if (MyOwner) {
@@ -235,7 +239,8 @@ void UPlayerStatsComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Dama
 
 float UPlayerStatsComponent::GetMaxHealth()
 {
-	return MaxHealth + (MaxHealth * GetIntelligencePercent()) + (MaxHealth * GetModernPercent());
+	const float Base = MaxHealth + GetPermanentBonus(EPlayerStats::EPS_Health);
+	return Base + (Base * GetIntelligencePercent()) + (Base * GetModernPercent());
 }
 void UPlayerStatsComponent::SetMaxHealth(float health)
 {
@@ -273,7 +278,8 @@ void UPlayerStatsComponent::SetCurrentHealth(float health)
 }
 float UPlayerStatsComponent::GetAttack()
 {
-	return Attack + (Attack * GetIntelligencePercent()) + (Attack * GetBarbaricPercent());
+	const float Base = Attack + GetPermanentBonus(EPlayerStats::EPS_Attack);
+	return Base + (Base * GetIntelligencePercent()) + (Base * GetBarbaricPercent());
 }
 void UPlayerStatsComponent::SetAttack(float attack)
 {
@@ -289,7 +295,7 @@ void UPlayerStatsComponent::LevelUpAttackMinor()
 }
 float UPlayerStatsComponent::GetDashCooldown()
 {
-	return DashCooldown - (GetIntelligencePercent() * 0.1f);
+	return DashCooldown * (1.f - GetPermanentBonus(EPlayerStats::EPS_DashCooldown)) - (GetIntelligencePercent() * 0.1f);
 }
 void UPlayerStatsComponent::SetDashCooldown(float CD)
 {
@@ -301,7 +307,8 @@ void UPlayerStatsComponent::LevelUpDashCooldown()
 }
 float UPlayerStatsComponent::GetDashLength()
 {
-	return DashLength + (DashLength * (GetIntelligencePercent() * 0.5f));
+	const float Base = DashLength * (1.f + GetPermanentBonus(EPlayerStats::EPS_DashLength));
+	return Base + (Base * (GetIntelligencePercent() * 0.5f));
 }
 void UPlayerStatsComponent::SetDashingLength(float DL)
 {
@@ -333,7 +340,7 @@ void UPlayerStatsComponent::LevelUpRegen()
 
 float UPlayerStatsComponent::GetProjectileAmount()
 {
-	return ProjectileAmount + GetIntelligencePercent();
+	return ProjectileAmount + GetPermanentBonus(EPlayerStats::EPS_ProjectileAmount) + GetIntelligencePercent();
 }
 
 void UPlayerStatsComponent::SetProjectileAmount(float amount)
@@ -348,7 +355,7 @@ void UPlayerStatsComponent::LevelUpProjectileAmount()
 
 float UPlayerStatsComponent::GetProjectileSpeed()
 {
-	return ProjectileSpeed + GetIntelligencePercent();
+	return ProjectileSpeed + GetPermanentBonus(EPlayerStats::EPS_ProjectileSpeed) + GetIntelligencePercent();
 }
 
 void UPlayerStatsComponent::SetProjectileSpeed(float value)
@@ -364,7 +371,7 @@ void UPlayerStatsComponent::LevelUpProjectileSpeed()
 
 float UPlayerStatsComponent::GetPickupRange()
 {
-	return PickupRange;
+	return PickupRange + GetPermanentBonus(EPlayerStats::EPS_PickupRange);
 }
 
 void UPlayerStatsComponent::SetPickupRange(float value)
@@ -392,11 +399,13 @@ void UPlayerStatsComponent::SetMoveSpeeds(float value)
 
 float UPlayerStatsComponent::GetReflectStat()
 {
-	return Reflect + (Reflect *(GetBarbaricPercent()/2.0f));
+	const float Base = Reflect + GetPermanentBonus(EPlayerStats::EPS_Reflect);
+	return Base + (Base * (GetBarbaricPercent() / 2.0f));
 }
 float UPlayerStatsComponent::GetReflectStatCalculated()
 {
-	return Reflect * ( ((1.0f - GetAttack())/2.0f)+ 1.0f)  *  (1.0f +( GetDefensePercent()/3.0f));
+	const float Base = Reflect + GetPermanentBonus(EPlayerStats::EPS_Reflect);
+	return Base * (((1.0f - GetAttack()) / 2.0f) + 1.0f) * (1.0f + (GetDefensePercent() / 3.0f));
 }
 
 void UPlayerStatsComponent::SetReflectStat(float value)
@@ -417,7 +426,8 @@ void UPlayerStatsComponent::LevelUpReflectStat()
 
 float UPlayerStatsComponent::GetLifeStealStat()
 {
-	return LifeSteal + (LifeSteal * (GetBarbaricPercent() / 3.0f));
+	const float Base = LifeSteal + GetPermanentBonus(EPlayerStats::EPS_LifeSteal);
+	return Base + (Base * (GetBarbaricPercent() / 3.0f));
 }
 
 void UPlayerStatsComponent::SetLifeStealStat(float value)
@@ -437,7 +447,8 @@ void UPlayerStatsComponent::LevelUpLifeStealStat()
 
 float UPlayerStatsComponent::GetEvasion()
 {
-	return Evasion + (Evasion* (GetIntelligencePercent()/2.0f));
+	const float Base = Evasion + GetPermanentBonus(EPlayerStats::EPS_Evasion);
+	return Base + (Base * (GetIntelligencePercent() / 2.0f));
 }
 
 void UPlayerStatsComponent::SetEvasion(float value)
@@ -457,7 +468,8 @@ void UPlayerStatsComponent::LevelUpEvasion()
 
 float UPlayerStatsComponent::GetWeaponAttack()
 {
-	return WeaponAttack + (WeaponAttack * GetModernPercent());
+	const float Base = WeaponAttack + GetPermanentBonus(EPlayerStats::EPS_WeaponAttack);
+	return Base + (Base * GetModernPercent());
 }
 
 void UPlayerStatsComponent::SetWeaponAttack(float value)
@@ -472,12 +484,13 @@ void UPlayerStatsComponent::LevelUpWeaponAttack()
 
 int UPlayerStatsComponent::GetDefense()
 {
-	return Defense;
+	return FMath::RoundToInt(Defense + GetPermanentBonus(EPlayerStats::EPS_Defense));
 }
 
 float UPlayerStatsComponent::GetDefensePercent()
 {
-	const float Effective = FMath::Max(1.0f, Defense + (Defense * GetBarbaricPercent()) + (Defense * GetModernPercent()));
+	const float Base = Defense + GetPermanentBonus(EPlayerStats::EPS_Defense);
+	const float Effective = FMath::Max(1.0f, Base + (Base * GetBarbaricPercent()) + (Base * GetModernPercent()));
 	return TruncateToHundredths(FMath::Loge(Effective) / FMath::Loge(50000.0f));
 }
 
@@ -498,7 +511,8 @@ void UPlayerStatsComponent::LevelUpDefenseMinor()
 
 float UPlayerStatsComponent::GetAttackSpeed()
 {
-	return AttackSpeed + (AttackSpeed * (GetIntelligencePercent() /1.5f)) + (AttackSpeed * (GetModernPercent() / 1.5f));
+	const float Base = AttackSpeed + GetPermanentBonus(EPlayerStats::EPS_AttackSpeed);
+	return Base + (Base * (GetIntelligencePercent() / 1.5f)) + (Base * (GetModernPercent() / 1.5f));
 }
 
 void UPlayerStatsComponent::SetAttackSpeed(float value)
@@ -513,7 +527,10 @@ void UPlayerStatsComponent::LevelUpAttackSpeed()
 
 float UPlayerStatsComponent::GetHealAmount()
 {
-	return HealAmount + (HealAmount * GetModernPercent());
+	const float Bonus = GetPermanentBonus(EPlayerStats::EPS_HealAmount);
+	// 0 means "not picked" (heals use their plain value), so a permanent bonus starts from 1x
+	const float Base = Bonus > 0.f ? (HealAmount > 0.f ? HealAmount : 1.f) + Bonus : HealAmount;
+	return Base + (Base * GetModernPercent());
 }
 
 void UPlayerStatsComponent::SetHealAmount(float value)
@@ -533,7 +550,9 @@ void UPlayerStatsComponent::LevelUpHealAmount()
 
 float UPlayerStatsComponent::GetEXPGain()
 {
-	return EXPGain;
+	const float Bonus = GetPermanentBonus(EPlayerStats::EPS_EXPGain);
+	// 0 means "not picked" (XP isn't multiplied), so a permanent bonus starts from 1x
+	return Bonus > 0.f ? (EXPGain > 0.f ? EXPGain : 1.f) + Bonus : EXPGain;
 }
 
 void UPlayerStatsComponent::SetEXPGain(float value)
@@ -618,6 +637,29 @@ void UPlayerStatsComponent::LevelUpModern()
 	if (OPFUE.IsBound()) {
 		OPFUE.Broadcast();
 	}
+}
+
+void UPlayerStatsComponent::ApplyPermanentUpgrades()
+{
+	PermanentBonus.Reset();
+	const UUGI_SUGameInstance* GI = GetWorld() ? GetWorld()->GetGameInstance<UUGI_SUGameInstance>() : nullptr;
+	const UPermanentUpgradeRules* Rules = GI ? GI->GetUpgradeRules() : nullptr;
+	if (!Rules) return;
+
+	for (int32 i = 0; i < static_cast<int32>(EPlayerStats::EPS_Count); ++i)
+	{
+		const EPlayerStats Stat = static_cast<EPlayerStats>(i);
+		const int32 Rank = GI->GetStatRank(Stat);
+		if (Rank > 0)
+		{
+			PermanentBonus.Add(Stat, Rules->GetBonus(Stat, Rank));
+		}
+	}
+
+	// Permanent focus points start the run already spent
+	SetIntelligence(GetIntelligence() + GI->GetPermanentFocus(Focus::Intelligence));
+	SetBarbaric(GetBarbaric() + GI->GetPermanentFocus(Focus::Barbaric));
+	SetModern(GetModern() + GI->GetPermanentFocus(Focus::Modern));
 }
 
 float UPlayerStatsComponent::GetCurrLevel()

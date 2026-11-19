@@ -10,6 +10,7 @@
 #include "UserSettings/EnhancedInputUserSettings.h"
 #include "Actor/UC_Player.h"
 #include "Actor/EXP_PickUp.h"
+#include "Core/PermanentUpgradeRules.h"
 
 #ifndef UINT64_MAX
 #define UINT64_MAX 0xffffffffffffffffui64
@@ -120,7 +121,7 @@ void UUGI_SUGameInstance::AddEXPtoNearestOne(FVector EnemyLocation, int32 EXPval
 	for (int i = 1; i < EXPActors.Num(); i++) {
 		if (PlayerItself) {
 			if (!PlayerItself->AttractedActors.Contains(EXPActors[i])) {
-				if ((closestDistance > (ClosestEXPActor.Get()->GetActorLocation() - EnemyLocation).Size())){
+				if ((closestDistance > (ClosestEXPActor.Get()->GetActorLocation() - EnemyLocation).Size())) {
 					ClosestEXPActor = EXPActors[i].Get();
 					closestDistance = (ClosestEXPActor.Get()->GetActorLocation() - EnemyLocation).Size();
 				}
@@ -195,6 +196,11 @@ void UUGI_SUGameInstance::LoadOrCreateSave()
 			SaveData->SpentPoints = 0;
 		}
 	}
+	// v3 added UnlockedCharacters and LastCharacter: empty is right for an old save (only the Villager)
+
+	// Mark it current, or the fixups above run again on every load (and would wipe SpentPoints each time)
+	SaveData->SaveVersion = USUSaveGame::LatestVersion;
+	SaveProgress();
 
 	UE_LOG(LogGameInstance, Log, TEXT("Loaded save \"%s\": %d points, best time %.1f s."), *SaveSlotName, SaveData->UpgradePoints, SaveData->BestTime);
 }
@@ -225,6 +231,7 @@ void UUGI_SUGameInstance::RecordRunResults(const FRunResults& Results)
 	SaveData->BestLevel = FMath::Max(SaveData->BestLevel, Results.LevelReached);
 	SaveData->BestScore = FMath::Max(SaveData->BestScore, Results.CalculatePoints());
 	SaveProgress();
+	NotifyPointsChanged();
 }
 
 //----------------------------------------------------------------------//
@@ -284,6 +291,7 @@ bool UUGI_SUGameInstance::TryBuyRank(FName Stat, int32 Cost, int32 MaxRank)
 	SaveData->UpgradePoints -= Cost;
 	SaveData->SpentPoints += Cost;
 	SaveProgress();
+	NotifyPointsChanged();
 	return true;
 }
 
@@ -317,6 +325,7 @@ void UUGI_SUGameInstance::RefundAllRanks()
 	SaveData->FocusModern = 0;
 
 	SaveProgress();
+	NotifyPointsChanged();
 }
 
 void UUGI_SUGameInstance::UpdatePlayerKeyBinds()
@@ -328,8 +337,8 @@ void UUGI_SUGameInstance::UpdatePlayerKeyBinds()
 }
 void UUGI_SUGameInstance::SaveKeyBinds() {
 	if (SaveData && PlayerMappingContext) {
-		TArray<FEnhancedActionKeyMapping>&AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(PlayerMappingContext->GetMappings());
-		for (int32 i = 0; i < AllMappings.Num();i++) {
+		TArray<FEnhancedActionKeyMapping>& AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(PlayerMappingContext->GetMappings());
+		for (int32 i = 0; i < AllMappings.Num(); i++) {
 			if (AllMappings[i].Action == MoveAction) {
 				switch (i) {
 				case 0:
@@ -356,7 +365,7 @@ void UUGI_SUGameInstance::SaveKeyBinds() {
 void UUGI_SUGameInstance::LoadKeyBinds() {
 	if (SaveData && PlayerMappingContext) {
 		TArray<FEnhancedActionKeyMapping>& AllMappings = const_cast<TArray<FEnhancedActionKeyMapping>&>(PlayerMappingContext->GetMappings());
-		for (int32 i = 0; i < AllMappings.Num();i++) {
+		for (int32 i = 0; i < AllMappings.Num(); i++) {
 			if (AllMappings[i].Action == MoveAction) {
 				switch (i) {
 				case 0:
@@ -577,7 +586,7 @@ void UUGI_SUGameInstance::ApplyMusicVolume()
 
 void UUGI_SUGameInstance::ApplySoundVolume()
 {
-	for (TObjectPtr<UAudioComponent>&Sound : ActiveSounds)
+	for (TObjectPtr<UAudioComponent>& Sound : ActiveSounds)
 	{
 		if (IsValid(Sound))
 		{
@@ -861,4 +870,113 @@ void UUGI_SUGameInstance::StopAllSound()
 		if (IsValid(Audio)) Audio->Stop();
 	}
 	ActiveSounds.Empty();
+}
+
+void UUGI_SUGameInstance::NotifyPointsChanged()
+{
+	OnUpgradePointsChanged.Broadcast(GetUpgradePoints());
+}
+
+bool UUGI_SUGameInstance::IsCharacterUnlocked(FName CharacterId) const
+{
+	return SaveData && SaveData->UnlockedCharacters.Contains(CharacterId);
+}
+
+bool UUGI_SUGameInstance::TryUnlockCharacter(FName CharacterId, int32 Cost)
+{
+	if (!SaveData || CharacterId.IsNone() || Cost < 0) return false;
+	if (SaveData->UnlockedCharacters.Contains(CharacterId)) return false; // already owned: don't charge twice
+	if (SaveData->UpgradePoints < Cost) return false;
+
+	// Not added to SpentPoints, so Refund All gives back ranks but never re-locks a character
+	SaveData->UpgradePoints -= Cost;
+	SaveData->UnlockedCharacters.Add(CharacterId);
+	SaveProgress();
+	NotifyPointsChanged();
+	return true;
+}
+
+FName UUGI_SUGameInstance::GetLastCharacter() const
+{
+	return SaveData ? SaveData->LastCharacter : NAME_None;
+}
+
+void UUGI_SUGameInstance::SetLastCharacter(FName CharacterId)
+{
+	if (!SaveData || SaveData->LastCharacter == CharacterId) return;
+	SaveData->LastCharacter = CharacterId;
+	SaveProgress();
+}
+
+int32 UUGI_SUGameInstance::GetStatRank(EPlayerStats Stat) const
+{
+	return GetPermanentRank(UPermanentUpgradeRules::GetStatKey(Stat));
+}
+
+int32 UUGI_SUGameInstance::GetNextStatRankCost(EPlayerStats Stat) const
+{
+	return UpgradeRules ? UpgradeRules->GetNextRankCost(GetStatRank(Stat)) : -1;
+}
+
+bool UUGI_SUGameInstance::TryBuyStatRank(EPlayerStats Stat)
+{
+	const int32 Cost = GetNextStatRankCost(Stat);
+	if (Cost < 0 || Stat == EPlayerStats::EPS_Count) return false;
+
+	// TryBuyRank still checks the cap and the points, so a 6th rank or an unaffordable one is refused there
+	return TryBuyRank(UPermanentUpgradeRules::GetStatKey(Stat), Cost, UpgradeRules->GetMaxRank());
+}
+
+int32 UUGI_SUGameInstance::GetPermanentFocusPointsEarned() const
+{
+	return UpgradeRules ? GetTotalPermanentRanks() / FMath::Max(1, UpgradeRules->RanksPerFocusPoint) : 0;
+}
+
+bool UUGI_SUGameInstance::TrySpendPermanentFocusPoint(Focus FocusStat)
+{
+	return TrySpendFocusPoint(FocusStat, GetPermanentFocusPointsEarned());
+}
+
+void UUGI_SUGameInstance::SU_GivePoints(int32 Points)
+{
+	if (!SaveData) return;
+	SaveData->UpgradePoints = FMath::Max(0, SaveData->UpgradePoints + Points);
+	SaveProgress();
+	UE_LOG(LogGameInstance, Display, TEXT("Upgrade points: %d"), SaveData->UpgradePoints);
+}
+
+void UUGI_SUGameInstance::SU_BuyRank(const FString& Stat)
+{
+	// "Health" -> EPS_Health
+	const int64 Value = StaticEnum<EPlayerStats>()->GetValueByNameString(FString(TEXT("EPS_")) + Stat);
+	if (Value == INDEX_NONE || Value >= static_cast<int64>(EPlayerStats::EPS_Count))
+	{
+		UE_LOG(LogGameInstance, Warning, TEXT("No stat called \"%s\""), *Stat);
+		return;
+	}
+
+	const EPlayerStats PlayerStat = static_cast<EPlayerStats>(Value);
+	const bool bBought = TryBuyStatRank(PlayerStat);
+	UE_LOG(LogGameInstance, Display, TEXT("%s %s: rank %d, %d points left"),
+		bBought ? TEXT("Bought") : TEXT("Refused"), *Stat, GetStatRank(PlayerStat), GetUpgradePoints());
+}
+
+void UUGI_SUGameInstance::SU_RefundAll()
+{
+	RefundAllRanks();
+	UE_LOG(LogGameInstance, Display, TEXT("Refunded: %d points"), GetUpgradePoints());
+}
+
+void UUGI_SUGameInstance::SU_ShowRanks()
+{
+	for (int32 i = 0; i < static_cast<int32>(EPlayerStats::EPS_Count); ++i)
+	{
+		const EPlayerStats Stat = static_cast<EPlayerStats>(i);
+		if (const int32 Rank = GetStatRank(Stat))
+		{
+			UE_LOG(LogGameInstance, Display, TEXT("%s: %d"), *UPermanentUpgradeRules::GetStatKey(Stat).ToString(), Rank);
+		}
+	}
+	UE_LOG(LogGameInstance, Display, TEXT("%d points, %d ranks, focus %d earned / %d spent"),
+		GetUpgradePoints(), GetTotalPermanentRanks(), GetPermanentFocusPointsEarned(), GetFocusPointsSpent());
 }
