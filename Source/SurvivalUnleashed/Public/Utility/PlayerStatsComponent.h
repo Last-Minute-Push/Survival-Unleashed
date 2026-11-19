@@ -110,6 +110,8 @@ public:
 	void ApplyStatUpgrade(EPlayerStats Stat);
 	void FinishUpgrade();
 	TArray<EPlayerStats> MainStatArrayForUI;
+
+	float GetPermanentBonus(EPlayerStats Stat) const { return PermanentBonus.FindRef(Stat); }
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -169,6 +171,11 @@ private:
 	float Barbaric = 0;
 	UPROPERTY()
 	float Modern = 0;
+
+	// Permanent upgrades: what the saved ranks add, read once when the run starts. The getters add it on top of the
+	// run's own values, so level-up rules like "the first rank turns the stat on" still see only the run's values.
+	TMap<EPlayerStats, float> PermanentBonus;
+	void ApplyPermanentUpgrades();
 
 	//Levels
 	UPROPERTY()
