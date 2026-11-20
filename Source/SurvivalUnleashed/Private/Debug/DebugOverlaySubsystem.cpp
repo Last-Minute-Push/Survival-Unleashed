@@ -168,12 +168,15 @@ EDebugOverlayStatus UDebugOverlaySubsystem::InitializeOverlay(const FString& InO
 	}
 
 	return EDebugOverlayStatus::ESuccess;
+#else
+	return EDebugOverlayStatus::EFailed;
 #endif
 }
 
 
 void UDebugOverlaySubsystem::AttachGeneralValues()
 {
+#if UE_WITH_CHEAT_MANAGER
 	// Any other value attachents or bindings that don't belong anywhere else can be placed here.
 	for (TActorIterator<ASpawnDirector> It(GetWorld()); It; ++It)
 	{
@@ -186,6 +189,7 @@ void UDebugOverlaySubsystem::AttachGeneralValues()
 
 	AttachToOverlay("General", "Performance and Balance", "Frame Time",
 		FOnOverlayUpdateFloat::CreateUFunction(this, "GetFTime"));
+#endif
 }
 
 // Repeated function body with different data types; this shortens the length of this file
@@ -222,13 +226,15 @@ void UDebugOverlaySubsystem::GetOverlayNames(TArray<FString>& OverlayNames)
 
 void UDebugOverlaySubsystem::TriggerOverlay()
 {
-
+#if UE_WITH_CHEAT_MANAGER
 	if (bTick) DisableOverlay();
 	else InitializeOverlay();
+#endif
 }
 
 void UDebugOverlaySubsystem::DisableOverlay()
 {
+#if UE_WITH_CHEAT_MANAGER
 	if (CurrentOverlay && CurrentOverlay->Widget.IsValid())
 	{
 		CurrentOverlay->Widget->SetVisibility(ESlateVisibility::Hidden);
@@ -236,10 +242,12 @@ void UDebugOverlaySubsystem::DisableOverlay()
 
 	bTick = false;
 	CurrentOverlay = nullptr;
+#endif
 }
 
 void UDebugOverlaySubsystem::TakeOutTheTrash()
 {
+#if UE_WITH_CHEAT_MANAGER
 	DisableOverlay();
 
 	LastUsed = nullptr;
@@ -274,6 +282,7 @@ void UDebugOverlaySubsystem::TakeOutTheTrash()
 			Overlay.Widget = nullptr;
 		}
 	}
+#endif
 }
 
 void UDebugOverlaySubsystem::SwitchOverlay(int32 NewIdx)
@@ -306,17 +315,20 @@ void UDebugOverlaySubsystem::SwitchOverlay(int32 NewIdx)
 
 void UDebugOverlaySubsystem::SetOverlayZOrder(int32 ZOrder)
 {
+#if UE_WITH_CHEAT_MANAGER
 	if (!CurrentOverlay || !CurrentOverlay->Widget.IsValid())
 	{
 		return;
 	}
 
 	CurrentOverlay->Widget->SetZOrder(ZOrder);
+#endif
 }
 
 #define SET_VALUE(GetData) Value.GetData.IsBound() ? Value.Widget->SetValue(Value.GetData.Execute()) : Value.Widget->SetNull();
 void UDebugOverlaySubsystem::SetValue(FDebugValueData& Value)
 {
+#if UE_WITH_CHEAT_MANAGER
 	if (!Value.Widget.IsValid()) return;
 
 	// Updates the widget to display the current value; displays null if the variable is not available
@@ -345,6 +357,7 @@ void UDebugOverlaySubsystem::SetValue(FDebugValueData& Value)
 	}
 
 	Value.ResetValue.ExecuteIfBound();
+#endif
 }
 
 FDebugValueData* UDebugOverlaySubsystem::FindKey(const FName& OverlayName, const FName& CategoryName, const FName& VariableName)
