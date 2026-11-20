@@ -122,7 +122,7 @@ void UPlayerStatsComponent::UpdateExpANDLevel(int amount)
 	}
 	
 
-	while (CurrentExpCount > ExpReuirement) { //levelup the needed amount of times
+	while (CurrentExpCount >= ExpReuirement) { //levelup the needed amount of times
 		OnEXPPickUp.Execute(GetCurrentExpCountForDisplay(), 0);
 		Level++; //level increase
 		LevelUpOverall();
