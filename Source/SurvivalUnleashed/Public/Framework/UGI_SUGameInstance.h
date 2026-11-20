@@ -113,6 +113,19 @@ public:
 	UDataAsset* PlayerData;
 
 	//----------------------------------------------------------------------//
+	//Loading Player all possible data player could be EARLY
+	//----------------------------------------------------------------------//
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UDataAsset* VillagerData;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UDataAsset* FighterData;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UDataAsset* RangerData;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UDataAsset* WizardData;
+
+	//----------------------------------------------------------------------//
     // Weapon Database
     //----------------------------------------------------------------------//
 	UFUNCTION() inline UWeaponDatabase* GetWeaponDatabase() const { return Database; }
