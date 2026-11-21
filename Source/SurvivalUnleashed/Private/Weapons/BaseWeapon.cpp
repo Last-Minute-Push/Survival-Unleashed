@@ -43,37 +43,7 @@ void ABaseWeapon::BeginPlay()
 #if UE_WITH_CHEAT_MANAGER
 	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
 	{
-		FString WeaponName;
-
-		switch (Type)
-		{
-		case EWeaponCategory::EBP_Sword:
-			WeaponName = WeaponName::Sword;
-			break;
-		case EWeaponCategory::EBP_BowToGun:
-			WeaponName = WeaponName::BowToGun;
-			break;
-		case EWeaponCategory::EBP_Axe:
-			WeaponName = WeaponName::Axe;
-			break;
-		case EWeaponCategory::EBP_Spear:
-			WeaponName = WeaponName::Spear;
-			break;
-		case EWeaponCategory::EBP_FireStaff:
-			WeaponName = WeaponName::FireStaff;
-			break;
-		case EWeaponCategory::EBP_IceStaff:
-			WeaponName = WeaponName::IceStaff;
-			break;
-		case EWeaponCategory::EBP_LightningStaff: 
-			WeaponName = WeaponName::LightningStaff;
-			break;
-		case EWeaponCategory::EBP_EarthStaff:
-			WeaponName = WeaponName::EarthStaff;
-			break;
-		case EWeaponCategory::EBP_Gauntlets:
-			WeaponName = WeaponName::Gauntlets;
-		}
+		FString WeaponName = StaticEnum<EWeaponCategory>()->GetDisplayNameTextByIndex(static_cast<int64>(Type)).ToString();
 
 		Ovl->AttachToOverlay("General", "Performance and Balance", FName(WeaponName + " DPS"),
 			FOnOverlayUpdateFloat::CreateUFunction(this, "GetDamagePerSecond"), FOnOverlayResetValue::CreateUFunction(this, "ResetDamagePerSecond"));

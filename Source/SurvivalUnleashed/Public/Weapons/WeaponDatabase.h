@@ -6,19 +6,6 @@
 #include "Engine/DataAsset.h"
 #include "WeaponDatabase.generated.h"
 
-namespace WeaponName
-{
-	constexpr const char Sword[] = "Sword";
-	constexpr const char BowToGun[] = "Bow-To-Gun";
-	constexpr const char Axe[] = "Axe";
-	constexpr const char Spear[] = "Spear";
-	constexpr const char FireStaff[] = "Fire Staff";
-	constexpr const char IceStaff[] = "Ice Staff";
-	constexpr const char LightningStaff[] = "Lightning Staff";
-	constexpr const char EarthStaff[] = "Earth Staff";
-	constexpr const char Gauntlets[] = "Gauntlets";
-}
-
 UENUM(BlueprintType)
 enum class EWeaponCategory : uint8
 {
