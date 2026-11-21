@@ -13,6 +13,7 @@ ABaseSpear::ABaseSpear()
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>("BoxCollision");
+	BoxCollision->SetGenerateOverlapEvents(false);
 	BoxCollision->SetupAttachment(Mesh);
 
 	bAbsoluteRotation = true;
