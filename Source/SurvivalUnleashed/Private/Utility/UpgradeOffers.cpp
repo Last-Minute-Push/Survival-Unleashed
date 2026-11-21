@@ -35,13 +35,6 @@ TArray<FUpgradeOffer> UpgradeOffers::Generate(const FBuildSnapshot& Build, int32
 {
 	// ---- Every legal weapon offer
 	TArray<FUpgradeOffer> Weapons;
-	for (const FOwnedWeapon& Owned : Build.OwnedWeapons)
-	{
-		if (Owned.FirstEvolution != -1 && Owned.Level < Owned.FirstEvolution - 1 || Owned.Level < Owned.MaxLevel) // max-level weapons drop out
-		{
-			Weapons.Add(MakeWeaponOffer(Owned.Data, Owned.Level + 1));
-		}
-	}
 	if (Build.OwnedWeapons.Num() < MaxWeapons) // new weapons only while a slot is free
 	{
 		for (EWeaponCategory Weapon : Build.WeaponPool)
@@ -55,7 +48,7 @@ TArray<FUpgradeOffer> UpgradeOffers::Generate(const FBuildSnapshot& Build, int32
 	}
 	if (WeaponSys)
 	{
-		WeaponSys->GetAvailableEvolutions(Build.OwnedWeapons, Build.StatLevels, Weapons);
+		WeaponSys->GetAvailableUpgrades(Build.OwnedWeapons, Build.StatLevels, Weapons);
 	}
 
 	// ---- Every legal stat offer

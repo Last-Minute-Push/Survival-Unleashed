@@ -233,8 +233,8 @@ void ABaseSword::StartSwing()
 {
     HitActors.Empty();
     bIsSwinging = true;
-    OnSwingStart.Broadcast();
     SetActorTickEnabled(true);
+    OnWeaponAttack.Broadcast();
     SetActorEnableCollision(true);
     NiagaraComponent->Activate(true);
     BoxCollision->SetGenerateOverlapEvents(true);

@@ -15,6 +15,7 @@ class AProjectileBase;
 class UPlayerStatsComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponHit, float, Damage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponAttack);
 
 UCLASS(Abstract)
 class SURVIVALUNLEASHED_API ABaseWeapon : public AActor
@@ -35,6 +36,7 @@ public:
 
 
 	UPROPERTY(BlueprintAssignable, Category = "Damage") FOnWeaponHit OnWeaponHit;
+	UPROPERTY(BlueprintAssignable, Category = "Damage") FOnWeaponAttack OnWeaponAttack;
 	UFUNCTION(BlueprintCallable, Category = "Weapon") virtual void StartWeapon();
 	UFUNCTION(BlueprintCallable, Category = "Weapon") virtual void StopWeapon();
 	UFUNCTION(BlueprintCallable, Category = "Weapon") static float ComputeWeaponHit(UWeaponData* W, UPlayerStatsComponent* P/*, UEnemyStats* E*/);

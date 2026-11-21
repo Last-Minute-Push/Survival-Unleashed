@@ -48,7 +48,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Mesh", meta = (ClampMin = "0"))           float Height;
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Mesh", meta = (ClampMin = "0"))           float DistanceFromPlayer;
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|ProjectileMesh")                          TSubclassOf<AProjectileBase> ProjectileType;
-	UPROPERTY(EditDefaultsOnly, Category = "Properties|Projectile", meta = (ClampMin = "0"))     int32 ProjectilePierce;
+	UPROPERTY(EditDefaultsOnly, Category = "Properties|Projectile", meta = (ClampMin = "0"))     float ProjectileDamage;
+	UPROPERTY(EditDefaultsOnly, Category = "Properties|Projectile", meta = (ClampMin = "-1"))     int32 ProjectilePierce;
+	UPROPERTY(EditDefaultsOnly, Category = "Properties|Projectile", meta = (ClampMin = "0"))     int32 ProjectileSpeed;
+	UPROPERTY(EditDefaultsOnly, Category = "Properties|Projectile", meta = (ClampMin = "0"))     float ProjectileKnockback;
+	UPROPERTY(EditDefaultsOnly, Category = "Properties|Projectile", meta = (ClampMin = "0"))     float ProjectileRange;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Niagara")                                 UNiagaraSystem* NiagaraSystem;
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Niagara|Trails", meta = (ClampMin = "0")) float TrailWidth;

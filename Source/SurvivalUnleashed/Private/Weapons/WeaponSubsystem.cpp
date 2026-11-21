@@ -172,7 +172,7 @@ FUpgradeCardInfo UWeaponSubsystem::GetWeaponInfo(EWeaponCategory Category, int32
 	return OutInfo;
 }
 
-void UWeaponSubsystem::GetAvailableEvolutions(const TArray<FOwnedWeapon>& OwnedWeapons, const TMap<EPlayerStats, int32>& OwnedStats, TArray<FUpgradeOffer>& OutEvolutions)
+void UWeaponSubsystem::GetAvailableUpgrades(const TArray<FOwnedWeapon>& OwnedWeapons, const TMap<EPlayerStats, int32>& OwnedStats, TArray<FUpgradeOffer>& OutEvolutions)
 {
 	for (const FOwnedWeapon& OwnedWeapon : OwnedWeapons)
 	{
@@ -180,8 +180,6 @@ void UWeaponSubsystem::GetAvailableEvolutions(const TArray<FOwnedWeapon>& OwnedW
 
 		// We check before validation.
 		if (OwnedWeapon.Level >= OwnedWeapon.MaxLevel ||          // The weapon cannot be at its max upgrade.
-			OwnedWeapon.FirstEvolution < 0 ||                     // There should be at least one evolution for this weapon.
-			OwnedWeapon.Level < OwnedWeapon.FirstEvolution - 1 || // The next upgrade for the owned weapon must be an evolution.
 			!GetCategoryUpgrades(OwnedWeapon.Data, Upgrades))     // This weapon must have upgrades (should always return true; upgrades missing?).
 			continue;
 
@@ -191,63 +189,26 @@ void UWeaponSubsystem::GetAvailableEvolutions(const TArray<FOwnedWeapon>& OwnedW
 		if (!Data) continue;
 
 		// We validate!
-		bool IsEvolution = true;
+		bool bPassed = true;
 		for (auto It = Data->EvolutionRequirements.begin(); It != Data->EvolutionRequirements.end(); ++It)
 		{
 			const int32* OwnedStatLevel = OwnedStats.Find(It->Key);
 			if (!OwnedStatLevel || *OwnedStatLevel < It->Value)
 			{
-				IsEvolution = false; // Failed to pass the stat requirements
+				bPassed = false; // Failed to pass the stat requirements
 				break;
 			}
 		}
-		if (!IsEvolution) continue;
+		if (!bPassed) continue;
 
-		// Evolution can be offered!
-		FUpgradeOffer EvlOffer;
-		EvlOffer.Kind = EUpgradeKind::Weapon;
-		EvlOffer.Weapon = Data->WeaponType;
-		EvlOffer.CurrentLevel = OwnedWeapon.Level + 1;
+		// Upgrade can be offered!
+		FUpgradeOffer Offer;
+		Offer.Kind = EUpgradeKind::Weapon;
+		Offer.Weapon = Data->WeaponType;
+		Offer.CurrentLevel = OwnedWeapon.Level + 1;
 
-		OutEvolutions.Add(EvlOffer);
+		OutEvolutions.Add(Offer);
 	}
-}
-
-int32 UWeaponSubsystem::GetCategoryEvolutionIndex(EWeaponCategory Category)
-{
-	int32 RetIdx = -1;
-	switch (Category)
-	{
-	case EWeaponCategory::EBP_Sword:
-		RetIdx = Database->FirstEvolutionIndexSword;
-		break;
-	case EWeaponCategory::EBP_BowToGun:
-		RetIdx = Database->FirstEvolutionIndexBowToGun;
-		break;
-	case EWeaponCategory::EBP_Axe:
-		RetIdx = Database->FirstEvolutionIndexAxe;
-		break;
-	case EWeaponCategory::EBP_Spear:
-		RetIdx = Database->FirstEvolutionIndexSpear;
-		break;
-	case EWeaponCategory::EBP_Gauntlets:
-		RetIdx = Database->FirstEvolutionIndexGauntlets;
-		break;
-	case EWeaponCategory::EBP_FireStaff:
-		RetIdx = Database->FirstEvolutionIndexFireStaff;
-		break;
-	case EWeaponCategory::EBP_IceStaff:
-		RetIdx = Database->FirstEvolutionIndexIceStaff;
-		break;
-	case EWeaponCategory::EBP_LightningStaff:
-		RetIdx = Database->FirstEvolutionIndexLightningStaff;
-		break;
-	case EWeaponCategory::EBP_EarthStaff:
-		RetIdx = Database->FirstEvolutionIndexEarthStaff;
-		break;
-	}
-
-	return RetIdx;
 }
 
 EWeaponUpgradeStatus UWeaponSubsystem::SetWeapon(FWeaponCreateParams& Params, TMap<EWeaponCategory, UChildActorComponent*>& Inventory)

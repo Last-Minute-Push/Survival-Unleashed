@@ -46,18 +46,6 @@ class SURVIVALUNLEASHED_API UWeaponDatabase : public UPrimaryDataAsset
 	GENERATED_BODY()
 	
 public:
-	// Any weapon upgrades equal or above the index respective
-	// to their category will be considered an evolution of that weapon.
-	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexSword          = -1;
-	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexBowToGun       = -1;
-	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexAxe            = -1;
-	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexSpear          = -1;
-	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexGauntlets      = -1;
-	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexFireStaff      = -1;
-	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexIceStaff       = -1;
-	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexLightningStaff = -1;
-	UPROPERTY(EditDefaultsOnly) int32 FirstEvolutionIndexEarthStaff     = -1;
-
 	UPROPERTY(EditDefaultsOnly) TArray<TSubclassOf<ABaseWeapon>> SwordUpgrades;
 	UPROPERTY(EditDefaultsOnly) TArray<TSubclassOf<ABaseWeapon>> BowToGunUpgrades;
 	UPROPERTY(EditDefaultsOnly) TArray<TSubclassOf<ABaseWeapon>> AxeUpgrades;
