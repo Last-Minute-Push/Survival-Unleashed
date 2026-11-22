@@ -52,6 +52,18 @@ struct FDebugValueData
 	FOnOverlayResetValue ResetValue;
 
 	FDebugValueData() {};
+
+	~FDebugValueData()
+	{
+		GetBool.Unbind();
+		GetInt32.Unbind();
+		GetFloat.Unbind();
+		GetVector2.Unbind();
+		GetVector3.Unbind();
+		GetVector4.Unbind();
+		GetString.Unbind();
+		ResetValue.Unbind();
+	}
 };
 
 USTRUCT(BlueprintType)

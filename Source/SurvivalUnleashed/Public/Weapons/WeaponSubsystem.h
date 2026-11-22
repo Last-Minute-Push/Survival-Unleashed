@@ -7,6 +7,8 @@
 #include "UI/UpgradeCard.h"
 #include "WeaponSubsystem.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponsUI, EWeaponCategory, Category, int, Level);
+
 UENUM(BlueprintType)
 enum class EWeaponUpgradeStatus : uint8
 {
@@ -33,7 +35,6 @@ struct FWeaponCreateParams
 /**
  *
  */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponsUI, EWeaponCategory, Category, int, Level);
 UCLASS()
 class SURVIVALUNLEASHED_API UWeaponSubsystem : public UWorldSubsystem
 {
@@ -48,8 +49,7 @@ class SURVIVALUNLEASHED_API UWeaponSubsystem : public UWorldSubsystem
 	void PlayUpgradeSFX();
 public:
 
-	UPROPERTY()
-	FOnWeaponsUI OnWeaponsUIUpdate;
+	UPROPERTY() FOnWeaponsUI OnWeaponsUIUpdate;
 
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 
