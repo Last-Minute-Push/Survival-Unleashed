@@ -9,10 +9,15 @@
 #include "Audio/Interfaces/AudioManagerInterface.h"
 #include "Core/RunResults.h"
 #include "Weapons/WeaponData.h" // Focus enum
+#include "Utility/PlayerStatsComponent.h" // EPlayerStats
 #include "UI/ControlsMenu.h"
 #include "UGI_SUGameInstance.generated.h"
 
+// Fires whenever the player's upgrade points change (a run ends, a rank is bought, Refund All, an unlock). Native: bind with AddUObject.
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUpgradePointsChanged, int32 /*Points*/);
+
 class UDebugOverlayDatabase;
+class UPermanentUpgradeRules;
 
 // Activates the audio test
 #define AUDIO_MANAGER_TEST 0
@@ -42,14 +47,14 @@ protected:
 
 
 	UPROPERTY(EditDefaultsOnly, Category = Audio) TSubclassOf<UAudioLibrary> AudioLibraryClass; //! SET IN EDITOR (BP_AudioLibrary)
-	
+
 	UAudioComponent* CreateAudio(USoundBase* Sound, float VolumeMultiplier, float PitchMultiplier,
 		USoundConcurrency* ConcurrencySettings, bool bPersistAcrossLevels);
 
-        // - Debug Overlay Database -
+	// - Debug Overlay Database -
 	UPROPERTY(EditDefaultsOnly, Category = "Debug") TObjectPtr<UDebugOverlayDatabase> OverlayDatabase;
 
-        // - Audio -
+	// - Audio -
 	void ApplyMusicVolume();
 	void ApplySoundVolume();
 
@@ -72,6 +77,9 @@ protected:
 	UPROPERTY() TObjectPtr<class USUSaveGame> SaveData;
 	UPROPERTY() FRunResults LastRunResults;
 
+	// Costs, rank cap, focus rule and per-rank bonuses
+	UPROPERTY(EditDefaultsOnly, Category = "Permanent Upgrades") TObjectPtr<UPermanentUpgradeRules> UpgradeRules; //! SET IN EDITOR (DA_PermanentUpgrades)
+
 	void LoadOrCreateSave();
 
 public:
@@ -81,8 +89,8 @@ public:
 	virtual void Init() override;
 
 	//----------------------------------------------------------------------//
-    // Level Handling
-    //----------------------------------------------------------------------//
+	// Level Handling
+	//----------------------------------------------------------------------//
 	void LoadLevel(const int32 LevelIndex);
 	void LoadLevelSafe(const int32 LevelIndex);
 	UFUNCTION() inline void LoadFirstLevel() { LoadLevelSafe(FirstLevelIndex); }
@@ -106,13 +114,13 @@ public:
 	bool calledMerge = false;
 
 	//----------------------------------------------------------------------//
-    // Weapon Database
-    //----------------------------------------------------------------------//
+	// Weapon Database
+	//----------------------------------------------------------------------//
 	UFUNCTION() inline UWeaponDatabase* GetWeaponDatabase() const { return Database; }
 
 	//----------------------------------------------------------------------//
-        // Debug Overlay Database
-        //----------------------------------------------------------------------//
+		// Debug Overlay Database
+		//----------------------------------------------------------------------//
 	UFUNCTION() inline UDebugOverlayDatabase* GetOverlayDatabase() const { return OverlayDatabase; }
 
 	//----------------------------------------------------------------------//
@@ -128,7 +136,8 @@ public:
 
 	//----------------------------------------------------------------------//
 	// Permanent Upgrades
-	// Stores and saves only. Costs, rank caps, and focus rules live in the stat component.
+	// Stores and saves the ranks. Costs, the rank cap and the focus rule come from UpgradeRules.
+	// The upgrade screen should use the EPlayerStats functions below; the FName ones are the storage layer under them.
 	//----------------------------------------------------------------------//
 	UFUNCTION(BlueprintPure, Category = "Permanent Upgrades") int32 GetUpgradePoints() const;
 	UFUNCTION(BlueprintPure, Category = "Permanent Upgrades") int32 GetPermanentRank(FName Stat) const;
@@ -136,12 +145,45 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Permanent Upgrades") int32 GetPermanentFocus(Focus FocusStat) const;
 	UFUNCTION(BlueprintPure, Category = "Permanent Upgrades") int32 GetFocusPointsSpent() const;
 
+	// For any screen that shows the point total: read GetUpgradePoints() once when it opens, then bind this
+	FOnUpgradePointsChanged OnUpgradePointsChanged;
+
+	void NotifyPointsChanged();
+
+	//----------------------------------------------------------------------//
+	// Characters
+	// Stores and saves only. Each character's ID and cost come from its data asset.
+	//----------------------------------------------------------------------//
+	// True if the character was bought. A character that costs 0 (the Villager) is always available: check its cost first.
+	UFUNCTION(BlueprintPure, Category = "Characters") bool IsCharacterUnlocked(FName CharacterId) const;
+	// Unlocks a character for Cost points if the player can afford it and doesn't own it yet. Saves on success.
+	UFUNCTION(BlueprintCallable, Category = "Characters") bool TryUnlockCharacter(FName CharacterId, int32 Cost);
+	UFUNCTION(BlueprintPure, Category = "Characters") FName GetLastCharacter() const;
+	// Call when a run starts with this character. Saves.
+	UFUNCTION(BlueprintCallable, Category = "Characters") void SetLastCharacter(FName CharacterId);
+
 	// Buys one rank if the player can afford it and it's below MaxRank. Saves on success.
 	UFUNCTION(BlueprintCallable, Category = "Permanent Upgrades") bool TryBuyRank(FName Stat, int32 Cost, int32 MaxRank);
 	// Spends one permanent focus point if fewer than FocusPointsEarned are spent. Saves on success.
 	UFUNCTION(BlueprintCallable, Category = "Permanent Upgrades") bool TrySpendFocusPoint(Focus FocusStat, int32 FocusPointsEarned);
 	// Returns every spent point and clears all ranks and focus points. Saves.
 	UFUNCTION(BlueprintCallable, Category = "Permanent Upgrades") void RefundAllRanks();
+
+	UFUNCTION(BlueprintPure, Category = "Permanent Upgrades") UPermanentUpgradeRules* GetUpgradeRules() const { return UpgradeRules; }
+	UFUNCTION(BlueprintPure, Category = "Permanent Upgrades") int32 GetStatRank(EPlayerStats Stat) const;
+	// The next rank's cost, or -1 if the stat is maxed
+	UFUNCTION(BlueprintPure, Category = "Permanent Upgrades") int32 GetNextStatRankCost(EPlayerStats Stat) const;
+	// Buys the next rank at the rules' price, if it's affordable and below the cap. Saves on success.
+	UFUNCTION(BlueprintCallable, Category = "Permanent Upgrades") bool TryBuyStatRank(EPlayerStats Stat);
+	// One for every RanksPerFocusPoint ranks bought
+	UFUNCTION(BlueprintPure, Category = "Permanent Upgrades") int32 GetPermanentFocusPointsEarned() const;
+	UFUNCTION(BlueprintCallable, Category = "Permanent Upgrades") bool TrySpendPermanentFocusPoint(Focus FocusStat);
+	
+	// Debug, from the console: SU_GivePoints 100, SU_BuyRank Health, SU_RefundAll, SU_ShowRanks
+	UFUNCTION(Exec) void SU_GivePoints(int32 Points);
+	UFUNCTION(Exec) void SU_BuyRank(const FString & Stat);
+	UFUNCTION(Exec) void SU_RefundAll();
+	UFUNCTION(Exec) void SU_ShowRanks();
 
 	// The player's controls. Owned here so gameplay never depends on the controls menu having been opened.
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
