@@ -3,17 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "UI/CharacterButton.h"
 #include "Framework/UGI_SUGameInstance.h"
+#include "Engine/Texture2D.h"
+#include "UI/ButtonBase.h"
 #include "CharacterSelectMenu.generated.h"
+
 
 /**
  * 
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterSelectClosed);
 UCLASS()
-class SURVIVALUNLEASHED_API UCharacterSelectMenu : public UUserWidget
+class SURVIVALUNLEASHED_API UCharacterSelectMenu : public UHUDBase
 {
 	GENERATED_BODY()
 	
@@ -46,10 +49,15 @@ public:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) UCharacterButton* CharacterOption_3;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) UCharacterButton* CharacterOption_4;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)  UTexture2D* CharacterImage2;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)  UTexture2D* CharacterImage3;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)  UTexture2D* CharacterImage4;
+
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UTextBlock* Points;
 
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* BackUpgradeButton;
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* PlayButton;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FText PointsInfo;
 
@@ -58,5 +66,8 @@ public:
 	UFUNCTION() void SetPointsAmount(float CurrentPoints);
 
 	UFUNCTION() void SetPointsText(int Ppoints);
+
+	UPROPERTY(BlueprintAssignable, Category = "Character Select")
+	FOnCharacterSelectClosed OnClosed;
 
 };

@@ -4,7 +4,7 @@
 #include "UI/CharacterSelectMenu.h"
 #include "Components/TextBlock.h"
 #include "Actor/BalancedPlayerDataAsset.h"
-#include "UI/ButtonBase.h"
+#include "Components/Image.h"
 
 
 void UCharacterSelectMenu::NativePreConstruct()
@@ -14,22 +14,54 @@ void UCharacterSelectMenu::NativePreConstruct()
 
 void UCharacterSelectMenu::NativeOnInitialized()
 {
+	GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
 	if (CharacterOption_1 && CharacterOption_2 && CharacterOption_3 && CharacterOption_4) {
 		CharacterOption_1->CodeButtonClick.AddDynamic(this, &UCharacterSelectMenu::ChooseCharacterV);
 		CharacterOption_2->CodeButtonClick.AddDynamic(this, &UCharacterSelectMenu::ChooseCharacterF);
 		CharacterOption_3->CodeButtonClick.AddDynamic(this, &UCharacterSelectMenu::ChooseCharacterR);
 		CharacterOption_4->CodeButtonClick.AddDynamic(this, &UCharacterSelectMenu::ChooseCharacterW);
-		BackUpgradeButton->CodeButtonClick.AddDynamic(this, &UCharacterSelectMenu::BackButton);
+		if (BackUpgradeButton && PlayButton && GI) {
+			PlayButton->CodeButtonClick.AddDynamic(GI, &UUGI_SUGameInstance::LoadFirstLevel);
+			BackUpgradeButton->CodeButtonClick.AddDynamic(this, &UCharacterSelectMenu::BackButton);
+		}
+		if (CharacterImage2&& CharacterImage3 && CharacterImage4 ){
+			CharacterOption_2->CharacterImage->SetBrushFromTexture(CharacterImage2);
+			CharacterOption_3->CharacterImage->SetBrushFromTexture(CharacterImage3);
+			CharacterOption_4->CharacterImage->SetBrushFromTexture(CharacterImage4);
+			if (GI) {
+				UBalancedPlayerDataAsset* Data2 = Cast<UBalancedPlayerDataAsset>(GI->FighterData);
+				UBalancedPlayerDataAsset* Data3 = Cast<UBalancedPlayerDataAsset>(GI->RangerData);
+				UBalancedPlayerDataAsset* Data4 = Cast<UBalancedPlayerDataAsset>(GI->WizardData);
+				CharacterOption_2->SetPriceText(FText::FromString("Cost: " + FString::FromInt((int)Data2->UnlockCost)));
+				CharacterOption_3->SetPriceText(FText::FromString("Cost: " + FString::FromInt((int)Data3->UnlockCost)));
+				CharacterOption_4->SetPriceText(FText::FromString("Cost: " + FString::FromInt((int)Data4->UnlockCost)));
+			}
+		}
 		CharacterLock();
 	}
-	SetPointsText(0);
+	if (Points) {
+		SetPointsText(0);
+	}
+
 }
 
 void UCharacterSelectMenu::CharacterLock()
 {
 	if (CharacterOption_2 && CharacterOption_3 && CharacterOption_4) {
+		UBalancedPlayerDataAsset* Data2 = Cast<UBalancedPlayerDataAsset>(GI->FighterData);
+		UBalancedPlayerDataAsset* Data3 = Cast<UBalancedPlayerDataAsset>(GI->RangerData);
+		UBalancedPlayerDataAsset* Data4 = Cast<UBalancedPlayerDataAsset>(GI->WizardData);
+		if (Data2->Unlocked) {
+			CharacterOption_2->Locked = false;
+		}
 		CharacterOption_2->LockCheck();
+		if (Data3->Unlocked) {
+			CharacterOption_3->Locked = false;
+		}
 		CharacterOption_3->LockCheck();
+		if (Data4->Unlocked) {
+			CharacterOption_4->Locked = false;
+		}
 		CharacterOption_4->LockCheck();
 	}
 }
@@ -57,8 +89,8 @@ void UCharacterSelectMenu::ChooseCharacterF()
 
 void UCharacterSelectMenu::ChooseCharacterR()
 {
-	if (CharacterOption_2->Locked) {
-		CharacterUnlock(CharacterOption_2);
+	if (CharacterOption_3->Locked) {
+		CharacterUnlock(CharacterOption_3);
 	}
 	else {
 		if (GI) {
@@ -93,8 +125,8 @@ void UCharacterSelectMenu::CharacterUnlock(UCharacterButton* Character)
 	if (Character == CharacterOption_2) {
 		UBalancedPlayerDataAsset* Data = Cast<UBalancedPlayerDataAsset>(GI->FighterData);
 		if (CurrentPointsAmount >= Data->UnlockCost) {
-			CharacterOption_2->Locked = false;
-			CharacterOption_2->LockCheck();
+			Data->Unlocked = true;
+			CharacterLock();
 			CurrentPointsAmount -= Data->UnlockCost;
 			SetPointsText(CurrentPointsAmount);
 			if (GI) {
@@ -109,8 +141,8 @@ void UCharacterSelectMenu::CharacterUnlock(UCharacterButton* Character)
 	else if (Character == CharacterOption_3) {
 		UBalancedPlayerDataAsset* Data = Cast<UBalancedPlayerDataAsset>(GI->RangerData);
 		if (CurrentPointsAmount >= Data->UnlockCost) {
-			CharacterOption_3->Locked = false;
-			CharacterOption_3->LockCheck();
+			Data->Unlocked = true;
+			CharacterLock();
 			CurrentPointsAmount -= Data->UnlockCost;
 			SetPointsText(CurrentPointsAmount);
 			if (GI) {
@@ -124,8 +156,8 @@ void UCharacterSelectMenu::CharacterUnlock(UCharacterButton* Character)
 	else if (Character == CharacterOption_4) {
 		UBalancedPlayerDataAsset* Data = Cast<UBalancedPlayerDataAsset>(GI->WizardData);
 		if (CurrentPointsAmount >= Data->UnlockCost) {
-			CharacterOption_4->Locked = false;
-			CharacterOption_4->LockCheck();
+			Data->Unlocked = true;
+			CharacterLock();
 			CurrentPointsAmount -= Data->UnlockCost;
 			SetPointsText(CurrentPointsAmount);
 			if (GI) {
@@ -148,5 +180,7 @@ void UCharacterSelectMenu::SetPointsText(int Ppoints)
 {
 	FText text;
 	text = FText::FromString("Perma Points: " + FString::SanitizeFloat(Ppoints));
-	Points->SetText(text);
+	if (Points) {
+		Points->SetText(text);
+	}
 }
