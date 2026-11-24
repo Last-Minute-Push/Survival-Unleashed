@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Utility/PlayerStatsComponent.h"
 #include "Weapons/WeaponDatabase.h"
 #include "WeaponData.generated.h"
 
+class UImage;
 class UNiagaraSystem;
 class AProjectileBase;
 
@@ -28,17 +30,29 @@ class SURVIVALUNLEASHED_API UWeaponData : public UPrimaryDataAsset
 	
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Defaults")                                           EWeaponCategory WeaponType;
-	UPROPERTY(EditDefaultsOnly, Category = "Stats", meta = (ClampMin = "0"))                     float Damage;
-	UPROPERTY(EditDefaultsOnly, Category = "Stats", Meta = (ClampMin = "0.1"))                   float Cooldown;
-	UPROPERTY(EditDefaultsOnly, Category = "Stats", meta = (ClampMin = "0.1"))                   float Range;
-	UPROPERTY(EditDefaultsOnly, Category = "Stats", meta = (ClampMin = "0"))                     float Knockback;
-	UPROPERTY(EditDefaultsOnly, Category = "Stats", meta = (ClampMin = "0"))                     float AttackSpeed;
-	UPROPERTY(EditDefaultsOnly, Transient, Category = "Stats")                                   Focus Alignment;
+	UPROPERTY(EditDefaultsOnly, Category = "Defaults|UpgradeCard")                               FText Name = FText::GetEmpty();
+	UPROPERTY(EditDefaultsOnly, Category = "Defaults|UpgradeCard")                               FText Description = FText::GetEmpty();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Defaults|UpgradeCard")                               TObjectPtr<UTexture2D> Icon;
+	UPROPERTY(EditDefaultsOnly, Category = "Evolution")                                          int32 EvolutionLevel;
+	UPROPERTY(EditDefaultsOnly, Category = "Evolution")                                          TMap<EPlayerStats, int32> EvolutionRequirements;
+	UPROPERTY(EditDefaultsOnly, Category = "DefaultStats", meta = (ClampMin = "0"))              float Damage;
+	UPROPERTY(EditDefaultsOnly, Category = "DefaultStats", meta = (ClampMin = "0.1"))            float Cooldown;
+	UPROPERTY(EditDefaultsOnly, Category = "DefaultStats", meta = (ClampMin = "0.1"))            float Range;
+	UPROPERTY(EditDefaultsOnly, Category = "DefaultStats", meta = (ClampMin = "0"))              float Knockback;
+	UPROPERTY(EditDefaultsOnly, Category = "DefaultStats", meta = (ClampMin = "0"))              float AttackSpeed;
+	UPROPERTY(EditDefaultsOnly, Transient, Category = "DefaultStats")                            Focus Alignment;
+
+	UPROPERTY(EditDefaultsOnly, Category = "EvolutionStats", meta = (ClampMin = "0"))            float HealAmount;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Mesh", meta = (ClampMin = "0"))           float Height;
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Mesh", meta = (ClampMin = "0"))           float DistanceFromPlayer;
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|ProjectileMesh")                          TSubclassOf<AProjectileBase> ProjectileType;
-	UPROPERTY(EditDefaultsOnly, Category = "Properties|Projectile", meta = (ClampMin = "0"))     int32 ProjectilePierce;
+	UPROPERTY(EditDefaultsOnly, Category = "Properties|Projectile", meta = (ClampMin = "0"))     float ProjectileDamage;
+	UPROPERTY(EditDefaultsOnly, Category = "Properties|Projectile", meta = (ClampMin = "-1"))     int32 ProjectilePierce;
+	UPROPERTY(EditDefaultsOnly, Category = "Properties|Projectile", meta = (ClampMin = "0"))     int32 ProjectileSpeed;
+	UPROPERTY(EditDefaultsOnly, Category = "Properties|Projectile", meta = (ClampMin = "0"))     float ProjectileKnockback;
+	UPROPERTY(EditDefaultsOnly, Category = "Properties|Projectile", meta = (ClampMin = "0"))     float ProjectileRange;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Niagara")                                 UNiagaraSystem* NiagaraSystem;
 	UPROPERTY(EditDefaultsOnly, Category = "Properties|Niagara|Trails", meta = (ClampMin = "0")) float TrailWidth;

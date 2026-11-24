@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UI/HUDBase.h"
-#include "Utility/UpgradeOffers.h"
+#include "Weapons/WeaponDatabase.h"  // EWeaponCategory
 #include "LevelUpScreen.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSetOwnedWeapons, TArray<FOwnedWeapon>&, WeaponPool);
@@ -32,7 +32,7 @@ public:
 	ULevelUpScreen();
 
 	UPROPERTY()
-	class AUC_Player* CurrentPlayer;
+	class AUC_Player* Player;
 	UPROPERTY()
 	class UPlayerStatsComponent* CurrentStatsComp;
 

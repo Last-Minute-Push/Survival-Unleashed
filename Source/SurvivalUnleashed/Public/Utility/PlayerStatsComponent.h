@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Weapons/WeaponDatabase.h"
 #include "PlayerStatsComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthUI, float, Current, float, Max);
@@ -24,6 +23,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerFocusUp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerLevelUpEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerFocusUpEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponUpgrade, EWeaponCategory, Category);
+DECLARE_MULTICAST_DELEGATE(FOnDodged);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnHitWindowStarted, float /*Duration*/);
 
 
 UENUM(BlueprintType)
@@ -115,6 +116,16 @@ public:
 	// Which Boss Chest menu is open, 1 to BossChestPicks; 0 for an ordinary level-up
 	int32 GetBossChestPick() const { return BossChestPick; }
 
+	// Blocks all damage, but not heals, for Duration seconds of game time. The dash uses it.
+	void GrantInvincibility(float Duration);
+	bool IsInvincible() const;
+
+	// Fires when Evasion dodges a hit, for Braulio's "Dodge" text. Native: bind with AddUObject.
+	FOnDodged OnDodged;
+
+	// Fires when a hit opens the hit window, for the player's hurt flash. Native: bind with AddUObject.
+	FOnHitWindowStarted OnHitWindowStarted;
+	
 	TMap<EPlayerStats, int32> StatRanks;
 	const TMap<EPlayerStats, int32>& GetStatRanks();
 	void ApplyStatUpgrade(EPlayerStats Stat);
@@ -129,6 +140,20 @@ private:
 
 	int32 BossChestPick = 0;
 
+	float InvincibleUntil = -1.f; // world time
+
+	// After a hit, only damage bigger than the biggest hit so far gets through, for this long.
+	// A crowd then hurts like its strongest member, and big telegraphed attacks still land.
+	UPROPERTY(EditDefaultsOnly, Category = "Stats|Damage", meta = (ClampMin = "0"))
+	float HitWindowTime = 0.3f;
+	
+	float HitWindowEnd = -1.f;     // world time
+	float HitWindowBiggest = 0.f;  // the biggest hit inside the current window, before Defense
+	
+	// Returns the part of Damage that gets through the hit window (0 if none)
+	float ApplyHitWindow(float Damage);
+	void ReflectDamage(AActor * DamagedActor, float Damage, AActor * DamageCauser);
+	
 	//PlayerStats, 0 = not enabled!
 
 	//Flat values

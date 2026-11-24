@@ -38,7 +38,7 @@ void AUGM_SUPlayAreaGameMode::BeginPlay() {
 		ResultScreenObject = CreateWidget<UResultsBase>(PlayerController, HUDClassRS);
 		LevelUpScreenObject = CreateWidget<ULevelUpScreen>(PlayerController, HUDClassLU);
 		if (LevelUpScreenObject) {
-			LevelUpScreenObject->CurrentPlayer = CurrentPlayer;
+			LevelUpScreenObject->Player = CurrentPlayer;
 			LevelUpScreenObject->CurrentStatsComp = CurrentPlayer->GetPlayerStatsComp();
 			CurrentPlayer->CurrentLvlScreen = LevelUpScreenObject;
 			CurrentPlayer->GetPlayerStatsComp()->CurrentLvlScreen = LevelUpScreenObject;

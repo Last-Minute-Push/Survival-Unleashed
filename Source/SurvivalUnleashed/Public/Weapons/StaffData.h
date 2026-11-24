@@ -26,13 +26,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Staff|Levels")
 	TArray<int32> ProjectilesPerLevel = { 1, 1, 2, 3, 3, 4 };
 
-	UPROPERTY(EditDefaultsOnly, Category = "Staff|Projectile", meta = (ClampMin = "0"))
-	float ProjectileSpeed = 1200.f;
-
-	// Extra enemies a projectile passes through: 0 = stops at the first, -1 = unlimited
-	UPROPERTY(EditDefaultsOnly, Category = "Staff|Projectile", meta = (ClampMin = "-1"))
-	int32 Pierce = 0;
-
 	// Above 0: the first hit explodes and hits everything in this radius (Fire Staff)
 	UPROPERTY(EditDefaultsOnly, Category = "Staff|Effect", meta = (ClampMin = "0"))
 	float ExplosionRadius = 0.f;

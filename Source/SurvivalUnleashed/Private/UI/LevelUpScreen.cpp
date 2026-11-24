@@ -8,7 +8,6 @@
 #include "Components/HorizontalBox.h"
 #include "Actor/UC_Player.h"
 #include "Utility/PlayerStatsComponent.h"
-#include "Utility/UpgradeOffers.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 
@@ -62,10 +61,13 @@ void ULevelUpScreen::SetFourUpgrades()
 	// TODO: Build.bGuaranteeEvolution = CurrentStatsComp->GetBossChestPick() == 1;
 	OnSetOwnedWeapons.Broadcast(Build.OwnedWeapons);
 
-	const TArray<FUpgradeOffer> Offers = UpgradeOffers::Generate(Build, Cards.Num());
+	int32 MaxSlots = Player->GetInventoryMaxSlots();
+	UWeaponSubsystem* WeaponSubsystem = Player->GetWeaponSubsystem();
+
+	const TArray<FUpgradeOffer> Offers = UpgradeOffers::Generate(Build, Cards.Num(), MaxSlots, WeaponSubsystem);
 	for (int32 i = 0; i < Cards.Num(); ++i) {
 		Cards[i]->SetOffer(Offers[i]);
-		
+
 	}
 	bOfferTaken = false;
 }

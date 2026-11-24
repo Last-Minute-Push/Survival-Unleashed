@@ -10,8 +10,11 @@ class UButton;
 class UImage;
 class UTextBlock;
 class UTexture2D;
+class UWidgetSwitcher;
+class UWeaponSubsystem;
 
 DECLARE_DELEGATE_OneParam(FOnUpgradeCardPicked, int32 /*CardIndex*/);
+DECLARE_DELEGATE_RetVal_TwoParams(FUpgradeCardInfo, FOnSetWeaponOffer, EWeaponCategory /*Category*/, int32 /*UpgradeLevel*/);
 
 // What a card shows for one stat or weapon. Filled in on WBP_UpgradeCard's Class Defaults.
 USTRUCT(BlueprintType)
@@ -38,28 +41,30 @@ public:
 
 	int32 CardIndex = INDEX_NONE; // set by the level-up screen
 	FOnUpgradeCardPicked OnPicked; // native delegate: the screen binds with BindUObject, no UFUNCTION needed on its side
+	FOnSetWeaponOffer OnSetWeaponOffer;
 
 protected:
 	virtual void NativeOnInitialized() override;
 	virtual void NativePreConstruct() override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Upgrade Card")
-	TMap<EPlayerStats, FUpgradeCardInfo> StatInfo;
+	TMap<EPlayerStats, FUpgradeCardInfo> StatsInfo;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Upgrade Card")
-	TMap<EWeaponCategory, FUpgradeCardInfo> WeaponInfo;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Upgrade Card")
-	TMap<EWeaponCategory, FText> WeaponTextMapIndexes;
+	TMap<EWeaponCategory, FUpgradeCardInfo> WeaponsInfo;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Upgrade Card")
 	FUpgradeCardInfo HealInfo;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Upgrade Card") 
+	TMap<EWeaponCategory, UTexture2D*> FallbackWeaponIcons;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) TObjectPtr<UButton> PickButton;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) TObjectPtr<UTextBlock> NameText;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) TObjectPtr<UTextBlock> LevelText;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UWidgetSwitcher* WeaponIconSwitcher;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) TObjectPtr<UImage> Icon;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> DescriptionText;
 
@@ -68,14 +73,14 @@ protected:
 	USoundBase* CurrentButtonClicked;
 private:
 	UFUNCTION(BlueprintCallable) // required: UButton::OnClicked is a dynamic delegate
-	void HandleClicked();
+		void HandleClicked();
 
 	UFUNCTION() void HandleHoverSFX();
 	UFUNCTION() void SetButtonClickSFX(USoundBase* SFX);
-	UFUNCTION() void GetWeaponImageIndex(EWeaponCategory Category);
-
-	FText GetWeaponDescription(EWeaponCategory Category);
 
 	UPROPERTY()
 	FUpgradeOffer Offer;
+
+	UPROPERTY()
+	UWeaponSubsystem* WeaponSubsystem;
 };

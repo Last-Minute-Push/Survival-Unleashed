@@ -15,6 +15,7 @@ class AProjectileBase;
 class UPlayerStatsComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponHit, float, Damage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponAttack);
 
 UCLASS(Abstract)
 class SURVIVALUNLEASHED_API ABaseWeapon : public AActor
@@ -24,7 +25,6 @@ class SURVIVALUNLEASHED_API ABaseWeapon : public AActor
 	bool bIsActive;
 	float DamagePerSecond = 0.f;
 	FTimerHandle TStartTimerTest, TStartTimerTest2;
-
 
 public:
 
@@ -36,6 +36,7 @@ public:
 
 
 	UPROPERTY(BlueprintAssignable, Category = "Damage") FOnWeaponHit OnWeaponHit;
+	UPROPERTY(BlueprintAssignable, Category = "Damage") FOnWeaponAttack OnWeaponAttack;
 	UFUNCTION(BlueprintCallable, Category = "Weapon") virtual void StartWeapon();
 	UFUNCTION(BlueprintCallable, Category = "Weapon") virtual void StopWeapon();
 	UFUNCTION(BlueprintCallable, Category = "Weapon") static float ComputeWeaponHit(UWeaponData* W, UPlayerStatsComponent* P/*, UEnemyStats* E*/);
@@ -56,6 +57,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Damage") inline void AddToDamagePerSecond(float Damage) { DamagePerSecond += Damage; }
 	UFUNCTION(BlueprintCallable, Category = "Damage") inline void ResetDamagePerSecond() { DamagePerSecond = 0.f; }
 	UFUNCTION(BlueprintCallable, Category = "Damage") virtual void ApplyDamage(AActor * Source, AActor * Target);
+	UFUNCTION(BlueprintCallable, Category = "Damage") void PlayerLifeSteal(float Damage);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Properties") bool bAbsoluteRotation;                  // Rotates on its own regard

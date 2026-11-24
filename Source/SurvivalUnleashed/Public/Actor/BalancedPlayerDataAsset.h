@@ -95,4 +95,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Passive")
 	EPassives Passive;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Unlock")
+	bool Unlocked = false;
 };
