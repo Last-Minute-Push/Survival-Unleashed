@@ -106,6 +106,13 @@ public:
 	bool calledMerge = false;
 
 	//----------------------------------------------------------------------//
+	//Loading Player for later
+	//----------------------------------------------------------------------//
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UDataAsset* PlayerData;
+
+	//----------------------------------------------------------------------//
     // Weapon Database
     //----------------------------------------------------------------------//
 	UFUNCTION() inline UWeaponDatabase* GetWeaponDatabase() const { return Database; }

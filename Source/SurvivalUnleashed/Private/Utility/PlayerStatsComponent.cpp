@@ -603,7 +603,8 @@ float UPlayerStatsComponent::GetModern()
 }
 
 float UPlayerStatsComponent::GetModernPercent()
-{
+{	
+	
 	return (Modern * 0.05f); 
 }
 
