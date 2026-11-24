@@ -151,6 +151,9 @@ private:
 	float EXPPitch;
 	float EXPPitchTimer;
 
+	// Damage is blocked for this long from the start of each dash, or for the whole dash if that's longer
+	UPROPERTY(EditDefaultsOnly, Category = "Dash", meta = (ClampMin = "0"))
+	float DashInvincibilityTime = 0.25f;
 
 	// - Debug Overlay -
 #if UE_WITH_CHEAT_MANAGER
@@ -165,8 +168,6 @@ private:
 	void Dash(const FInputActionValue& Value);
 	void PlayerPause(const FInputActionValue& Value);
 	void SetPlayerSpeed(float value);
-	void EnableCollision();
-	void DisableCollision();
 	UFUNCTION()
 	void UpdatePickUpRadius(float value);
 	UFUNCTION()
