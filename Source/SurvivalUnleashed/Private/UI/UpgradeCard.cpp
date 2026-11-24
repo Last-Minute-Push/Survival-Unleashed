@@ -4,6 +4,9 @@
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Weapons/WeaponData.h"
+#include "Weapons/WeaponSubsystem.h"
+#include "Blueprint/WidgetTree.h"
+#include "Engine/Canvas.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 
 UUpgradeCard::UUpgradeCard()
@@ -20,39 +23,67 @@ void UUpgradeCard::NativeOnInitialized()
 	Super::NativeOnInitialized();
 	PickButton->OnClicked.AddDynamic(this, &UUpgradeCard::HandleClicked); // once per widget, so no double-binding
 	PickButton->OnHovered.AddDynamic(this, &UUpgradeCard::HandleHoverSFX);
-	
+
+	if (UWeaponSubsystem* WSS = GetWorld()->GetSubsystem<UWeaponSubsystem>())
+	{
+		WeaponSubsystem = WSS;
+		OnSetWeaponOffer.BindUFunction(WeaponSubsystem, "GetWeaponInfo");
+	}
 }
 
 void UUpgradeCard::SetOffer(const FUpgradeOffer& InOffer)
 {
 	Offer = InOffer;
+	Icon->SetVisibility(ESlateVisibility::Hidden);
 
 	// Look up what to show for this offer
-	const FUpgradeCardInfo* Info = &HealInfo;
+	FUpgradeCardInfo WeaponCardInfo, *Info = &HealInfo, *WeaponUpgradeInfo = nullptr;
 	if (Offer.Kind == EUpgradeKind::Stat)
 	{
-		Info = StatInfo.Find(Offer.Stat);
-		WeaponIconSwitcher->SetVisibility(ESlateVisibility::Hidden);
+		Info = StatsInfo.Find(Offer.Stat);
 	}
 	else if (Offer.Kind == EUpgradeKind::Weapon)
 	{
-		Info = WeaponInfo.Find(Offer.Weapon);
-		GetWeaponImageIndex(Offer.Weapon);
-		
+		if (OnSetWeaponOffer.IsBound())
+		{
+			WeaponUpgradeInfo = &(WeaponCardInfo = OnSetWeaponOffer.Execute(Offer.Weapon, Offer.CurrentLevel));
+		}
+
+		Info = WeaponsInfo.Find(Offer.Weapon);
 	}
 
-	if (Info)
+	// Set the offer's info
+
+	// Icon
+	if (WeaponUpgradeInfo && IsValid(WeaponUpgradeInfo->Icon)) // Weapon Upgrade Override
+	{
+		Icon->SetBrushFromTexture(WeaponUpgradeInfo->Icon);
+		Icon->SetVisibility(ESlateVisibility::Visible);
+	}
+	else if (Info && IsValid(Info->Icon)) // Defaults
+	{
+		Icon->SetBrushFromTexture(Info->Icon);
+		Icon->SetVisibility(ESlateVisibility::Visible);
+	}
+
+	// Name
+	if (WeaponUpgradeInfo && !WeaponUpgradeInfo->Name.IsEmpty()) // Weapon Upgrade Override
+	{
+		NameText->SetText(WeaponUpgradeInfo->Name);
+	}
+	else if (Info && !Info->Name.IsEmpty()) // Defaults
 	{
 		NameText->SetText(Info->Name);
 	}
-	else // missing row in Class Defaults: still show something readable
+	else // missing row in Class Defaults: still show something readable // Fallback
 	{
 		NameText->SetText(Offer.Kind == EUpgradeKind::Weapon
 			? StaticEnum<EWeaponCategory>()->GetDisplayNameTextByIndex(static_cast<int64>(Offer.Weapon))
 			: StaticEnum<EPlayerStats>()->GetDisplayNameTextByValue(static_cast<int64>(Offer.Stat)));
 	}
 
-	if (Offer.Kind == EUpgradeKind::Heal)
+	// Level
+	if (Offer.Kind == EUpgradeKind::Heal) // Heal Override
 	{
 		LevelText->SetText(FText::GetEmpty());
 	}
@@ -65,20 +96,15 @@ void UUpgradeCard::SetOffer(const FUpgradeOffer& InOffer)
 		LevelText->SetText(FText::Format(INVTEXT("Lv {0} -> {1}"), Offer.CurrentLevel, Offer.CurrentLevel + 1));
 	}
 
-	
-	if (DescriptionText)
+	// Description
+	if (WeaponUpgradeInfo && !WeaponUpgradeInfo->Description.IsEmpty()) // Weapon Upgrade Override
 	{
-		if (Offer.Kind == EUpgradeKind::Weapon) 
-		{
-			if (WeaponTextMapIndexes.Contains(Offer.Weapon)) {
-				DescriptionText->SetText(*WeaponTextMapIndexes.Find(Offer.Weapon));
-			}
-		}
-		else {
-			DescriptionText->SetText(Info ? Info->Description : FText::GetEmpty());
-		}
+		DescriptionText->SetText(WeaponUpgradeInfo->Description);
 	}
-
+	else if (Info && !Info->Description.IsEmpty()) // Defaults
+	{
+		DescriptionText->SetText(Info->Description);
+	}
 }
 
 void UUpgradeCard::HandleClicked()
@@ -119,66 +145,4 @@ void UUpgradeCard::HandleHoverSFX() {
 void UUpgradeCard::SetButtonClickSFX(USoundBase* SFX)
 {
 	CurrentButtonClicked = SFX;
-}
-
-void UUpgradeCard::GetWeaponImageIndex(EWeaponCategory Category)
-{
-
-
-	switch (Category)
-	{
-	case EWeaponCategory::EBP_Sword:
-		WeaponIconSwitcher->SetActiveWidgetIndex(1);
-		return;
-		break;
-	case EWeaponCategory::EBP_Gauntlets:
-		WeaponIconSwitcher->SetActiveWidgetIndex(2);
-		return;
-		break;
-	case EWeaponCategory::EBP_Axe:
-		WeaponIconSwitcher->SetActiveWidgetIndex(3);
-		return;
-		break;
-	case EWeaponCategory::EBP_Spear:
-		WeaponIconSwitcher->SetActiveWidgetIndex(4);
-		return;
-		break;
-	case EWeaponCategory::EBP_BowToGun:
-		WeaponIconSwitcher->SetActiveWidgetIndex(5);
-		return;
-		break;
-	case EWeaponCategory::EBP_IceStaff:
-		WeaponIconSwitcher->SetActiveWidgetIndex(6);
-		return;
-		break;
-	case EWeaponCategory::EBP_EarthStaff:
-		WeaponIconSwitcher->SetActiveWidgetIndex(7);
-		return;
-		break;
-	case EWeaponCategory::EBP_FireStaff:
-		WeaponIconSwitcher->SetActiveWidgetIndex(8);
-		return;
-		break;
-	case EWeaponCategory::EBP_LightningStaff:
-		WeaponIconSwitcher->SetActiveWidgetIndex(9);
-		return;
-		break;
-	}
-	//return 0;
-	WeaponIconSwitcher->SetActiveWidgetIndex(0);
-}
-
-FText UUpgradeCard::GetWeaponDescription(EWeaponCategory Category)
-{
-	
-	switch (Category)
-	{
-	case EWeaponCategory::EBP_Sword:
-		return FText::FromString("-A average speed swinging weapon that damages\n that makes contact!-");
-		break;
-	case EWeaponCategory::EBP_BowToGun:
-		return FText::FromString("-Shoot projectiles to the nearest enemy!-");
-		break;
-	}
-	return FText();
 }
