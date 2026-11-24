@@ -47,7 +47,7 @@ void ULevelUpScreen::SetFourUpgrades()
 	const TArray<FUpgradeOffer> Offers = UpgradeOffers::Generate(Build, Cards.Num());
 	for (int32 i = 0; i < Cards.Num(); ++i) {
 		Cards[i]->SetOffer(Offers[i]);
-
+		
 	}
 	bOfferTaken = false;
 }
@@ -97,6 +97,10 @@ void ULevelUpScreen::EnabledFocusScreen()
 {
 	if (CurrentStatsComp) 
 	{
+		UpgradeIntelligence->CodeButtonClick.Clear();
+		UpgradeBarbaric->CodeButtonClick.Clear();
+		UpgradeModern->CodeButtonClick.Clear();
+
 		UpgradeIntelligence->CodeButtonClick.AddDynamic(CurrentStatsComp, &UPlayerStatsComponent::LevelUpIntelligence);
 		UpgradeBarbaric->CodeButtonClick.AddDynamic(CurrentStatsComp, &UPlayerStatsComponent::LevelUpBarbaric);
 		UpgradeModern->CodeButtonClick.AddDynamic(CurrentStatsComp, &UPlayerStatsComponent::LevelUpModern);

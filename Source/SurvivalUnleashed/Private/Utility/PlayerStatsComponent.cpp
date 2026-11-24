@@ -90,6 +90,24 @@ void UPlayerStatsComponent::BeginPlay()
 	}
 }
 
+void UPlayerStatsComponent::BalancedCheck()
+{
+	if (!WarriorPassive && !WizardPassive && !ModernPassive) {
+		int mod = GetModern();
+		int inte = GetIntelligence();
+		int bar = GetBarbaric();
+		int result1 = mod - inte;
+		int result2 = inte - bar;
+		int result3 = bar - inte;
+		if ((result1 < 3 && result1 > -3) && (result2 < 3 && result2 > -3) && (result3 < 3 && result3 > -3)) {
+			BalancedPassive = true;
+		}
+		else {
+			BalancedPassive = false;
+		}
+	}
+}
+
 void UPlayerStatsComponent::UpdateExpANDLevel(int amount)
 {
 	if (GetEXPGain() != 0) {
@@ -103,8 +121,7 @@ void UPlayerStatsComponent::UpdateExpANDLevel(int amount)
 		OnEXPEffect.Execute();
 	}
 
-
-	while (CurrentExpCount > ExpReuirement) { //levelup the needed amount of times
+	while (CurrentExpCount >= ExpReuirement) { //levelup the needed amount of times
 		OnEXPPickUp.Execute(GetCurrentExpCountForDisplay(), 0);
 		Level++; //level increase
 		LevelUpOverall();
@@ -602,6 +619,12 @@ float UPlayerStatsComponent::GetIntelligence()
 
 float UPlayerStatsComponent::GetIntelligencePercent()
 {
+	if (WizardPassive) {
+		return (Intelligence * 0.1f);
+	}
+	if (BalancedPassive) {
+		return (Intelligence * 0.75f);
+	}
 	return (Intelligence * 0.05f);
 }
 
@@ -613,6 +636,7 @@ void UPlayerStatsComponent::SetIntelligence(float value)
 void UPlayerStatsComponent::LevelUpIntelligence()
 {
 	SetIntelligence(GetIntelligence() + 1.0f);
+	BalancedCheck();
 	if (OPFUE.IsBound()) {
 		OPFUE.Broadcast();
 	}
@@ -625,6 +649,12 @@ float UPlayerStatsComponent::GetBarbaric()
 
 float UPlayerStatsComponent::GetBarbaricPercent()
 {
+	if (WarriorPassive) {
+		return (Barbaric * 0.1f);
+	}
+	if (BalancedPassive) {
+		return (Barbaric * 0.75f);
+	}
 	return (Barbaric * 0.05f);
 }
 
@@ -636,6 +666,7 @@ void UPlayerStatsComponent::SetBarbaric(float value)
 void UPlayerStatsComponent::LevelUpBarbaric()
 {
 	SetBarbaric(GetBarbaric() + 1.0f);
+	BalancedCheck();
 	if (OPFUE.IsBound()) {
 		OPFUE.Broadcast();
 	}
@@ -647,7 +678,13 @@ float UPlayerStatsComponent::GetModern()
 }
 
 float UPlayerStatsComponent::GetModernPercent()
-{
+{	
+	if (ModernPassive) {
+		return (Modern * 0.1f);
+	}
+	if (BalancedPassive) {
+		return (Modern * 0.75f);
+	}
 	return (Modern * 0.05f);
 }
 
@@ -659,6 +696,7 @@ void UPlayerStatsComponent::SetModern(float value)
 void UPlayerStatsComponent::LevelUpModern()
 {
 	SetModern(GetModern() + 1.0f);
+	BalancedCheck();
 	if (OPFUE.IsBound()) {
 		OPFUE.Broadcast();
 	}

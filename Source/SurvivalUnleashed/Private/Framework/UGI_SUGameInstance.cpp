@@ -116,20 +116,26 @@ void UUGI_SUGameInstance::QuitTheGame()
 void UUGI_SUGameInstance::AddEXPtoNearestOne(FVector EnemyLocation, int32 EXPvalue)
 {
 	float closestDistance = INT_MAX;
-	ClosestEXPActor = EXPActors[0].Get();
+	while (!ClosestEXPActor.Get()) {
+		ClosestEXPActor = EXPActors[FMath::RandRange(0, EXPActors.Num() - 1)].Get();
+	}
 	for (int i = 1; i < EXPActors.Num(); i++) {
 		if (PlayerItself) {
 			if (!PlayerItself->AttractedActors.Contains(EXPActors[i])) {
-				if ((closestDistance > (ClosestEXPActor.Get()->GetActorLocation() - EnemyLocation).Size())){
-					ClosestEXPActor = EXPActors[i].Get();
-					closestDistance = (ClosestEXPActor.Get()->GetActorLocation() - EnemyLocation).Size();
+				if (ClosestEXPActor.Get()) {
+					if ((closestDistance > (ClosestEXPActor.Get()->GetActorLocation() - EnemyLocation).Size())) {
+						ClosestEXPActor = EXPActors[i].Get();
+						closestDistance = (ClosestEXPActor.Get()->GetActorLocation() - EnemyLocation).Size();
+					}
 				}
 			}
 		}
 		else {
-			if (closestDistance > (ClosestEXPActor.Get()->GetActorLocation() - EnemyLocation).Size()) {
-				ClosestEXPActor = EXPActors[i].Get();
-				closestDistance = (ClosestEXPActor.Get()->GetActorLocation() - EnemyLocation).Size();
+			if (ClosestEXPActor.Get()) {
+				if (closestDistance > (ClosestEXPActor.Get()->GetActorLocation() - EnemyLocation).Size()) {
+					ClosestEXPActor = EXPActors[i].Get();
+					closestDistance = (ClosestEXPActor.Get()->GetActorLocation() - EnemyLocation).Size();
+				}
 			}
 		}
 	}

@@ -12,6 +12,7 @@
 #include "Utility/PlayerStatsComponent.h"
 #include "Utility/UpgradeOffers.h"
 #include "GameFramework/CheatManagerDefines.h"
+#include "Actor/BalancedPlayerDataAsset.h"
 #include "UC_Player.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerLost);
@@ -89,6 +90,8 @@ public:
 	TArray<TWeakObjectPtr<AActor>> AttractedActors;
 	UFUNCTION()
 	void UpdateKeyBinds();
+	UFUNCTION()
+	void LoadPlayerData();
 protected:
 	UPROPERTY(Category = Character, VisibleAnywhere)
 	class USpringArmComponent* SpringArm;
@@ -100,6 +103,8 @@ protected:
 	UInputAction* Moves;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UInputAction* Dashes;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UDataAsset* PlayerData;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UInputAction* Paused;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -168,4 +173,5 @@ private:
 	UFUNCTION()
 	void HandlePickUpOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
 	UFUNCTION() void PlayEXPSound();
+	void PassiveEnable(EPassives ThePassive);
 };

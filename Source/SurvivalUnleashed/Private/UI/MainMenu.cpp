@@ -5,6 +5,7 @@
 #include "UI/ButtonBase.h"
 #include "UI/OptionsMenuBase.h"
 #include "UI/PermaUpgradeMenu.h"
+#include "UI/CharacterSelectMenu.h"
 #include "UI/Credits.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 #include"../SurvivalUnleashed.h"
@@ -23,11 +24,9 @@ void UMainMenu::NativeOnInitialized()
 
 	if (UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance()))
 	{
-		if (PlayButton && QuitButton)
+		if (PlayButton && QuitButton && PlayButton && SettingsButton && UpgradeButton && QuitButton && CreditsButton)
 		{
-
-			PlayButton->CodeButtonClick.AddDynamic(this, &UMainMenu::EndMainMenuMusic);
-			PlayButton->CodeButtonClick.AddDynamic(GI, &UUGI_SUGameInstance::LoadFirstLevel);
+			PlayButton->CodeButtonClick.AddDynamic(this, &UMainMenu::PlayButtonPressed);
 			UpgradeButton->CodeButtonClick.AddDynamic(this, &UMainMenu::UpgradeButtonPressed);
 			SettingsButton->CodeButtonClick.AddDynamic(this, &UMainMenu::SettingsButtonPressed);
 			QuitButton->CodeButtonClick.AddDynamic(GI, &UUGI_SUGameInstance::QuitTheGame);
@@ -38,6 +37,29 @@ void UMainMenu::NativeOnInitialized()
 	else UE_LOG(LogMainMenu, Error, TEXT("Failed to cast the GameInstance because of an incorrect socketed GameInstance!"));
 
 	ZOrderLayer = 0;
+}
+
+void UMainMenu::PlayButtonPressed()
+{
+	if (!CharacterSelectHud)
+	{
+		CharacterSelectHud = CreateWidget<UCharacterSelectMenu>(GetOwningPlayer(), CharSelectHUDClass);
+		if (!CharacterSelectHud)
+		{
+			UE_LOG(LogMainMenu, Error, TEXT("Could not create the Character Select menu; is CharSelectClass set?"));
+			return;
+		}
+		UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+		if (CharacterSelectHud->PlayButton) {
+			CharacterSelectHud->PlayButton->CodeButtonClick.AddDynamic(this, &UMainMenu::EndMainMenuMusic);
+			CharacterSelectHud->PlayButton->CodeButtonClick.AddDynamic(GI, &UUGI_SUGameInstance::LoadFirstLevel);
+		}
+		CharacterSelectHud->SetIsFocusable(true);
+		CharacterSelectHud->OnClosed.AddDynamic(this, &UMainMenu::UnHideMainMenuButtons);
+	}
+
+	SetVisibility(ESlateVisibility::Collapsed); // hide the main menu
+	CharacterSelectHud->AddToViewport();
 }
 
 void UMainMenu::SettingsButtonPressed()
@@ -78,6 +100,7 @@ void UMainMenu::UpgradeButtonPressed()
 
 void UMainMenu::EndMainMenuMusic()
 {
+
 	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
 	{
 		if (I->GetLibrary()->BGM_MainMenuSong) {
