@@ -184,6 +184,7 @@ public:
 	UFUNCTION(Exec) void SU_BuyRank(const FString & Stat);
 	UFUNCTION(Exec) void SU_RefundAll();
 	UFUNCTION(Exec) void SU_ShowRanks();
+	UFUNCTION(Exec) void SU_SpendFocus(const FString& FocusName);
 
 	// The player's controls. Owned here so gameplay never depends on the controls menu having been opened.
 	UPROPERTY(EditDefaultsOnly, Category = "Input")

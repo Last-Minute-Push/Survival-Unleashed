@@ -980,3 +980,20 @@ void UUGI_SUGameInstance::SU_ShowRanks()
 	UE_LOG(LogGameInstance, Display, TEXT("%d points, %d ranks, focus %d earned / %d spent"),
 		GetUpgradePoints(), GetTotalPermanentRanks(), GetPermanentFocusPointsEarned(), GetFocusPointsSpent());
 }
+
+void UUGI_SUGameInstance::SU_SpendFocus(const FString& FocusName)
+{
+	Focus FocusStat;
+	if (FocusName.Equals(TEXT("Intelligence"), ESearchCase::IgnoreCase))  FocusStat = Focus::Intelligence;
+	else if (FocusName.Equals(TEXT("Barbaric"), ESearchCase::IgnoreCase)) FocusStat = Focus::Barbaric;
+	else if (FocusName.Equals(TEXT("Modern"), ESearchCase::IgnoreCase))   FocusStat = Focus::Modern;
+	else
+	{
+		UE_LOG(LogGameInstance, Warning, TEXT("No focus stat called \"%s\""), *FocusName);
+		return;
+	}
+
+	const bool bSpent = TrySpendPermanentFocusPoint(FocusStat);
+	UE_LOG(LogGameInstance, Display, TEXT("%s %s: %d spent / %d earned"),
+		bSpent ? TEXT("Spent") : TEXT("Refused"), *FocusName, GetFocusPointsSpent(), GetPermanentFocusPointsEarned());
+}
