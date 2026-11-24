@@ -26,6 +26,8 @@ private:
 
 	bool bOfferTaken = false; // ignores a second click before the screen closes
 
+	FText DefaultTitle; // the title set in the widget, put back after a Boss Chest
+
 public:
 	ULevelUpScreen();
 
@@ -36,6 +38,13 @@ public:
 
 	void EnableLevelUpScreen();
 	void EnabledFocusScreen();
+
+	// Titles the menu "BOSS CHEST 1/3" and so on; 0 puts the normal title back
+	void SetBossChestPick(int32 Pick, int32 Picks);
+
+	// The menu's title text. Optional, so the widget still compiles without it.
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	class UTextBlock* MenuTitle;
 
 	void SetFourUpgrades(); // generates the offers and fills the four cards
 	bool UpgradeLevelDone = false;

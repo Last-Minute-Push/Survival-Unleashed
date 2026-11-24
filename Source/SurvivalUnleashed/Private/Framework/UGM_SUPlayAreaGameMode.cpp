@@ -11,6 +11,7 @@
 #include "Core/SUSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/CountdownWidget.h"
+#include "Utility/PlayerStatsComponent.h"
 
 AUGM_SUPlayAreaGameMode::AUGM_SUPlayAreaGameMode()
 {
@@ -183,6 +184,7 @@ void AUGM_SUPlayAreaGameMode::PlayerLevelUp()
 {
 	CurrentPlayer->LevelUpPause();
 	LevelUpScreenObject->SetFourUpgrades();
+	LevelUpScreenObject->SetBossChestPick(CurrentPlayer->GetPlayerStatsComp()->GetBossChestPick(), UPlayerStatsComponent::BossChestPicks);
 	LevelUpScreenObject->EnableLevelUpScreen();
 	LevelUpScreenObject->AddToViewport();
 	FInputModeUIOnly InputModeData;
@@ -206,17 +208,24 @@ void AUGM_SUPlayAreaGameMode::PlayerFocusUp()
 
 void AUGM_SUPlayAreaGameMode::ClearLevelUpScreen()
 {
+	LevelUpScreenObject->RemoveFromParent();
+
+	// More menus waiting (a Boss Chest, or several levels at once): open the next one while still paused
+	if (CurrentPlayer->GetPlayerStatsComp()->OpenNextLevelUp())
+	{
+		return;
+	}
+
 	CurrentPlayer->LevelUpResume();
 	FInputModeGameOnly InputModeData;
 	LevelUpScreenObject->GetOwningPlayer()->SetInputMode(InputModeData);
 	LevelUpScreenObject->GetOwningPlayer()->bShowMouseCursor = false;
-	LevelUpScreenObject->RemoveFromParent();
-	//should be fine? gonna edit this when I get player so it works as expected.
 }
 
 void AUGM_SUPlayAreaGameMode::SwapFromFocustoLevel()
 {
 	LevelUpScreenObject->SetFourUpgrades();
+	LevelUpScreenObject->SetBossChestPick(0, UPlayerStatsComponent::BossChestPicks);
 	LevelUpScreenObject->EnableLevelUpScreen();
 }
 

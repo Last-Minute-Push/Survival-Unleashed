@@ -9,6 +9,7 @@
 #include "Actor/UC_Player.h"
 #include "Utility/PlayerStatsComponent.h"
 #include "Components/Image.h"
+#include "Components/TextBlock.h"
 
 ULevelUpScreen::ULevelUpScreen()
 {
@@ -18,6 +19,11 @@ ULevelUpScreen::ULevelUpScreen()
 void ULevelUpScreen::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
+
+	if (MenuTitle)
+	{
+		DefaultTitle = MenuTitle->GetText();
+	}
 
 	for (EWeaponCategory C : TEnumRange<EWeaponCategory>())
 		if (C != EWeaponCategory::EBP_OfferEnd)
@@ -31,6 +37,17 @@ void ULevelUpScreen::NativeOnInitialized()
 	}
 }
 
+void ULevelUpScreen::SetBossChestPick(int32 Pick, int32 Picks)
+{
+	if (!MenuTitle)
+	{
+		return;
+	}
+	MenuTitle->SetText(Pick > 0
+		? FText::Format(NSLOCTEXT("LevelUpScreen", "BossChestTitle", "BOSS CHEST {0}/{1}"), Pick, Picks)
+		: DefaultTitle);
+}
+
 void ULevelUpScreen::SetFourUpgrades()
 {
 	if (!CurrentStatsComp) {
@@ -41,6 +58,7 @@ void ULevelUpScreen::SetFourUpgrades()
 	FBuildSnapshot Build;
 	Build.StatLevels = CurrentStatsComp->GetStatRanks();
 	Build.WeaponPool = WeaponPool;
+	// TODO: Build.bGuaranteeEvolution = CurrentStatsComp->GetBossChestPick() == 1;
 	OnSetOwnedWeapons.Broadcast(Build.OwnedWeapons);
 
 	int32 MaxSlots = Player->GetInventoryMaxSlots();
