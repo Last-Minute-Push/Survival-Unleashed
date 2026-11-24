@@ -194,6 +194,12 @@ private:
 	UPROPERTY()
 	int OldExpRequirement = 0;
 
+public:	
+	bool BalancedPassive = false;
+	bool WarriorPassive = false;
+	bool WizardPassive = false;
+	bool ModernPassive = false;
+	void BalancedCheck();
 
 public:
 
