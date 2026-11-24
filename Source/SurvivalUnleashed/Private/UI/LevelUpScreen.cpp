@@ -97,6 +97,10 @@ void ULevelUpScreen::EnabledFocusScreen()
 {
 	if (CurrentStatsComp) 
 	{
+		UpgradeIntelligence->CodeButtonClick.Clear();
+		UpgradeBarbaric->CodeButtonClick.Clear();
+		UpgradeModern->CodeButtonClick.Clear();
+
 		UpgradeIntelligence->CodeButtonClick.AddDynamic(CurrentStatsComp, &UPlayerStatsComponent::LevelUpIntelligence);
 		UpgradeBarbaric->CodeButtonClick.AddDynamic(CurrentStatsComp, &UPlayerStatsComponent::LevelUpBarbaric);
 		UpgradeModern->CodeButtonClick.AddDynamic(CurrentStatsComp, &UPlayerStatsComponent::LevelUpModern);
