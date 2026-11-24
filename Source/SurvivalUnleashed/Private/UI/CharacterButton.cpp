@@ -23,7 +23,7 @@ void UCharacterButton::NativePreConstruct() {
 
 	if (Price && CharacterName && Description)
 	{
-		SetPriceText(PriceInfo);
+		//SetPriceText(PriceInfo);
 		SetCharacterNameText(CharacterInfo);
 		SetDescriptionText(DescriptionInfo);
 		SetButtonFont(FInfo);
@@ -86,7 +86,7 @@ void UCharacterButton::SetDescriptionText(FText text)
 void UCharacterButton::SetButtonFont(FSlateFontInfo FontInfo)
 {
 	if (Price && CharacterName && Description) {
-		Price->SetFont(FontInfo);
+		//Price->SetFont(FontInfo);
 		CharacterName->SetFont(FontInfo);
 		Description->SetFont(FontInfo);
 	}
