@@ -122,7 +122,7 @@ void AStaffWeapon::Attack()
 
 	const int32 Shots = GetShotCount();
 	TArray<AEnemyBase*> Targets;
-	FindTargets(Shots, SD->Range, Targets);
+	FindTargets(Shots, SD->ProjectileRange, Targets);
 	if (Targets.IsEmpty())
 	{
 		return; // nothing in range; try again next cooldown
@@ -130,8 +130,8 @@ void AStaffWeapon::Attack()
 
 	FProjectileLaunchParams Params;
 	Params.Speed = SD->ProjectileSpeed;
-	Params.Range = SD->Range;
-	Params.Pierce = SD->Pierce;
+	Params.Range = SD->ProjectileRange;
+	Params.Pierce = SD->ProjectilePierce;
 
 	const FVector Origin = GetFireOrigin();
 	for (int32 i = 0; i < Shots; ++i)

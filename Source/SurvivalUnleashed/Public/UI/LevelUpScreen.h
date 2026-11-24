@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UI/HUDBase.h"
-#include "Utility/UpgradeOffers.h"
+#include "Weapons/WeaponDatabase.h"  // EWeaponCategory
 #include "LevelUpScreen.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSetOwnedWeapons, TArray<FOwnedWeapon>&, WeaponPool);
@@ -26,16 +26,25 @@ private:
 
 	bool bOfferTaken = false; // ignores a second click before the screen closes
 
+	FText DefaultTitle; // the title set in the widget, put back after a Boss Chest
+
 public:
 	ULevelUpScreen();
 
 	UPROPERTY()
-	class AUC_Player* CurrentPlayer;
+	class AUC_Player* Player;
 	UPROPERTY()
 	class UPlayerStatsComponent* CurrentStatsComp;
 
 	void EnableLevelUpScreen();
 	void EnabledFocusScreen();
+
+	// Titles the menu "BOSS CHEST 1/3" and so on; 0 puts the normal title back
+	void SetBossChestPick(int32 Pick, int32 Picks);
+
+	// The menu's title text. Optional, so the widget still compiles without it.
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	class UTextBlock* MenuTitle;
 
 	void SetFourUpgrades(); // generates the offers and fills the four cards
 	bool UpgradeLevelDone = false;
@@ -47,7 +56,7 @@ public:
 	// Every weapon a level-up can offer.
 	UPROPERTY(BlueprintReadOnly, Category = "Level Up")
 	TArray<EWeaponCategory> WeaponPool;
-	
+
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	class UHorizontalBox* HorizontalBox;
 

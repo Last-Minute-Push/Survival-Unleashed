@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "UI/LevelUpScreen.h"
 #include "Math/UnrealMathUtility.h"
+#include "Algo/Count.h"
 
 // Sets default values for this component's properties
 UPlayerStatsComponent::UPlayerStatsComponent()
@@ -20,6 +21,7 @@ UPlayerStatsComponent::UPlayerStatsComponent()
 
 void UPlayerStatsComponent::CallLevelUp()
 {
+	BossChestPick = 0;
 	if (OPLU.IsBound()) {
 		OPLU.Broadcast();
 	}
@@ -27,8 +29,48 @@ void UPlayerStatsComponent::CallLevelUp()
 
 void UPlayerStatsComponent::CallFocusStat()
 {
+	BossChestPick = 0;
 	if (OPFU.IsBound()) {
 		OPFU.Broadcast();
+	}
+}
+
+bool UPlayerStatsComponent::OpenNextLevelUp()
+{
+	if (QueueStyle.Num() == 0)
+	{
+		return false;
+	}
+
+	// Removed before opening, so the count of chest menus still waiting is right
+	const ELevelUpStyle Style = QueueStyle[0];
+	QueueStyle.RemoveAt(0);
+
+	switch (Style)
+	{
+	case ESP_Focus:
+		CallFocusStat();
+		break;
+	case ESP_BossChest:
+		// Every chest queues BossChestPicks menus, so the chest menus still waiting tell which one this is
+		BossChestPick = BossChestPicks - Algo::Count(QueueStyle, ESP_BossChest) % BossChestPicks;
+		if (OPLU.IsBound()) {
+			OPLU.Broadcast();
+
+		}
+		break;
+	default:
+		CallLevelUp();
+		break;
+	}
+	return true;
+}
+
+void UPlayerStatsComponent::QueueBossChest()
+{
+	for (int32 i = 0; i < BossChestPicks; ++i)
+	{
+		QueueStyle.Add(ESP_BossChest);
 	}
 }
 
@@ -120,6 +162,7 @@ void UPlayerStatsComponent::UpdateExpANDLevel(int amount)
 		OnEXPPickUp.Execute(GetCurrentExpCountForDisplay(), GetExpReuirementForDisplay());
 		OnEXPEffect.Execute();
 	}
+
 
 	while (CurrentExpCount >= ExpReuirement) { //levelup the needed amount of times
 		OnEXPPickUp.Execute(GetCurrentExpCountForDisplay(), 0);

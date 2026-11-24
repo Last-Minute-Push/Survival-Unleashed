@@ -147,6 +147,7 @@ void ABaseBowToGun::StopAim()
 	// Launch the projectile.
 	AProjectileBase::Fire(GetWorld(), Data->ProjectileType, this, Params, Hit);
 
+	OnWeaponAttack.Broadcast();
 	HideProjectile(true);
 
 	GetWorldTimerManager().SetTimer(TFireCooldown, this, &ABaseBowToGun::StartAim, Cooldown);

@@ -33,6 +33,8 @@ void ABaseWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
+	OnWeaponHit.AddDynamic(this, &ABaseWeapon::PlayerLifeSteal);
+
 	if (Data)
 	{
 		Type = Data->WeaponType;
@@ -41,43 +43,14 @@ void ABaseWeapon::BeginPlay()
 #if UE_WITH_CHEAT_MANAGER
 	if (UDebugOverlaySubsystem* Ovl = GetWorld()->GetSubsystem<UDebugOverlaySubsystem>())
 	{
-		FString WeaponName;
-
-		switch (Type)
-		{
-		case EWeaponCategory::EBP_Sword:
-			WeaponName = WeaponName::Sword;
-			break;
-		case EWeaponCategory::EBP_BowToGun:
-			WeaponName = WeaponName::BowToGun;
-			break;
-		case EWeaponCategory::EBP_Axe:
-			WeaponName = WeaponName::Axe;
-			break;
-		case EWeaponCategory::EBP_Spear:
-			WeaponName = WeaponName::Spear;
-			break;
-		case EWeaponCategory::EBP_FireStaff:
-			WeaponName = WeaponName::FireStaff;
-			break;
-		case EWeaponCategory::EBP_IceStaff:
-			WeaponName = WeaponName::IceStaff;
-			break;
-		case EWeaponCategory::EBP_LightningStaff: 
-			WeaponName = WeaponName::LightningStaff;
-			break;
-		case EWeaponCategory::EBP_EarthStaff:
-			WeaponName = WeaponName::EarthStaff;
-			break;
-		case EWeaponCategory::EBP_Gauntlets:
-			WeaponName = WeaponName::Gauntlets;
-		}
+		FString WeaponName = StaticEnum<EWeaponCategory>()->GetDisplayNameTextByIndex(static_cast<int64>(Type)).ToString();
 
 		Ovl->AttachToOverlay("General", "Performance and Balance", FName(WeaponName + " DPS"),
 			FOnOverlayUpdateFloat::CreateUFunction(this, "GetDamagePerSecond"), FOnOverlayResetValue::CreateUFunction(this, "ResetDamagePerSecond"));
+    }
 #endif
 }
-}
+
 
 // Called every frame
 void ABaseWeapon::Tick(float DeltaTime)
@@ -100,7 +73,7 @@ void ABaseWeapon::SetParent(AUC_Player* P)
 
 /*static*/float ABaseWeapon::ComputeHitFromBase(float BaseDamage, UPlayerStatsComponent * P)
 {
-	if (P/*&& E*/)
+	if (IsValid(P)/*&& E*/)
 	{
 		// Attack and Weapon Attack are multipliers (1.0 = no bonus, 1.05 = +5%), and both already include their focus bonuses
 		float damage = BaseDamage * P->GetAttack() * P->GetWeaponAttack();
@@ -134,7 +107,7 @@ void ABaseWeapon::ApplyDamage(AActor* Source, AActor* Target)
 	{
 		//if (UEnemyData* EnemyData = E->GetEnemyData()) // For Elite and Armored enemy states - unused for now
         //{
-		float Damage = GetHitDamage();
+		    float Damage = GetHitDamage();
 
      		TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
 	    	FDamageEvent DamageEvent(ValidDamageTypeClass);
@@ -160,5 +133,27 @@ void ABaseWeapon::ApplyDamage(AActor* Source, AActor* Target)
 
 	    	OnWeaponHit.Broadcast(Damage);
 		//}
+	}
+}
+
+void ABaseWeapon::PlayerLifeSteal(float Damage)
+{
+	if (ParentStats->GetLifeStealStat() > 0.0f)
+	{
+		float chance = FMath::FRand();
+		if (ParentStats->GetLifeStealStat() > chance)
+		{
+			TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
+			FDamageEvent DamageEvent(ValidDamageTypeClass);
+
+			if (float HealAmount = ParentStats->GetHealAmount() > 0.0f)
+			{
+				Parent->TakeDamage(Parent->GetLifeStealHealAmount() * HealAmount, DamageEvent, GetInstigatorController(), this);
+			}
+			else
+			{
+				Parent->TakeDamage(Parent->GetLifeStealHealAmount(), DamageEvent, GetInstigatorController(), this);
+			}
+		}
 	}
 }

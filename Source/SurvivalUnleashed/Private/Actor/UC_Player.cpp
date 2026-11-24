@@ -197,16 +197,10 @@ void AUC_Player::Tick(float DeltaTime)
 			Actor->AddActorLocalOffset(Offset, false);
 		}
 	}
-	if (GetPlayerStatsComp()->QueueStyle.Num() > 0) {
-		if (GetPlayerStatsComp()->QueueStyle[0] == GetPlayerStatsComp()->ELevelUpStyle::ESP_Focus) {
-			GetPlayerStatsComp()->CallFocusStat();
-			GetPlayerStatsComp()->QueueStyle.RemoveAt(0);
-		}
-		else {
-			GetPlayerStatsComp()->CallLevelUp();
-			GetPlayerStatsComp()->QueueStyle.RemoveAt(0);
-		}
-	}
+	
+	// Opens the first waiting menu; the rest open one after another as each menu closes
+	GetPlayerStatsComp()->OpenNextLevelUp();
+
 	if (GetPlayerStatsComp()->GetRegen() > 0) {
 		RegenTimer += DeltaTime;
 		if (RegenTimer >= GetPlayerStatsComp()->GetRegen()) {
@@ -362,6 +356,11 @@ void AUC_Player::Dash(const FInputActionValue& Value)
 		CanDash = false;
 		GetPlayerStatsComp()->GrantInvincibility(FMath::Max(DashInvincibilityTime, GetPlayerStatsComp()->GetDashLength()));
 		SetPlayerSpeed(GetPlayerStatsComp()->GetMoveSpeed() * 4);
+
+		if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
+		{
+			I->PlaySoundInterrupt(I->GetLibrary()->SFX_PlayerDash);
+		}
 	}
 
 }

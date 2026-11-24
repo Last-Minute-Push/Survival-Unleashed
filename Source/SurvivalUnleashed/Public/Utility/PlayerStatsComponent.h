@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Weapons/WeaponDatabase.h"
 #include "PlayerStatsComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthUI, float, Current, float, Max);
@@ -13,7 +12,7 @@ DECLARE_DYNAMIC_DELEGATE(FOnHurtEffect);
 DECLARE_DYNAMIC_DELEGATE(FOnHealEffect);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnDeath, float, Ratio);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnHeal, float, Ratio);
-DECLARE_DYNAMIC_DELEGATE_TwoParams(FOnEXPPickUp, float, Ratio, float,Max);
+DECLARE_DYNAMIC_DELEGATE_TwoParams(FOnEXPPickUp, float, Ratio, float, Max);
 DECLARE_DYNAMIC_DELEGATE(FOnEXPEffect);
 DECLARE_DYNAMIC_DELEGATE_TwoParams(FOnLevelUp, float, Level, float, EXP);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnEXPRadiusUpdate, float, NewExpRadius);
@@ -52,12 +51,12 @@ enum class EPlayerStats : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStatUIUpdate, EPlayerStats, PlayerStatsArray, int32, Stats);
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class SURVIVALUNLEASHED_API UPlayerStatsComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UPlayerStatsComponent();
 
@@ -99,12 +98,23 @@ public:
 	enum ELevelUpStyle
 	{
 		ESP_Focus,
-		ESP_Level
+		ESP_Level,
+		ESP_BossChest
 	};
 	TArray<ELevelUpStyle> QueueStyle;
 
 	void CallLevelUp();
 	void CallFocusStat();
+
+	// Opens the next waiting level-up or focus menu. Returns false if nothing was waiting.
+	bool OpenNextLevelUp();
+
+	// Boss Chest: queues BossChestPicks level-up menus, after any level-ups already waiting
+	void QueueBossChest();
+	static constexpr int32 BossChestPicks = 3;
+
+	// Which Boss Chest menu is open, 1 to BossChestPicks; 0 for an ordinary level-up
+	int32 GetBossChestPick() const { return BossChestPick; }
 
 	// Blocks all damage, but not heals, for Duration seconds of game time. The dash uses it.
 	void GrantInvincibility(float Duration);
@@ -117,7 +127,7 @@ public:
 	FOnHitWindowStarted OnHitWindowStarted;
 	
 	TMap<EPlayerStats, int32> StatRanks;
-	const TMap<EPlayerStats, int32>& GetStatRanks(); 
+	const TMap<EPlayerStats, int32>& GetStatRanks();
 	void ApplyStatUpgrade(EPlayerStats Stat);
 	void FinishUpgrade();
 	TArray<EPlayerStats> MainStatArrayForUI;
@@ -127,6 +137,8 @@ protected:
 private:
 	UFUNCTION()
 	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser); //Does a evasion check first!
+
+	int32 BossChestPick = 0;
 
 	float InvincibleUntil = -1.f; // world time
 
@@ -206,7 +218,6 @@ private:
 	int CurrentExpCount = 0;
 	UPROPERTY()
 	int OldExpRequirement = 0;
-	
 
 public:	
 	bool BalancedPassive = false;
@@ -215,7 +226,9 @@ public:
 	bool ModernPassive = false;
 	void BalancedCheck();
 
-	void UpdateExpANDLevel(int amount); 
+public:
+
+	void UpdateExpANDLevel(int amount);
 	void LevelUpOverall(); //happens on every levelup and is to give player an overall lvl up.
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void TakeDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser); //applys taken damage
@@ -260,7 +273,7 @@ public:
 	UFUNCTION()
 	void LevelUpProjectileSpeed();
 
-	float GetPickupRange(); 
+	float GetPickupRange();
 	void SetPickupRange(float value);
 	UFUNCTION()
 	void LevelUpPickupRange();
@@ -288,7 +301,7 @@ public:
 	void SetWeaponAttack(float value); // Set flat value ex: 1.2 for 20% more attack
 	UFUNCTION()
 	void LevelUpWeaponAttack();
-	 
+
 	int GetDefense(); // stat flat value
 	float GetDefensePercent(); //actual percent amount (USE FOR EVERYTHING!!)
 	void SetDefense(int value); // Set flat value ex: 10 for 9% dmg reduction (not an accurate conversion but ya get the gist)
