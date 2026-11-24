@@ -25,9 +25,12 @@ protected:
 	UPROPERTY() TObjectPtr<class UOptionsMenuBase> OptionHud;
 	UPROPERTY() TObjectPtr<class UPermaUpgradeMenu> UpgradeHud;
 	UPROPERTY() TObjectPtr<class UCredits> CreditsHud;
+	UPROPERTY() TObjectPtr<class UCharacterSelectMenu> CharacterSelectHud;
 
 	virtual void NativeOnInitialized() override;
 
+	UFUNCTION()
+	void PlayButtonPressed();
 	UFUNCTION()
 	void SettingsButtonPressed();
 
@@ -48,6 +51,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UUserWidget> CreditsHUDClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> CharSelectHUDClass;
 
 	UFUNCTION()
 	void UnHideMainMenuButtons();
