@@ -8,7 +8,6 @@
 #include "Components/HorizontalBox.h"
 #include "Actor/UC_Player.h"
 #include "Utility/PlayerStatsComponent.h"
-#include "Utility/UpgradeOffers.h"
 #include "Components/Image.h"
 
 ULevelUpScreen::ULevelUpScreen()
@@ -44,10 +43,13 @@ void ULevelUpScreen::SetFourUpgrades()
 	Build.WeaponPool = WeaponPool;
 	OnSetOwnedWeapons.Broadcast(Build.OwnedWeapons);
 
-	const TArray<FUpgradeOffer> Offers = UpgradeOffers::Generate(Build, Cards.Num());
+	int32 MaxSlots = Player->GetInventoryMaxSlots();
+	UWeaponSubsystem* WeaponSubsystem = Player->GetWeaponSubsystem();
+
+	const TArray<FUpgradeOffer> Offers = UpgradeOffers::Generate(Build, Cards.Num(), MaxSlots, WeaponSubsystem);
 	for (int32 i = 0; i < Cards.Num(); ++i) {
 		Cards[i]->SetOffer(Offers[i]);
-		
+
 	}
 	bOfferTaken = false;
 }
@@ -95,8 +97,12 @@ void ULevelUpScreen::EnableLevelUpScreen()
 
 void ULevelUpScreen::EnabledFocusScreen()
 {
-	if (CurrentStatsComp) 
+	if (CurrentStatsComp)
 	{
+		UpgradeIntelligence->CodeButtonClick.Clear();
+		UpgradeBarbaric->CodeButtonClick.Clear();
+		UpgradeModern->CodeButtonClick.Clear();
+
 		UpgradeIntelligence->CodeButtonClick.AddDynamic(CurrentStatsComp, &UPlayerStatsComponent::LevelUpIntelligence);
 		UpgradeBarbaric->CodeButtonClick.AddDynamic(CurrentStatsComp, &UPlayerStatsComponent::LevelUpBarbaric);
 		UpgradeModern->CodeButtonClick.AddDynamic(CurrentStatsComp, &UPlayerStatsComponent::LevelUpModern);

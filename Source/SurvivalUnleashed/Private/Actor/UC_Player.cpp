@@ -24,6 +24,7 @@
 #include "Engine/LocalPlayer.h" 
 #include "UserSettings/EnhancedInputUserSettings.h"
 #include "Components/AudioComponent.h"
+
 #include "InputMappingContext.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPlayer, Log, All);
@@ -37,7 +38,7 @@ AUC_Player::AUC_Player()
 	PrimaryActorTick.bTickEvenWhenPaused = false;
 
 	PlayerStatsComponent = CreateDefaultSubobject<UPlayerStatsComponent>("PlayerStatsComponent");
-	this->GetCharacterMovement()->MaxWalkSpeed = PlayerStatsComponent->GetMoveSpeed();
+
 	this->GetCharacterMovement()->bOrientRotationToMovement = true;
 	this->GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
 	bUseControllerRotationPitch = false;
@@ -62,15 +63,20 @@ AUC_Player::AUC_Player()
 	PickUpRadius = CreateDefaultSubobject<USphereComponent>("PickUpRadius");
 	PickUpRadius->SetupAttachment(GetRootComponent());
 	PickUpRadius->SetCollisionProfileName(FName("PickupRadius"));
-	PickUpRadius->SetSphereRadius(PlayerStatsComponent->GetPickupRange());
 	PickUpRadius->OnComponentBeginOverlap.AddDynamic(this, &AUC_Player::HandlePickUpOverlap);
-	
 }
 
 // Called when the game starts or when spawned
 void AUC_Player::BeginPlay()
 {
 	Super::BeginPlay();
+	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
+	if (GI) {
+		GI->PlayerItself = this;
+		PlayerData = GI->PlayerData;
+		GI->LoadKeyBinds();
+	}
+	LoadPlayerData();
 	EXPPitch = 0.8;
 	EXPPitchTimer = 0;
 	APC = Cast<APlayerController>(GetController());
@@ -162,11 +168,7 @@ void AUC_Player::BeginPlay()
 	}
 
 	UpdatePickUpRadius(GetPlayerStatsComp()->GetPickupRange());
-	UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance());
-	if (GI) {
-		GI->PlayerItself = this;
-		GI->LoadKeyBinds();
-	}
+
 
 	if (UBossEventSubsystem* BS = GetWorld()->GetSubsystem<UBossEventSubsystem>())
 	{
@@ -237,7 +239,6 @@ void AUC_Player::Tick(float DeltaTime)
 			this->AddActorWorldOffset(Offset, true);
 		}
 		else {
-			EnableCollision();
 			SetPlayerSpeed(GetPlayerStatsComp()->GetMoveSpeed());
 			IsDashing = false;
 			DashCDTimer = 0;
@@ -283,6 +284,7 @@ void AUC_Player::SetOwnedWeapons(TArray<FOwnedWeapon>& OwnedWeapons)
 			FOwnedWeapon Owned;
 			Owned.Data = It->Key;
 			Owned.Level = W->GetWeaponUpgrade();
+			Owned.FirstEvolution = WeaponSubsystem->GetCategoryEvolutionIndex(W->GetEWeaponCategory());
 			Owned.MaxLevel = WeaponSubsystem->GetCategoryUpgradeSize(It->Key);
 			OwnedWeapons.Add(Owned);
 		}
@@ -359,7 +361,7 @@ void AUC_Player::Dash(const FInputActionValue& Value)
 	if (CanDash == true && LastKnownInput != FVector2D::Zero()) {
 		IsDashing = true;
 		CanDash = false;
-		DisableCollision();
+		GetPlayerStatsComp()->GrantInvincibility(FMath::Max(DashInvincibilityTime, GetPlayerStatsComp()->GetDashLength()));
 		SetPlayerSpeed(GetPlayerStatsComp()->GetMoveSpeed() * 4);
 
 		if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
@@ -406,16 +408,6 @@ void AUC_Player::PlayerPause(const FInputActionValue& Value)
 void AUC_Player::SetPlayerSpeed(float value)
 {
 	this->GetCharacterMovement()->MaxWalkSpeed = value;
-}
-
-void AUC_Player::EnableCollision()
-{
-	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
-}
-
-void AUC_Player::DisableCollision()
-{
-	GetCapsuleComponent()->SetGenerateOverlapEvents(false);
 }
 
 void AUC_Player::LevelUpPause()
@@ -551,6 +543,24 @@ void AUC_Player::PlayEXPSound()
 	}
 }
 
+void AUC_Player::PassiveEnable(EPassives ThePassive)
+{
+	switch (ThePassive) {
+	case(EPassives::Villager):
+		GetPlayerStatsComp()->BalancedPassive = true;
+		break;
+	case(EPassives::Wizard):
+		GetPlayerStatsComp()->WizardPassive = true;
+		break;
+	case(EPassives::Fighter):
+		GetPlayerStatsComp()->WarriorPassive = true;
+		break;
+	case(EPassives::Ranger):
+		GetPlayerStatsComp()->ModernPassive = true;
+		break;
+	}
+}
+
 void AUC_Player::UpdateKeyBinds()
 {
 	APlayerController* PC = Cast<APlayerController>(GetController());
@@ -567,6 +577,40 @@ void AUC_Player::UpdateKeyBinds()
 		{
 			UserSettings->ApplySettings();
 			UserSettings->AsyncSaveSettings();
+		}
+	}
+}
+
+void AUC_Player::LoadPlayerData()
+{
+	if (PlayerData) {
+		if (GetPlayerStatsComp()) {
+			UBalancedPlayerDataAsset* Data = Cast<UBalancedPlayerDataAsset>(PlayerData);
+			if (Data) {
+				PassiveEnable(Data->Passive);
+				GetPlayerStatsComp()->SetAttack(Data->Attack);
+				GetPlayerStatsComp()->SetMaxHealth(Data->MaxHealth);
+				GetPlayerStatsComp()->SetDashCooldown(Data->DashCooldown);
+				GetPlayerStatsComp()->SetDashingLength(Data->DashLength);
+				GetPlayerStatsComp()->SetRegen(Data->Regen);
+				GetPlayerStatsComp()->SetProjectileAmount(Data->ProjectileAmount);
+				GetPlayerStatsComp()->SetProjectileSpeed(Data->ProjectileSpeed);
+				GetPlayerStatsComp()->SetPickupRange(Data->PickupRange);
+				GetPlayerStatsComp()->SetMoveSpeeds(Data->MoveSpeed);
+				GetPlayerStatsComp()->SetEvasion(Data->Evasion);
+				GetPlayerStatsComp()->SetLifeStealStat(Data->LifeSteal);
+				GetPlayerStatsComp()->SetWeaponAttack(Data->WeaponAttack);
+				GetPlayerStatsComp()->SetDefense(Data->Defense);
+				GetPlayerStatsComp()->SetAttackSpeed(Data->AttackSpeed);
+				GetPlayerStatsComp()->SetHealAmount(Data->HealAmount);
+				GetPlayerStatsComp()->SetEXPGain(Data->EXPGain);
+				GetPlayerStatsComp()->SetReflectStat(Data->Reflect);
+				GetMesh()->SetSkeletalMeshAsset(Data->Model);
+				GetMesh()->SetAnimInstanceClass(Data->Animation);
+				StartingWeapons = Data->StartingWeapons;
+				GetCharacterMovement()->MaxWalkSpeed = PlayerStatsComponent->GetMoveSpeed();
+				PickUpRadius->SetSphereRadius(PlayerStatsComponent->GetPickupRange());
+			}
 		}
 	}
 }
