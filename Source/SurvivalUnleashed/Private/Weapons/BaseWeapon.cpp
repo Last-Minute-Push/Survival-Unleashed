@@ -77,7 +77,7 @@ void ABaseWeapon::BeginPlay()
 
 		Ovl->AttachToOverlay("General", "Performance and Balance", FName(WeaponName + " DPS"),
 			FOnOverlayUpdateFloat::CreateUFunction(this, "GetDamagePerSecond"), FOnOverlayResetValue::CreateUFunction(this, "ResetDamagePerSecond"));
-	}
+    }
 #endif
 }
 

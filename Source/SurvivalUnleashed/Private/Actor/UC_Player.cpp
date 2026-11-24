@@ -363,6 +363,11 @@ void AUC_Player::Dash(const FInputActionValue& Value)
 		CanDash = false;
 		GetPlayerStatsComp()->GrantInvincibility(FMath::Max(DashInvincibilityTime, GetPlayerStatsComp()->GetDashLength()));
 		SetPlayerSpeed(GetPlayerStatsComp()->GetMoveSpeed() * 4);
+
+		if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
+		{
+			I->PlaySoundInterrupt(I->GetLibrary()->SFX_PlayerDash);
+		}
 	}
 
 }
