@@ -58,7 +58,6 @@ protected:
 public:
 	ABaseSword();
 
-	UPROPERTY(BlueprintAssignable, Category = "Properties|Swing|Event") FOnSwordEvent OnSwingStart;
 	UPROPERTY(BlueprintAssignable, Category = "Properties|Swing|Event") FOnSwordEvent OnSwingEnd;
 
 	virtual void BeginPlay() override;

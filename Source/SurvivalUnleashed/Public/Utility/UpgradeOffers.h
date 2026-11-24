@@ -32,7 +32,6 @@ struct FOwnedWeapon
 
 	EWeaponCategory Data;
 	int32 Level = 1;
-	int32 FirstEvolution = 1;
 	int32 MaxLevel = 1;
 };
 

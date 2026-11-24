@@ -200,6 +200,7 @@ void UDebugOverlaySubsystem::AttachToOverlay(const FName& OverlayName, const FNa
 	if (Value && !Value->GetData.IsBound() && GetValue.IsBound()) \
 	{ \
 		Value->Type = DataType; \
+		Value->GetData.Unbind(); \
 		Value->GetData = MoveTemp(GetValue); \
 \
 		if (ResetValue.IsBound()) Value->ResetValue = ResetValue; \

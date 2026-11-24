@@ -7,6 +7,8 @@
 #include "UI/UpgradeCard.h"
 #include "WeaponSubsystem.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponsUI, EWeaponCategory, Category, int, Level);
+
 UENUM(BlueprintType)
 enum class EWeaponUpgradeStatus : uint8
 {
@@ -33,13 +35,13 @@ struct FWeaponCreateParams
 /**
  *
  */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponsUI, EWeaponCategory, Category, int, Level);
 UCLASS()
 class SURVIVALUNLEASHED_API UWeaponSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
 
 	UWeaponDatabase* Database;
+	TMap<TTuple<EWeaponCategory, int32>, TObjectPtr<UWeaponData>> WeaponDataCache;
 
 	EWeaponUpgradeStatus CreateWeapon(FWeaponCreateParams& Params, TMap<EWeaponCategory, UChildActorComponent*>& Inventory, TArray<TSubclassOf<ABaseWeapon>>& Upgrades);
 	EWeaponUpgradeStatus UpgradeWeapon(FWeaponCreateParams& Params, TMap<EWeaponCategory, UChildActorComponent*>& Inventory, TWeakObjectPtr<UChildActorComponent> WeaponComponent, TArray<TSubclassOf<ABaseWeapon>>& Upgrades);
@@ -47,8 +49,7 @@ class SURVIVALUNLEASHED_API UWeaponSubsystem : public UWorldSubsystem
 	void PlayUpgradeSFX();
 public:
 
-	UPROPERTY()
-	FOnWeaponsUI OnWeaponsUIUpdate;
+	UPROPERTY() FOnWeaponsUI OnWeaponsUIUpdate;
 
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 
@@ -56,7 +57,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon") bool GetCategoryUpgrades(EWeaponCategory Category, TArray<TSubclassOf<ABaseWeapon>>& Upgrades);
 	UFUNCTION(BlueprintCallable, Category = "Weapon") int32 GetCategoryUpgradeSize(EWeaponCategory Category);
 	UFUNCTION(BlueprintCallable, Category = "Weapon") FUpgradeCardInfo GetWeaponInfo(EWeaponCategory Category, int32 UpgradeLevel);
-	UFUNCTION(BlueprintCallable, Category = "Weapon") void GetAvailableEvolutions(const TArray<FOwnedWeapon>& OwnedWeapons, const TMap<EPlayerStats, int32>& OwnedStats, TArray<FUpgradeOffer>& OutEvolutions);
-	UFUNCTION(BlueprintCallable, Category = "Weapon") int32 GetCategoryEvolutionIndex(EWeaponCategory Category);
+	UFUNCTION(BlueprintCallable, Category = "Weapon") void GetAvailableUpgrades(const TArray<FOwnedWeapon>& OwnedWeapons, const TMap<EPlayerStats, int32>& OwnedStats, TArray<FUpgradeOffer>& OutEvolutions);
 	UFUNCTION(BlueprintCallable, Category = "Weapon") EWeaponUpgradeStatus SetWeapon(FWeaponCreateParams& Params, TMap<EWeaponCategory, UChildActorComponent*>& Inventory);
 };

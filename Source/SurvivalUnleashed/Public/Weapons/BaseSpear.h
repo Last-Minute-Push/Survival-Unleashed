@@ -13,6 +13,8 @@ class SURVIVALUNLEASHED_API ABaseSpear : public ABaseWeapon
 {
 	GENERATED_BODY()
 	
+	uint32 JavelinAlternation = -1;
+
 	float MoveSpear(float DeltaTime);
 
 	void Thrust();         // Begins the thrust cycle and activates damage overlap events.
@@ -22,19 +24,24 @@ class SURVIVALUNLEASHED_API ABaseSpear : public ABaseWeapon
 	UFUNCTION(Category = "Damage") void ApplyDamageCollision(UPrimitiveComponent * OverlappedComponent, AActor * OtherActor, UPrimitiveComponent * OtherComp,
 		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	UFUNCTION(Category = "Attack") void JavelinRain();
+
 protected:
-	bool bIsAiming, bIsThrusting;
+	bool bIsAiming, bIsThrusting, bAlternation = true;
 	float Range;     // Data->Range	
 	float Height;    // Data->Height
 	float Radius;    // Data->DistanceFromPlayer
 	float Cooldown;  // Data->Cooldown
 	float Speed;     // Data->AttackSpeed
+	float ProjectileSpeed;
+	float ProjectileRange;
+	uint32 EvolutionLevel, ProjectilePierce;
 	FTimerHandle TThrustCooldown;
 
 	UPROPERTY(Transient) TObjectPtr<UHordeSubsystem> Horde;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Thrusting") float RetreatMultiplier = 0.25f;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Collision") TObjectPtr<UBoxComponent> BoxCollision;
-	UPROPERTY(VisibleAnywhere, Transient, Category = "Properties|Collision")          TArray<TObjectPtr<AActor>> HitActors;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Thrusting")   float RetreatMultiplier = 0.25f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Properties|Collision")   TObjectPtr<UBoxComponent> BoxCollision;
+	UPROPERTY(VisibleAnywhere, Transient, Category = "Properties|Collision")            TArray<TObjectPtr<AActor>> HitActors;
 
 	virtual void BeginPlay();
 	virtual void Tick(float DeltaTime);
