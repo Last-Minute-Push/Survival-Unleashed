@@ -17,6 +17,8 @@ class SURVIVALUNLEASHED_API UMainMenu : public UHUDBase
 
 protected:
 
+	UPROPERTY() class AUPC_SUMainMenuPlayerController* MainMenuController;
+
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* PlayButton;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* UpgradeButton;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* SettingsButton;
@@ -26,6 +28,8 @@ protected:
 	UPROPERTY() TObjectPtr<class UPermaUpgradeMenu> UpgradeHud;
 	UPROPERTY() TObjectPtr<class UCredits> CreditsHud;
 	UPROPERTY() TObjectPtr<class UCharacterSelectMenu> CharacterSelectHud;
+
+	UPROPERTY() TObjectPtr<class UQuitConfirmation> QuitHud;
 
 	virtual void NativeOnInitialized() override;
 
@@ -43,6 +47,9 @@ protected:
 	UFUNCTION()
 	void CreditsButtonPressed();
 
+	UFUNCTION()
+	void QuitButtonPressed();
+
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UUserWidget> OptionHUDClass;
@@ -53,9 +60,15 @@ public:
 	TSubclassOf<UUserWidget> CreditsHUDClass;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> QuitHUDClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UUserWidget> CharSelectHUDClass;
 
 	UFUNCTION()
 	void UnHideMainMenuButtons();
+
+	UFUNCTION()
+	void Testing();
 
 };

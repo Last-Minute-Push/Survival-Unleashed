@@ -7,6 +7,8 @@
 #include "UI/PermaUpgradeMenu.h"
 #include "UI/CharacterSelectMenu.h"
 #include "UI/Credits.h"
+#include "UI/QuitConfirmation.h"
+#include "Framework/UPC_SUMainMenuPlayerController.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 #include"../SurvivalUnleashed.h"
 
@@ -15,7 +17,11 @@ DEFINE_LOG_CATEGORY_STATIC(LogMainMenu, Log, All);
 void UMainMenu::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
-
+	
+	if (GetOwningLocalPlayer()->GetPlayerController(GetWorld()))
+	{
+		MainMenuController = Cast<AUPC_SUMainMenuPlayerController>(GetOwningLocalPlayer()->GetPlayerController(GetWorld()));
+	}
 
 	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
 	{
@@ -29,7 +35,7 @@ void UMainMenu::NativeOnInitialized()
 			PlayButton->CodeButtonClick.AddDynamic(this, &UMainMenu::PlayButtonPressed);
 			UpgradeButton->CodeButtonClick.AddDynamic(this, &UMainMenu::UpgradeButtonPressed);
 			SettingsButton->CodeButtonClick.AddDynamic(this, &UMainMenu::SettingsButtonPressed);
-			QuitButton->CodeButtonClick.AddDynamic(GI, &UUGI_SUGameInstance::QuitTheGame);
+			QuitButton->CodeButtonClick.AddDynamic(this, &UMainMenu::QuitButtonPressed);
 			CreditsButton->CodeButtonClick.AddDynamic(this, &UMainMenu::CreditsButtonPressed);
 		}
 		else UE_LOG(LogMainMenu, Error, TEXT("PlayButton and/or QuitButton not bound to the widget!"));
@@ -135,7 +141,35 @@ void UMainMenu::CreditsButtonPressed()
 	CreditsHud->AddToViewport();
 }
 
+void UMainMenu::QuitButtonPressed()
+{
+	if (!QuitHud)
+	{
+		QuitHud = CreateWidget<UQuitConfirmation>(GetOwningPlayer(), QuitHUDClass);
+		if (!QuitHud)
+		{
+			UE_LOG(LogMainMenu, Error, TEXT("Could not create the Quit menu; is QuitHUDClass set?"));
+			return;
+		}
+		QuitHud->SetIsFocusable(true);
+		QuitHud->SetKeyboardFocus();
+		QuitHud->OnQuitClosed.AddDynamic(this, &UMainMenu::UnHideMainMenuButtons);
+		if (MainMenuController)
+		{
+			MainMenuController->OnExitHUD.AddDynamic(QuitHud, &UQuitConfirmation::NoButtonPressed);
+		}
+	}
+
+	SetVisibility(ESlateVisibility::Collapsed); // hide the main menu
+	QuitHud->AddToViewport();
+}
+
 void UMainMenu::UnHideMainMenuButtons()
 {
 	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+}
+
+void UMainMenu::Testing()
+{
+	UE_LOG(LogMainMenu, Error, TEXT("Testing Input Baby!!!"))
 }

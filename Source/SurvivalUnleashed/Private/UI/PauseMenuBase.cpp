@@ -5,6 +5,7 @@
 #include "Actor/UC_Player.h"
 #include "EngineUtils.h"
 #include "UI/ButtonBase.h"
+#include "UI/MenuConfirmation.h"
 #include "../SurvivalUnleashed.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPauseMenuBase, Log, All);
@@ -18,13 +19,16 @@ void UPauseMenuBase::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
+	
+	PlayerPawn = Cast<AUC_Player>(GetOwningPlayerPawn());
+
 	if (UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance()))
 	{
 		if (ContinueButton && QuitButton && OptionsButton)
 		{
 			ContinueButton->CodeButtonClick.AddDynamic(this, &UPauseMenuBase::ResumeGame);
 			OptionsButton->CodeButtonClick.AddDynamic(this, &UPauseMenuBase::OptionsButtonPressed);
-			QuitButton->CodeButtonClick.AddDynamic(GI, &UUGI_SUGameInstance::QuitToMenu);
+			QuitButton->CodeButtonClick.AddDynamic(this, &UPauseMenuBase::MenuButtonPressed);
 		}
 		else UE_LOG(LogPauseMenuBase, Error, TEXT("PlayButton and/or QuitButton not bound to the widget!"));
 	}
@@ -59,6 +63,25 @@ void UPauseMenuBase::OptionsButtonPressed()
 
 	SetVisibility(ESlateVisibility::Collapsed); // hide the pause menu
 	OptionHud->AddToViewport();
+}
+
+void UPauseMenuBase::MenuButtonPressed()
+{
+	if (!MenuHud)
+	{
+		MenuHud = CreateWidget<UMenuConfirmation>(GetOwningPlayer(), MenuHUDClass);
+		if (!MenuHud)
+		{
+			UE_LOG(LogPauseMenuBase, Error, TEXT("Could not create the Menu HUD; is MenuHUDClass set?"));
+			return;
+		}
+		MenuHud->bIsFocusable = true;
+		MenuHud->OnMenuClosed.AddDynamic(this, &UPauseMenuBase::UnHidePauseButtons);
+		PlayerPawn->OnResume.BindUFunction(MenuHud, "NoMenuButtonPressed");
+	}
+
+	SetVisibility(ESlateVisibility::Collapsed); // hide the pause menu
+	MenuHud->AddToViewport();
 }
 
 void UPauseMenuBase::UnHidePauseButtons()

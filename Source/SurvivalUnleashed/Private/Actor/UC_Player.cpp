@@ -467,12 +467,13 @@ void AUC_Player::PauseGame()
 
 void AUC_Player::ResumeGame()
 {
+
 	APlayerController* PController = Cast<APlayerController>(GetController());
 	if (!PController || !isPaused)
 	{
 		return;
 	}
-
+	OnResume.ExecuteIfBound();
 	PController->SetPause(false);
 	isPaused = false;
 

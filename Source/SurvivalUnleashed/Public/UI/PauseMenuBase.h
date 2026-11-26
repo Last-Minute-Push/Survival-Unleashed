@@ -18,8 +18,11 @@ class SURVIVALUNLEASHED_API UPauseMenuBase : public UHUDBase
 {
 	GENERATED_BODY()
 
-	
+	UPauseMenuBase();
 protected: 
+
+	UPROPERTY() class AUC_Player* PlayerPawn;
+
 	virtual void NativeOnInitialized() override;
 	virtual void NativeDestruct() override;
 
@@ -34,14 +37,21 @@ protected:
 	UFUNCTION()
 	void OptionsButtonPressed();
 
+	UFUNCTION()
+	void MenuButtonPressed();
+
 	UPROPERTY()
 	UOptionsMenuBase* OptionHud;
 
+	UPROPERTY() TObjectPtr<class UMenuConfirmation> MenuHud;
+
 public:
-	UPauseMenuBase();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UUserWidget> OptionHUDClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> MenuHUDClass;
 
 	UFUNCTION()
 	void UnHidePauseButtons();
