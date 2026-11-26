@@ -15,6 +15,7 @@
 #include "UC_Player.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerLost);
+DECLARE_DYNAMIC_DELEGATE(FOnResume);
 
 
 class ABaseWeapon;
@@ -93,6 +94,8 @@ public:
 	void UpdateKeyBinds();
 	UFUNCTION()
 	void LoadPlayerData();
+
+	FOnResume OnResume;
 protected:
 	UPROPERTY(Category = Character, VisibleAnywhere)
 	class USpringArmComponent* SpringArm;

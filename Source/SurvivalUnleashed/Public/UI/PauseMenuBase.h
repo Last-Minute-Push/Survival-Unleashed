@@ -20,6 +20,9 @@ class SURVIVALUNLEASHED_API UPauseMenuBase : public UHUDBase
 
 	UPauseMenuBase();
 protected: 
+
+	UPROPERTY() class AUC_Player* PlayerPawn;
+
 	virtual void NativeOnInitialized() override;
 	virtual void NativeDestruct() override;
 

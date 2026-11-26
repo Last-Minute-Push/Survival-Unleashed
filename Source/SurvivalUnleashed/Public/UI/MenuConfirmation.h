@@ -22,9 +22,9 @@ protected:
 	UPROPERTY(meta = (BindWidget)) class UButtonBase* YesButton;
 	UPROPERTY(meta = (BindWidget)) class UButtonBase* NoButton;
 
+public:
 	UFUNCTION() void NoMenuButtonPressed();
 
-public:
 	UMenuConfirmation();
 
 	FOnMenuClosed OnMenuClosed;

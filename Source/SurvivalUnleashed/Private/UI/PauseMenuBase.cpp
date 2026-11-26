@@ -19,6 +19,9 @@ void UPauseMenuBase::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
+	
+	PlayerPawn = Cast<AUC_Player>(GetOwningPlayerPawn());
+
 	if (UUGI_SUGameInstance* GI = Cast<UUGI_SUGameInstance>(GetGameInstance()))
 	{
 		if (ContinueButton && QuitButton && OptionsButton)
@@ -72,8 +75,9 @@ void UPauseMenuBase::MenuButtonPressed()
 			UE_LOG(LogPauseMenuBase, Error, TEXT("Could not create the Menu HUD; is MenuHUDClass set?"));
 			return;
 		}
-
+		MenuHud->bIsFocusable = true;
 		MenuHud->OnMenuClosed.AddDynamic(this, &UPauseMenuBase::UnHidePauseButtons);
+		PlayerPawn->OnResume.BindDynamic(MenuHud, &UMenuConfirmation::NoMenuButtonPressed);
 	}
 
 	SetVisibility(ESlateVisibility::Collapsed); // hide the pause menu

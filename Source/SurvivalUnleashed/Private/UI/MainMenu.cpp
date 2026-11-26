@@ -8,6 +8,7 @@
 #include "UI/CharacterSelectMenu.h"
 #include "UI/Credits.h"
 #include "UI/QuitConfirmation.h"
+#include "Framework/UPC_SUMainMenuPlayerController.h"
 #include "Audio/Interfaces/AudioManagerInterface.h"
 #include"../SurvivalUnleashed.h"
 
@@ -16,6 +17,11 @@ DEFINE_LOG_CATEGORY_STATIC(LogMainMenu, Log, All);
 void UMainMenu::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
+	
+	if (GetOwningLocalPlayer()->GetPlayerController(GetWorld()))
+	{
+		MainMenuController = Cast<AUPC_SUMainMenuPlayerController>(GetOwningLocalPlayer()->GetPlayerController(GetWorld()));
+	}
 
 	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
 	{
@@ -148,6 +154,10 @@ void UMainMenu::QuitButtonPressed()
 		QuitHud->SetIsFocusable(true);
 		QuitHud->SetKeyboardFocus();
 		QuitHud->OnQuitClosed.AddDynamic(this, &UMainMenu::UnHideMainMenuButtons);
+		if (MainMenuController)
+		{
+			MainMenuController->OnExitHUD.AddDynamic(QuitHud, &UQuitConfirmation::NoButtonPressed);
+		}
 	}
 
 	SetVisibility(ESlateVisibility::Collapsed); // hide the main menu
@@ -157,4 +167,9 @@ void UMainMenu::QuitButtonPressed()
 void UMainMenu::UnHideMainMenuButtons()
 {
 	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+}
+
+void UMainMenu::Testing()
+{
+	UE_LOG(LogMainMenu, Error, TEXT("Testing Input Baby!!!"))
 }

@@ -18,17 +18,13 @@ class SURVIVALUNLEASHED_API UQuitConfirmation : public UHUDBase
 	UQuitConfirmation();
 
 	virtual void NativeOnInitialized() override;
-
-	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
-
+	
 protected:
 
 	UPROPERTY(meta = (BindWidget)) class UButtonBase* YesButton;
 	UPROPERTY(meta = (BindWidget)) class UButtonBase* NoButton;
-
+public:
 	UFUNCTION() void NoButtonPressed();
 
-	
-public:
 	FOnQuitClosed OnQuitClosed;
 };

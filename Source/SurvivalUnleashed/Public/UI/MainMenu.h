@@ -17,6 +17,8 @@ class SURVIVALUNLEASHED_API UMainMenu : public UHUDBase
 
 protected:
 
+	UPROPERTY() class AUPC_SUMainMenuPlayerController* MainMenuController;
+
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* PlayButton;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* UpgradeButton;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) class UButtonBase* SettingsButton;
@@ -65,5 +67,8 @@ public:
 
 	UFUNCTION()
 	void UnHideMainMenuButtons();
+
+	UFUNCTION()
+	void Testing();
 
 };
