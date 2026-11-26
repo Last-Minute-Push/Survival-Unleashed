@@ -473,7 +473,7 @@ void AUC_Player::ResumeGame()
 	{
 		return;
 	}
-	OnResume.Execute();
+	OnResume.ExecuteIfBound();
 	PController->SetPause(false);
 	isPaused = false;
 

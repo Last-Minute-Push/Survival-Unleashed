@@ -77,7 +77,7 @@ void UPauseMenuBase::MenuButtonPressed()
 		}
 		MenuHud->bIsFocusable = true;
 		MenuHud->OnMenuClosed.AddDynamic(this, &UPauseMenuBase::UnHidePauseButtons);
-		PlayerPawn->OnResume.BindDynamic(MenuHud, &UMenuConfirmation::NoMenuButtonPressed);
+		PlayerPawn->OnResume.BindUFunction(MenuHud, "NoMenuButtonPressed");
 	}
 
 	SetVisibility(ESlateVisibility::Collapsed); // hide the pause menu

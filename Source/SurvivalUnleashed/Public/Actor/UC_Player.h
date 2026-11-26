@@ -15,7 +15,7 @@
 #include "UC_Player.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerLost);
-DECLARE_DYNAMIC_DELEGATE(FOnResume);
+DECLARE_DELEGATE(FOnResume);
 
 
 class ABaseWeapon;
