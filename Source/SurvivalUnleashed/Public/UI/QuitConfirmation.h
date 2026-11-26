@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/HUDBase.h"
 #include "QuitConfirmation.generated.h"
 
 /**
@@ -11,12 +11,15 @@
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnQuitClosed);
 UCLASS()
-class SURVIVALUNLEASHED_API UQuitConfirmation : public UUserWidget
+class SURVIVALUNLEASHED_API UQuitConfirmation : public UHUDBase
 {
 	GENERATED_BODY()
 
+	UQuitConfirmation();
+
 	virtual void NativeOnInitialized() override;
 
+	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
 protected:
 
@@ -24,6 +27,8 @@ protected:
 	UPROPERTY(meta = (BindWidget)) class UButtonBase* NoButton;
 
 	UFUNCTION() void NoButtonPressed();
+
+	
 public:
 	FOnQuitClosed OnQuitClosed;
 };

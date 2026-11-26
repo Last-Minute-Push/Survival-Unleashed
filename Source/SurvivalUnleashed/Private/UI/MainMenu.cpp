@@ -17,7 +17,6 @@ void UMainMenu::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
-
 	if (IAudioManagerInterface* I = Cast<IAudioManagerInterface>(GetWorld()->GetGameInstance()))
 	{
 		I->PlayMusic(I->GetLibrary()->BGM_MainMenuSong);
@@ -147,6 +146,7 @@ void UMainMenu::QuitButtonPressed()
 			return;
 		}
 		QuitHud->SetIsFocusable(true);
+		QuitHud->SetKeyboardFocus();
 		QuitHud->OnQuitClosed.AddDynamic(this, &UMainMenu::UnHideMainMenuButtons);
 	}
 
